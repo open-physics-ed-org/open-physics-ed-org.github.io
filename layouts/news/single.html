@@ -7,21 +7,14 @@
   <!-- CSS will be injected by build.py -->
 </head>
 <body>
-  <nav><!-- menu will be injected by build.py --></nav>
-  <header style="text-align: center; margin: 2rem 0 1rem 0;">
-    <h1>{{ .Title }}</h1>
+  <header class="site-header">
+    <div class="site-title">{{ .SiteTitle }}</div>
+    {{ .SiteSubtitle }}
   </header>
-  <main style="max-width: 700px; margin: 0 auto; padding: 1rem;">
-    <article style="background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); padding: 2rem 1rem;">
-      <header style="margin-bottom: 1.5rem;">
-        <h1 style="margin-bottom: 0.5rem;">{{ .Title }}</h1>
-        <!-- Date, author, tags will be injected by build.py if present -->
-      </header>
-      <section class="article-content">
-        {{ .Content }}
-      </section>
-    </article>
+  <nav><!-- menu will be injected by build.py --></nav>
+  <main class="site-main">
+    {{ .Content }}
   </main>
-  <footer><!-- footer will be injected by build.py --></footer>
+  <footer class="site-footer"><!-- footer will be injected by build.py --></footer>
 </body>
 </html>

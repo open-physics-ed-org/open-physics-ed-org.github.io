@@ -92,12 +92,20 @@ def build_menu(menu, current_output_path, debug=False):
 def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
     html = load_layout(layout_name)
     # Compute correct relative path to css/theme-modern.css from the output HTML file location
-    # meta should have 'output_path' set by build_file
     output_path = meta.get('output_path', 'index.html')
     css_rel = rel_link(output_path, 'css/theme-modern.css')
-    css_links = f'<link rel="stylesheet" href="{css_rel}" id="theme-style">'  # Modern, WCAG-compliant
+    css_links = f'<link rel="stylesheet" href="{css_rel}" id="theme-style">'
     html = html.replace('</head>', f'{css_links}\n</head>')
-    html = html.replace('{{ .Title }}', meta.get('title', site.get('title', 'Untitled')))
+    # Inject site title everywhere
+    site_title = site.get('title', 'Untitled')
+    site_subtitle = site.get('subtitle', '')
+    html = html.replace('{{ .SiteTitle }}', site_title)
+    # Only inject subtitle if present
+    if site_subtitle:
+        html = html.replace('{{ .SiteSubtitle }}', f'<div class="site-subtitle">{site_subtitle}</div>')
+    else:
+        html = html.replace('{{ .SiteSubtitle }}', '')
+    html = html.replace('{{ .Title }}', meta.get('title', site_title))
     html = html.replace('{{ .Content }}', content_html)
     html = re.sub(r'<nav[^>]*>.*?</nav>', f'<nav class="site-menu" role="navigation" aria-label="Main menu">{menu_html}</nav>', html, flags=re.DOTALL)
     html = re.sub(r'<footer[^>]*>.*?</footer>', f'<footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">{footer_html}</footer>', html, flags=re.DOTALL)
@@ -240,6 +248,10 @@ def main():
     css_root.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(css_src, css_docs)
     shutil.copy2(css_src, css_root)
+
+    # Always create .nojekyll in docs root
+    nojekyll_path = Path('docs/.nojekyll')
+    nojekyll_path.write_text('')
 
     if args.file:
         build_file(args.file, site, menu, footer_html, debug=args.debug)

@@ -1,6 +1,7 @@
 # Site-wide content and organization
 site:
-  title: "openphysicsed.org"
+  title: "Open Physics Ed dot Org"
+  subtitle: "Open, accessible, and community-driven physics education."
   description: "Open Physics Education - News, resources, and community."
   author: "Open Physics Ed Team"
   language: "en-us"

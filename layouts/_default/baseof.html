@@ -7,6 +7,10 @@
   <!-- CSS link is injected by build.py -->
 </head>
 <body>
+  <header class="site-header">
+    <div class="site-title">{{ .SiteTitle }}</div>
+    {{ .SiteSubtitle }}
+  </header>
   <nav class="site-menu" role="navigation" aria-label="Main menu">
     <ul class="site-menu-list">
       <li class="site-menu-item"><a href="/">Home</a></li>
@@ -14,9 +18,6 @@
       <li class="site-menu-item"><a href="/about/">About</a></li>
     </ul>
   </nav>
-  <header class="site-header">
-    <h1>{{ .Title }}</h1>
-  </header>
   <main class="site-main">
     {{ .Content }}
   </main>
