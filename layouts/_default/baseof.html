@@ -7,14 +7,14 @@
   <!-- CSS link is injected by build.py -->
 </head>
 <body>
-  <header class="site-header" style="display: flex; flex-direction: column; align-items: center; padding: 1.5rem 0 0.5rem 0; border-bottom: none;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 2rem; width: 100%; max-width: 900px;">
-      <a href="/" class="site-logo-link" style="display: flex; align-items: center;" aria-label="Open Physics Ed Home">
-        <img src="{{ .LogoPath }}" alt="Open Physics Ed logo: stylized atom with orbitals" style="height: 80px; width: 80px; margin-right: 1.5rem; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); background: #fff; border: 2px solid #e0e0e0; object-fit: cover;" role="img" />
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="/" class="site-logo-link" aria-label="Open Physics Ed Home">
+        <img src="{{ .LogoPath }}" alt="Open Physics Ed logo: stylized atom with orbitals" class="site-logo" role="img" />
       </a>
-      <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center;">
-        <span class="site-title" style="font-size: 2.2rem; font-weight: bold; line-height: 1.1; color: #1a237e;">{{ .SiteTitle }}</span>
-        <span class="site-subtitle" style="display: block; font-size: 1.15rem; margin-top: 0.25rem; color: #374151;">{{ .SiteSubtitle }}</span>
+      <div class="site-title-group">
+        <span class="site-title">{{ .SiteTitle }}</span>
+        <span class="site-subtitle">{{ .SiteSubtitle }}</span>
       </div>
     </div>
   </header>
