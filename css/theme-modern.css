@@ -285,7 +285,7 @@
 }
 /* Responsive menu: single markup, dual style */
 .site-menu {
-  background: #1976d2;
+  background: transparent;
   border-radius: 0.5rem;
   margin-bottom: 0;
   padding: 0.5rem 1.5rem;
@@ -794,9 +794,9 @@ nav a:active {
 }
 
 .site-main {
-  max-width: 700px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 1.5rem 1rem 1rem 1rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   text-align: left;
 }
 
