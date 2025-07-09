@@ -1,0 +1,26 @@
+# Log of test_build_menu.py failures for build_menu refactor
+
+## test_homepage_menu
+Expected: href="index.html"
+Actual:   href="index/index.html"
+Menu HTML: <ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="index/index.html">Home</a></li><li><a href="news/index.html">News</a></li><li><a href="about/index.html">About</a></li></ul>
+
+## test_about_menu
+Expected: href="../index.html"
+Actual:   href="../index/index.html"
+Menu HTML: <ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="../news/index.html">News</a></li><li><a href="index.html">About</a></li></ul>
+
+## test_news_index_menu
+Expected: href="../index.html"
+Actual:   href="../index/index.html"
+Menu HTML: <ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="index.html">News</a></li><li><a href="../about/index.html">About</a></li></ul>
+
+## test_news_article_menu
+Expected: href="../index.html"
+Actual:   href="../index/index.html"
+Menu HTML: <ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="index.html">News</a></li><li><a href="../about/index.html">About</a></li></ul>
+
+# Summary
+- All failures are due to the homepage link being rendered as `index/index.html` instead of `index.html`.
+- The correct output for the homepage should be `index.html` at the root, not `index/index.html`.
+- Refactor build_menu to rewrite menu URLs so that any `index/index.html` becomes `index.html` when generating links to the homepage.

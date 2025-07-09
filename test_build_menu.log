@@ -1,0 +1,45 @@
+test_about_menu (test_build_menu.TestMenuLinks.test_about_menu) ... FAIL
+test_homepage_menu (test_build_menu.TestMenuLinks.test_homepage_menu) ... FAIL
+test_news_article_menu (test_build_menu.TestMenuLinks.test_news_article_menu) ... FAIL
+test_news_index_menu (test_build_menu.TestMenuLinks.test_news_index_menu) ... FAIL
+
+======================================================================
+FAIL: test_about_menu (test_build_menu.TestMenuLinks.test_about_menu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/test_build_menu.py", line 24, in test_about_menu
+    self.assertIn('href="../index.html"', html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'href="../index.html"' not found in '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="../news/index.html">News</a></li><li><a href="index.html">About</a></li></ul>'
+
+======================================================================
+FAIL: test_homepage_menu (test_build_menu.TestMenuLinks.test_homepage_menu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/test_build_menu.py", line 16, in test_homepage_menu
+    self.assertIn('href="index.html"', html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'href="index.html"' not found in '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="index/index.html">Home</a></li><li><a href="news/index.html">News</a></li><li><a href="about/index.html">About</a></li></ul>'
+
+======================================================================
+FAIL: test_news_article_menu (test_build_menu.TestMenuLinks.test_news_article_menu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/test_build_menu.py", line 40, in test_news_article_menu
+    self.assertIn('href="../index.html"', html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'href="../index.html"' not found in '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="index.html">News</a></li><li><a href="../about/index.html">About</a></li></ul>'
+
+======================================================================
+FAIL: test_news_index_menu (test_build_menu.TestMenuLinks.test_news_index_menu)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/test_build_menu.py", line 32, in test_news_index_menu
+    self.assertIn('href="../index.html"', html)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'href="../index.html"' not found in '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index/index.html">Home</a></li><li><a href="index.html">News</a></li><li><a href="../about/index.html">About</a></li></ul>'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (failures=4)

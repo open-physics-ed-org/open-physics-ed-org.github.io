@@ -68,14 +68,29 @@ def build_menu(menu, current_output_path, debug=False):
     items = []
     for item in sorted(menu, key=lambda x: x.get('weight', 0)):
         url = item["url"]
-        rel_url = rel_link(current_output_path, url)
+        # Rewrite menu URLs to match output structure
+        # news/_index.html or news/_index.htm -> news/index.html
+        # about.html -> about/index.html (for any top-level .html)
+        # index.html stays index.html, but index/index.html should become index.html
+        url_out = url
+        if url.endswith('/_index.html') or url.endswith('/_index.htm'):
+            url_out = url.rsplit('/', 1)[0] + '/index.html'
+        elif url.endswith('.html') and '/' not in url:
+            # top-level about.html -> about/index.html
+            url_out = url.replace('.html', '/index.html')
+        elif url.endswith('.htm') and '/' not in url:
+            url_out = url.replace('.htm', '/index.html')
+        # Fix: if url_out is index/index.html, rewrite to index.html (homepage)
+        if url_out == 'index/index.html':
+            url_out = 'index.html'
+        rel_url = rel_link(current_output_path, url_out)
         if url.startswith('http://') or url.startswith('https://') or url.startswith('//'):
             link = f'<a href="{url}" target="_blank" rel="noopener">{item["name"]}</a>'
         else:
             link = f'<a href="{rel_url}">{item["name"]}</a>'
         items.append(f'<li>{link}</li>')
         if debug:
-            print(f"[DEBUG] Menu: {item['name']} url={url} rel_url={rel_url} from={current_output_path}")
+            print(f"[DEBUG] Menu: {item['name']} url={url} url_out={url_out} rel_url={rel_url} from={current_output_path}")
     return '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;">' + ''.join(items) + '</ul>'
 
 def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
