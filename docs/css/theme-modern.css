@@ -5,10 +5,22 @@
   box-shadow: 0 2px 8px rgba(26,35,126,0.04);
 }
 .site-title {
-  color: #1a237e !important; /* deep indigo */
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #1976d2 !important; /* match menu blue, high contrast */
+  letter-spacing: 0.01em;
+  font-family: 'Roboto', system-ui, sans-serif;
+  margin-bottom: 0.2em;
+  text-shadow: 0 2px 8px rgba(21,101,192,0.08);
 }
 .site-subtitle {
-  color: #374151 !important; /* slate gray */
+  color: #2563eb !important; /* accessible blue, matches primary */
+  font-size: 1.25rem;
+  margin-top: 0.2em;
+  margin-bottom: 0.5em;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 4px rgba(37,99,235,0.08);
 }
 .site-menu {
   background: #1976d2;
@@ -87,6 +99,17 @@
   text-align: center;
   border-radius: 0 0 0.5rem 0.5rem;
 }
+.site-footer a,
+.footer-license-link {
+  color: #1976d2 !important;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.site-footer a:hover,
+.footer-license-link:hover {
+  color: #0d47a1 !important;
+}
 .site-subtitle {
   font-size: 1.25rem;
   color: #555;
@@ -97,7 +120,8 @@
 }
 @media (prefers-color-scheme: dark) {
   .site-subtitle {
-    color: #bbb;
+    color: #60a5fa !important; /* lighter blue for dark mode */
+    text-shadow: 0 1px 4px rgba(96,165,250,0.12);
   }
 }
 

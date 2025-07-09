@@ -1,14 +1,18 @@
 # Site-wide content and organization
 site:
-  title: "Open Physics Ed dot Org"
+  title: "OPENPHYSICSED.ORG"
   subtitle: "Open, accessible, and community-driven physics education."
   description: "Open Physics Education - News, resources, and community."
   author: "Open Physics Ed Team"
   language: "en-us"
   css: "/css/theme-modern.css"
   footer: |
-    &copy; 2025 openphysicsed.org &mdash; All rights reserved.<br>
-    Powered by Hugo
+
+    Made with ❤️ and lots of ☕️ for students and educators everywhere.
+    <br>
+    <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="display:inline-block; vertical-align:middle; margin-top:0.5em;">
+      <img alt="Creative Commons License" style="border-width:0; height:22px; margin-right:0.3em; vertical-align:middle;" src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" />
+    </a>openphysicsed.org
 
 menu:
   - name: Home
