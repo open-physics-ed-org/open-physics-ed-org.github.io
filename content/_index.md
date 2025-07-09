@@ -1,5 +1,3 @@
-
-
 # Welcome to Open Physics Ed
 
 Open Physics Ed is a collaborative, open-source project dedicated to building accessible, high-quality, and modern educational resources for physics and computational science. Our mission is to lower barriers to learning by providing free, open, and adaptable materials for students, educators, and lifelong learners everywhere.
@@ -38,3 +36,12 @@ We welcome your feedback, suggestions, and contributions! Visit our [GitHub repo
 ---
 
 Open Physics Ed is open source and always evolving. Join us in building a more accessible, equitable future for physics education.
+
+---
+
+[![GitHub Repo stars](https://img.shields.io/github/stars/open-physics-ed-org/open-physics-ed-org.github.io?style=social)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io)
+[![GitHub forks](https://img.shields.io/github/forks/open-physics-ed-org/open-physics-ed-org.github.io?style=social)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/fork)
+[![GitHub issues](https://img.shields.io/github/issues/open-physics-ed-org/open-physics-ed-org.github.io)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/open-physics-ed-org/open-physics-ed-org.github.io)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/pulls)
+[![GitHub license](https://img.shields.io/github/license/open-physics-ed-org/open-physics-ed-org.github.io)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/blob/main/LICENSE)
+[![Releases](https://img.shields.io/github/v/release/open-physics-ed-org/open-physics-ed-org.github.io?include_prereleases)](https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/releases)
