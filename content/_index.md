@@ -14,7 +14,7 @@ Open Physics Ed is a collaborative, open-source project dedicated to building ac
 We are actively developing and deploying resources for:
 - **Introductory Mechanics**
 - **Electromagnetism**
-- **Classical Mechanics** (see [Modern Classical Mechanics](https://dannycaballero.info/modern-classical-mechanics/))
+- **Classical Mechanics** (see [Modern Classical Mechanics](https://open-physics-ed-org.github.io//modern-classical-mechanics/))
 - **Advanced Electromagnetism**
 - **Mathematical Methods**
 
