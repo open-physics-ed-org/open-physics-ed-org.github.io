@@ -1,4 +1,3 @@
-
 # Welcome to Open Physics Ed dot Org! 🚀
 
 *Open Physics Ed* is a fun, friendly, and community-powered static site for sharing open physics education resources, news, and more. No Hugo, no Jekyll, no magic SSGs—just pure Python and a sprinkle of creativity!
@@ -47,6 +46,30 @@ docs/images/          # Logo, etc.
 ```
 
 ## How Do I Build This Thing?
+
+To set up your environment automatically, run:
+
+```sh
+python3 setup.py
+```
+
+This will:
+- Create a Python virtual environment in `.venv` if it doesn't exist
+- Install all dependencies from `requirements.txt`
+
+After setup, activate the environment:
+
+```sh
+source .venv/bin/activate
+```
+
+Then build the site:
+
+```sh
+python build.py
+```
+
+Your site will be ready in `docs/index.html`.
 
 Check out [`BUILD.MD`](BUILD.MD) for a fun, step-by-step guide to setting up your environment and building the site. Spoiler: it's just a couple of commands!
 
