@@ -532,7 +532,7 @@
   flex-direction: column;
   gap: 2.5rem;
   margin-top: 2.5rem;
-  align-items: center;
+  align-items: stretch;
 }
 
 /* News preview: use card background that adapts to light/dark and is less stark than #fff */
@@ -541,7 +541,7 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
-  max-width: 600px;
+  max-width: 900px;
   width: 100%;
   transition: box-shadow 0.2s;
   outline: none;

@@ -532,7 +532,7 @@
   flex-direction: column;
   gap: 2.5rem;
   margin-top: 2.5rem;
-  align-items: center;
+  align-items: stretch;
 }
 
 /* News preview: use card background that adapts to light/dark and is less stark than #fff */
