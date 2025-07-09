@@ -1,21 +1,27 @@
-{{ define "main" }}
-<article style="max-width: 700px; margin: 0 auto; padding: 2rem 1rem; background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-  <header style="margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0.5rem;">{{ .Title }}</h1>
-    {{ with .Params.date }}
-      <div style="color: #888; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ . | time.Format "Jan 2, 2006" }}</div>
-    {{ end }}
-    {{ with .Params.author }}
-      <div style="color: #888; font-size: 0.95rem;">By {{ . }}</div>
-    {{ end }}
-    {{ with .Params.tags }}
-      <div style="margin-top: 0.5rem;">
-        {{ range . }}<span style="background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 2px 8px; font-size: 0.85rem; margin-right: 0.5rem;">#{{ . }}</span>{{ end }}
-      </div>
-    {{ end }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ .Title }}</title>
+  <!-- CSS will be injected by build.py -->
+</head>
+<body>
+  <nav><!-- menu will be injected by build.py --></nav>
+  <header style="text-align: center; margin: 2rem 0 1rem 0;">
+    <h1>{{ .Title }}</h1>
   </header>
-  <section class="article-content">
-    {{ .Content }}
-  </section>
-</article>
-{{ end }}
+  <main style="max-width: 700px; margin: 0 auto; padding: 1rem;">
+    <article style="background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); padding: 2rem 1rem;">
+      <header style="margin-bottom: 1.5rem;">
+        <h1 style="margin-bottom: 0.5rem;">{{ .Title }}</h1>
+        <!-- Date, author, tags will be injected by build.py if present -->
+      </header>
+      <section class="article-content">
+        {{ .Content }}
+      </section>
+    </article>
+  </main>
+  <footer><!-- footer will be injected by build.py --></footer>
+</body>
+</html>

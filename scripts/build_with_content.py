@@ -49,16 +49,35 @@ def load_layout(layout_name):
 
 def build_menu(menu):
     # menu: list of dicts with name, url
+    # Accepts current_output_path (relative to DOCS_DIR) as a closure variable
+    import os
     def is_external(url):
         return url.startswith('http://') or url.startswith('https://') or url.startswith('//')
+    def rel_link(from_path, to_url):
+        # Only handle internal links (starting with / or no scheme)
+        if is_external(to_url):
+            return to_url
+        # Remove leading slash if present
+        to_url = to_url.lstrip('/')
+        # Map menu url to output html file
+        if to_url == '':
+            to_file = 'index.html'
+        elif to_url.endswith('/'):
+            to_file = os.path.join(to_url, '_index.html')
+        elif to_url.endswith('.md'):
+            to_file = to_url.replace('.md', '.html')
+        else:
+            to_file = to_url
+        # Compute relative path from from_path to to_file
+        rel = os.path.relpath(to_file, os.path.dirname(from_path))
+        return rel
     items = []
     for item in sorted(menu, key=lambda x: x.get('weight', 0)):
         url = item["url"]
         if is_external(url):
             link = f'<a href="{url}" target="_blank" rel="noopener">{item["name"]}</a>'
         else:
-            # Always use relative links for internal pages
-            rel_url = url if url.startswith('/') else '/' + url
+            rel_url = rel_link(current_output_path, url)
             link = f'<a href="{rel_url}">{item["name"]}</a>'
         items.append(f'<li>{link}</li>')
     return '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;">' + ''.join(items) + '</ul>'
@@ -89,7 +108,6 @@ def main():
     site = site_content.get('site', {})
     menu = site_content.get('menu', [])
     footer_html = site.get('footer', '')
-    menu_html = build_menu(menu)
 
     md_path = Path(args.mdfile)
     if not md_path.exists():
@@ -103,9 +121,17 @@ def main():
     else:
         layout_name = '_default/baseof.html'
     content_html = render_markdown(md_content)
-    html = build_html(meta, content_html, layout_name, site, menu_html, footer_html)
+    # Output path: preserve directory structure under docs
     rel_path = md_path.relative_to(CONTENT_DIR).with_suffix('.html')
+    # Special case: content/_index.md -> docs/index.html
+    if str(rel_path) == '_index.html':
+        rel_path = Path('index.html')
     out_path = DOCS_DIR / rel_path
+    # Pass the output path (relative to docs/) to build_menu
+    global current_output_path
+    current_output_path = str(rel_path)
+    menu_html = build_menu(menu)
+    html = build_html(meta, content_html, layout_name, site, menu_html, footer_html)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html)
     print(f"[OK] Built {out_path}")

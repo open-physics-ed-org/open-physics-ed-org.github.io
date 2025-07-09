@@ -1,21 +1,31 @@
-{{ define "main" }}
-<article style="max-width: 700px; margin: 0 auto; padding: 2rem 1rem; background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-  <header style="margin-bottom: 1.5rem;">
-    <h1 style="margin-bottom: 0.5rem;">Physics Ed in the Classroom</h1>
-    {{ with .Params.date }}
-      <div style="color: #888; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ . | time.Format "Jan 2, 2006" }}</div>
-    {{ end }}
-    {{ with .Params.author }}
-      <div style="color: #888; font-size: 0.95rem;">By {{ . }}</div>
-    {{ end }}
-    {{ with .Params.tags }}
-      <div style="margin-top: 0.5rem;">
-        {{ range . }}<span style="background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 2px 8px; font-size: 0.85rem; margin-right: 0.5rem;">#{{ . }}</span>{{ end }}
-      </div>
-    {{ end }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Ed in the Classroom</title>
+  <!-- CSS will be injected by build.py -->
+<link rel="stylesheet" href="/css/theme-light.css" id="theme-style">
+<link rel="stylesheet" href="/css/theme-dark.css" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+  <nav style="padding: 1rem 0; border-bottom: 1px solid #eee; background: #f8f8f8;"><ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;"><li><a href="../index.html">Home</a></li><li><a href="_index.html">News</a></li><li><a href="../about.html">About</a></li></ul></nav>
+  <header style="text-align: center; margin: 2rem 0 1rem 0;">
+    <h1>Physics Ed in the Classroom</h1>
   </header>
-  <section class="article-content">
-    <p>Discover how Open Physics Ed resources can be integrated into your classroom for better learning outcomes.</p>
-  </section>
-</article>
-{{ end }}
+  <main style="max-width: 700px; margin: 0 auto; padding: 1rem;">
+    <article style="background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); padding: 2rem 1rem;">
+      <header style="margin-bottom: 1.5rem;">
+        <h1 style="margin-bottom: 0.5rem;">Physics Ed in the Classroom</h1>
+        <!-- Date, author, tags will be injected by build.py if present -->
+      </header>
+      <section class="article-content">
+        <p>Discover how Open Physics Ed resources can be integrated into your classroom for better learning outcomes.</p>
+      </section>
+    </article>
+  </main>
+  <footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">&copy; 2025 openphysicsed.org &mdash; All rights reserved.<br>
+Powered by Hugo
+</footer>
+</body>
+</html>

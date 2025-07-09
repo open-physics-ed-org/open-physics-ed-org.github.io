@@ -10,13 +10,13 @@ site:
 
 menu:
   - name: Home
-    url: /
+    url: index.html
     weight: 10
   - name: News
-    url: /news/
+    url: news/_index.html
     weight: 20
   - name: About
-    url: /about/
+    url: about.html
     weight: 30
 
 content:

@@ -87,6 +87,9 @@ def main():
     html = build_html(meta, content_html, layout_name)
     # Output path: preserve directory structure under docs
     rel_path = md_path.relative_to(CONTENT_DIR).with_suffix('.html')
+    # Special case: content/_index.md -> docs/index.html
+    if str(rel_path) == '_index.html':
+        rel_path = Path('index.html')
     out_path = DOCS_DIR / rel_path
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html)
