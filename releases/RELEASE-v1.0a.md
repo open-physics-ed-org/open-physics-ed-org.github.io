@@ -1,4 +1,10 @@
-# 🚀 Open Physics Ed Static Site Generator v1.0a Release Notes
+# Release v1.0a: "Hank's Solid Update" 🤠
+
+## 🚀 Open Physics Education Network v1.0a — The Texas-Solid Update Release
+
+We’re excited to announce **v1.0a** of the Open Physics Ed Static Site Generator! This release, named **"Hank's Solid Update"** (a nod to Hank Hill and the reliable, no-nonsense spirit of Texas), brings a set of practical improvements and workflow upgrades to our custom Python static site builder.
+
+---
 
 ## 🎉 What's New in v1.0a?
 
