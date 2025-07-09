@@ -1,5 +1,3 @@
-# GitHub Actions workflow to build and deploy Hugo site to gh-pages branch
-# This workflow builds the site on every commit to main and deploys to gh-pages
 
 name: Build and Deploy Hugo site (gh-pages)
 
@@ -16,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true  # Fetch themes if any
+          submodules: true
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
@@ -25,7 +23,7 @@ jobs:
           extended: true
 
       - name: Build site
-        run: hugo --minify
+        run: hugo --cleanDestinationDir
 
       - name: Deploy to GitHub Pages (gh-pages branch)
         uses: peaceiris/actions-gh-pages@v4

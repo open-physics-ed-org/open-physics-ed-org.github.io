@@ -1,4 +1,4 @@
-baseURL = 'https://example.org/'
+baseURL = '/'
 languageCode = 'en-us'
 title = 'openphysicsed.org'
 theme = 'PaperMod'
@@ -16,3 +16,7 @@ theme = 'PaperMod'
   name = 'About'
   url = '/about'
   weight = 30
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'
