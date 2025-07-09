@@ -91,12 +91,58 @@ def build_menu(menu, current_output_path, debug=False):
 
 def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
     html = load_layout(layout_name)
-    # Compute correct relative path to css/theme-modern.css and images/logo.png from the output HTML file location
+    # Compute correct relative path to theme-modern.css and images/logo.png
     output_path = meta.get('output_path', 'index.html')
-    css_rel = rel_link(output_path, 'css/theme-modern.css')
+    css_modern = rel_link(output_path, 'css/theme-modern.css')
     logo_rel = rel_link(output_path, 'images/logo.png')
-    css_links = f'<link rel="stylesheet" href="{css_rel}" id="theme-style">'
-    html = html.replace('</head>', f'{css_links}\n</head>')
+    css_links = f'<link rel="stylesheet" href="{css_modern}" id="theme-modern">'
+    # Accessible toggle button and script (data-theme switching)
+    theme_toggle = '''
+    <button id="theme-toggle" aria-label="Switch to dark mode" style="position:absolute;top:1.5rem;right:2rem;z-index:1000;background:var(--button-bg,#eee);color:var(--button-fg,#222);border:none;padding:0.5em 1em;border-radius:2em;cursor:pointer;font-size:1.2em;box-shadow:0 2px 8px rgba(0,0,0,0.10);" tabindex="0">
+      <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
+      <span class="sr-only">Toggle theme</span>
+    </button>
+    <script>
+    (function() {
+      const btn = document.getElementById('theme-toggle');
+      const icon = document.getElementById('theme-toggle-icon');
+      function setTheme(theme) {
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          icon.textContent = '☀️';
+          btn.setAttribute('aria-label', 'Switch to light mode');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+          icon.textContent = '🌙';
+          btn.setAttribute('aria-label', 'Switch to dark mode');
+        }
+        localStorage.setItem('theme', theme);
+      }
+      function getPreferredTheme() {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'light' || stored === 'dark') return stored;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      function toggleTheme() {
+        const current = getPreferredTheme();
+        setTheme(current === 'dark' ? 'light' : 'dark');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        setTheme(getPreferredTheme());
+        btn.addEventListener('click', toggleTheme);
+        btn.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+        });
+      });
+    })();
+    </script>
+    <style>
+    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
+    #theme-toggle { transition: background 0.2s, color 0.2s; }
+    #theme-toggle:focus { outline: 2px solid #005fcc; outline-offset: 2px; }
+    </style>
+    '''
+    html = html.replace('</head>', f'{css_links}\n{theme_toggle}\n</head>')
     # Inject site title everywhere
     site_title = site.get('title', 'Untitled')
     site_subtitle = site.get('subtitle', '')
