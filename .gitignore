@@ -47,6 +47,7 @@ yarn.lock
 public/
 resources/_gen/
 _build
+# docs/   # Uncomment this line to ignore built site output. Commented out to allow committing built docs.
 *.bak
 
 # HTML/CSS/JS build artifacts
