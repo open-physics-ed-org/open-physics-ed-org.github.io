@@ -1,3 +1,92 @@
+/* --- Custom header, menu, and footer color scheme --- */
+.site-header {
+  background: #e3eafc;
+  border-bottom: none;
+  box-shadow: 0 2px 8px rgba(26,35,126,0.04);
+}
+.site-title {
+  color: #1a237e !important; /* deep indigo */
+}
+.site-subtitle {
+  color: #374151 !important; /* slate gray */
+}
+.site-menu {
+  background: #1976d2;
+  border-radius: 0.5rem;
+  margin-bottom: 0;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(21,101,192,0.06);
+  border: none;
+}
+.site-menu-list {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site-menu-item a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5em 1.2em;
+  border-radius: 0.375em;
+  background: #1976d2;
+  border: 2px solid #1976d2;
+  box-shadow: 0 1px 4px rgba(21,101,192,0.04);
+  margin: 0 0.1em;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+}
+.site-menu-item a:focus,
+.site-menu-item a:hover {
+  background: #fff;
+  color: #1976d2;
+  border: 2px solid #1976d2;
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+/* --- Divider line below menu and above footer --- */
+.site-divider {
+  width: 100%;
+  border: none;
+  border-top: 2px solid #c5cae9;
+  margin: 0 0 1.5rem 0;
+  height: 0;
+}
+.site-divider-footer {
+  width: 100%;
+  border: none;
+  border-top: 2px solid #c5cae9;
+  margin: 2rem 0 0 0;
+  height: 0;
+}
+
+/* --- Main content link color scheme --- */
+.site-main a {
+  color: #1976d2;
+  text-decoration: underline;
+  transition: color 0.2s, background 0.2s;
+}
+.site-main a:focus,
+.site-main a:hover {
+  color: #0d47a1;
+  background: #e3f2fd;
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* --- Footer styling --- */
+.site-footer {
+  background: #f1f5fb;
+  border-top: 2px solid #c5cae9;
+  color: #374151;
+  font-size: 1rem;
+  padding: 1.2rem 0 1.5rem 0;
+  margin-top: 2rem;
+  text-align: center;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
 .site-subtitle {
   font-size: 1.25rem;
   color: #555;

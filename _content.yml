@@ -36,3 +36,7 @@ content:
     description: "About Open Physics Ed."
 
 # Additional meta or structure can be added as needed
+
+logo:
+  path: "/images/logo.png"
+  alt: "Open Physics Ed Logo"

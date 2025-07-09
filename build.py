@@ -239,6 +239,7 @@ def main():
     footer_html = site.get('footer', '')
     content = site_content.get('content', [])
 
+
     # Ensure modern CSS is copied to both docs/css and css
     import shutil
     css_src = Path('static/css/theme-modern.css')
@@ -248,6 +249,14 @@ def main():
     css_root.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(css_src, css_docs)
     shutil.copy2(css_src, css_root)
+
+    # Copy static/images to docs/images (for logo and other assets)
+    images_src = Path('static/images')
+    images_dst = Path('docs/images')
+    if images_src.exists():
+        if images_dst.exists():
+            shutil.rmtree(images_dst)
+        shutil.copytree(images_src, images_dst)
 
     # Always create .nojekyll in docs root
     nojekyll_path = Path('docs/.nojekyll')
