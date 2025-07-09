@@ -4,6 +4,7 @@ site:
   description: "Open Physics Education - News, resources, and community."
   author: "Open Physics Ed Team"
   language: "en-us"
+  css: "/css/theme-modern.css"
   footer: |
     &copy; 2025 openphysicsed.org &mdash; All rights reserved.<br>
     Powered by Hugo

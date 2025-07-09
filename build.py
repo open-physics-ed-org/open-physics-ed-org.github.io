@@ -1,3 +1,14 @@
+def rewrite_menu_url(url):
+    if url == 'index.html' or url == 'index/index.html':
+        return 'index.html'
+    if url.endswith('/_index.html') or url.endswith('/_index.htm'):
+        return url.rsplit('/', 1)[0] + '/index.html'
+    elif url.endswith('.html') and '/' not in url:
+        return url.replace('.html', '/index.html')
+    elif url.endswith('.htm') and '/' not in url:
+        return url.replace('.htm', '/index.html')
+    return url
+
 #!/usr/bin/env python3
 """
 Open Physics Ed Static Site Builder
@@ -28,8 +39,7 @@ CONTENT_DIR = Path('content')
 DOCS_DIR = Path('docs')
 LAYOUTS_DIR = Path('layouts')
 STATIC_CSS = {
-    'light': '/css/theme-light.css',
-    'dark': '/css/theme-dark.css',
+    'modern': './css/theme-modern.css',
 }
 
 def load_content_yml():
@@ -68,38 +78,28 @@ def build_menu(menu, current_output_path, debug=False):
     items = []
     for item in sorted(menu, key=lambda x: x.get('weight', 0)):
         url = item["url"]
-        # Rewrite menu URLs to match output structure
-        # news/_index.html or news/_index.htm -> news/index.html
-        # about.html -> about/index.html (for any top-level .html)
-        # index.html stays index.html, but index/index.html should become index.html
-        url_out = url
-        if url.endswith('/_index.html') or url.endswith('/_index.htm'):
-            url_out = url.rsplit('/', 1)[0] + '/index.html'
-        elif url.endswith('.html') and '/' not in url:
-            # top-level about.html -> about/index.html
-            url_out = url.replace('.html', '/index.html')
-        elif url.endswith('.htm') and '/' not in url:
-            url_out = url.replace('.htm', '/index.html')
-        # Fix: if url_out is index/index.html, rewrite to index.html (homepage)
-        if url_out == 'index/index.html':
-            url_out = 'index.html'
+        url_out = rewrite_menu_url(url)
         rel_url = rel_link(current_output_path, url_out)
         if url.startswith('http://') or url.startswith('https://') or url.startswith('//'):
             link = f'<a href="{url}" target="_blank" rel="noopener">{item["name"]}</a>'
         else:
             link = f'<a href="{rel_url}">{item["name"]}</a>'
-        items.append(f'<li>{link}</li>')
+        items.append(f'<li class="site-menu-item">{link}</li>')
         if debug:
             print(f"[DEBUG] Menu: {item['name']} url={url} url_out={url_out} rel_url={rel_url} from={current_output_path}")
-    return '<ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;">' + ''.join(items) + '</ul>'
+    return '<ul class="site-menu-list">' + ''.join(items) + '</ul>'
 
 def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
     html = load_layout(layout_name)
-    css_links = f'<link rel="stylesheet" href="{STATIC_CSS['light']}" id="theme-style">\n<link rel="stylesheet" href="{STATIC_CSS['dark']}" media="(prefers-color-scheme: dark)">'  # noqa
+    # Compute correct relative path to css/theme-modern.css from the output HTML file location
+    # meta should have 'output_path' set by build_file
+    output_path = meta.get('output_path', 'index.html')
+    css_rel = rel_link(output_path, 'css/theme-modern.css')
+    css_links = f'<link rel="stylesheet" href="{css_rel}" id="theme-style">'  # Modern, WCAG-compliant
     html = html.replace('</head>', f'{css_links}\n</head>')
     html = html.replace('{{ .Title }}', meta.get('title', site.get('title', 'Untitled')))
     html = html.replace('{{ .Content }}', content_html)
-    html = re.sub(r'<nav[^>]*>.*?</nav>', f'<nav style="padding: 1rem 0; border-bottom: 1px solid #eee; background: #f8f8f8;">{menu_html}</nav>', html, flags=re.DOTALL)
+    html = re.sub(r'<nav[^>]*>.*?</nav>', f'<nav class="site-menu" role="navigation" aria-label="Main menu">{menu_html}</nav>', html, flags=re.DOTALL)
     html = re.sub(r'<footer[^>]*>.*?</footer>', f'<footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">{footer_html}</footer>', html, flags=re.DOTALL)
     if '{{ now.Year }}' in html:
         from datetime import datetime
@@ -108,6 +108,13 @@ def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
 
 def collect_files_from_content(content):
     files = set()
+    # Always include homepage (content/_index.md)
+    homepage = CONTENT_DIR / '_index.md'
+    if homepage.exists():
+        files.add(homepage)
+    else:
+        print(f"[ERROR] Homepage _index.md not found in content/")
+        sys.exit(1)
     for section in content:
         main_page = section.get('main_page')
         if main_page:
@@ -128,10 +135,7 @@ def collect_files_from_content(content):
                 print(f"[ERROR] Missing _index.md in {folder}. Every section folder must have an _index.md.")
                 sys.exit(1)
             for f in folder.glob('*.md'):
-                if f.name == '_index.md':
-                    files.add(f)
-                else:
-                    files.add(f)
+                files.add(f)
     return sorted(files)
 
 def build_file(mdfile, site, menu, footer_html, debug=False):
@@ -146,7 +150,36 @@ def build_file(mdfile, site, menu, footer_html, debug=False):
         layout_name = 'news/single.html'
     else:
         layout_name = '_default/baseof.html'
+    rel_path = md_path.relative_to(CONTENT_DIR)
+    # Special handling for news index: embed news article previews
+    is_news_index = (rel_path.parts == ("news", "_index.md"))
     content_html = render_markdown(md_content)
+    if is_news_index:
+        # Collect all news articles (exclude _index.md)
+        news_dir = CONTENT_DIR / "news"
+        news_files = [f for f in news_dir.glob("*.md") if f.name != "_index.md"]
+        previews = []
+        for nf in sorted(news_files, reverse=True):
+            nmeta, ncontent = parse_front_matter(nf.read_text())
+            title = nmeta.get("title", nf.stem)
+            date = nmeta.get("date", "")
+            summary = nmeta.get("summary", "")
+            # Output path for article
+            article_url = rel_link("news/index.html", f"news/{nf.stem}.html")
+            # If the article is an _index.md, skip (shouldn't happen)
+            if nf.name == "_index.md":
+                continue
+            # Preview card HTML
+            previews.append(f'''
+              <article class="news-preview">
+                <h2><a href="{article_url}">{title}</a></h2>
+                <div class="news-meta">{date}</div>
+                <p class="news-summary">{summary}</p>
+                <a class="news-readmore" href="{article_url}">Read more &rarr;</a>
+              </article>
+            ''')
+        # Insert previews after the intro content
+        content_html += '\n<div class="news-previews-list">' + '\n'.join(previews) + '</div>'
     rel_path = md_path.relative_to(CONTENT_DIR)
     # Home page: content/_index.md -> docs/index.html
     if str(rel_path) == '_index.md':
@@ -177,6 +210,8 @@ def build_file(mdfile, site, menu, footer_html, debug=False):
         out_path = DOCS_DIR / out_html
         menu_path = str(out_html)
     menu_html = build_menu(menu, menu_path, debug=debug)
+    # Pass output_path to meta for correct CSS rel path
+    meta['output_path'] = str(out_path.relative_to(DOCS_DIR))
     html = build_html(meta, content_html, layout_name, site, menu_html, footer_html)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html)
@@ -195,6 +230,16 @@ def main():
     menu = site_content.get('menu', [])
     footer_html = site.get('footer', '')
     content = site_content.get('content', [])
+
+    # Ensure modern CSS is copied to both docs/css and css
+    import shutil
+    css_src = Path('static/css/theme-modern.css')
+    css_docs = Path('docs/css/theme-modern.css')
+    css_root = Path('css/theme-modern.css')
+    css_docs.parent.mkdir(parents=True, exist_ok=True)
+    css_root.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(css_src, css_docs)
+    shutil.copy2(css_src, css_root)
 
     if args.file:
         build_file(args.file, site, menu, footer_html, debug=args.debug)

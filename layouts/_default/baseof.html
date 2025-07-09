@@ -4,23 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ .Title }}</title>
-  <link rel="stylesheet" href="/css/theme-light.css" id="theme-style">
+  <!-- CSS link is injected by build.py -->
 </head>
 <body>
-  <nav style="padding: 1rem 0; border-bottom: 1px solid #eee; background: #f8f8f8;">
-    <ul style="display: flex; gap: 2rem; list-style: none; margin: 0; padding: 0; justify-content: center;">
-      <li><a href="/">Home</a></li>
-      <li><a href="/news/">News</a></li>
-      <li><a href="/about/">About</a></li>
+  <nav class="site-menu" role="navigation" aria-label="Main menu">
+    <ul class="site-menu-list">
+      <li class="site-menu-item"><a href="/">Home</a></li>
+      <li class="site-menu-item"><a href="/news/">News</a></li>
+      <li class="site-menu-item"><a href="/about/">About</a></li>
     </ul>
   </nav>
-  <header style="text-align: center; margin: 2rem 0 1rem 0;">
+  <header class="site-header">
     <h1>{{ .Title }}</h1>
   </header>
-  <main style="max-width: 700px; margin: 0 auto; padding: 1rem;">
+  <main class="site-main">
     {{ .Content }}
   </main>
-  <footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">
+  <footer class="site-footer">
     &copy; {{ now.Year }} openphysicsed.org
   </footer>
 </body>
