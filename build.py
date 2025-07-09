@@ -1,4 +1,12 @@
-def rewrite_menu_url(url):
+def rewrite_menu_url(url: str) -> str:
+    """
+    Normalize menu URLs for output paths.
+    - 'index.html' or 'index/index.html' -> 'index.html'
+    - 'section/_index.html' -> 'section/index.html'
+    - 'about.html' -> 'about/index.html'
+    - 'about.htm' -> 'about/index.html'
+    Returns the normalized URL as a string.
+    """
     if url == 'index.html' or url == 'index/index.html':
         return 'index.html'
     if url.endswith('/_index.html') or url.endswith('/_index.htm'):
@@ -38,15 +46,20 @@ CONTENT_YML = Path('_content.yml')
 CONTENT_DIR = Path('content')
 DOCS_DIR = Path('docs')
 LAYOUTS_DIR = Path('layouts')
-STATIC_CSS = {
-    'modern': './css/theme-modern.css',
-}
 
-def load_content_yml():
+def load_content_yml() -> dict:
+    """
+    Load and parse the _content.yml file for site structure and metadata.
+    Returns a dictionary with site, menu, and content structure.
+    """
     with open(CONTENT_YML) as f:
         return yaml.safe_load(f)
 
-def parse_front_matter(md_text):
+def parse_front_matter(md_text: str) -> tuple[dict, str]:
+    """
+    Extract YAML front matter and Markdown content from a Markdown file.
+    Returns a tuple (meta, content), where meta is a dict and content is the Markdown string.
+    """
     if md_text.startswith('---'):
         parts = md_text.split('---', 2)
         if len(parts) >= 3:
@@ -55,17 +68,29 @@ def parse_front_matter(md_text):
             return meta, content
     return {}, md_text
 
-def render_markdown(md_text):
+def render_markdown(md_text: str) -> str:
+    """
+    Convert Markdown text to HTML using the markdown package.
+    Returns the HTML string.
+    """
     return markdown.markdown(md_text, extensions=['extra', 'codehilite'])
 
-def load_layout(layout_name):
+def load_layout(layout_name: str) -> str:
+    """
+    Load the HTML layout template by name from the layouts directory.
+    Returns the template as a string.
+    """
     layout_path = LAYOUTS_DIR / layout_name
     if not layout_path.exists():
         raise FileNotFoundError(f"Layout not found: {layout_path}")
     return layout_path.read_text()
 
-def rel_link(from_path, to_url):
-    def is_external(url):
+def rel_link(from_path: str, to_url: str) -> str:
+    """
+    Compute a relative URL from one output path to another, or return external URLs unchanged.
+    Returns the relative or absolute URL as a string.
+    """
+    def is_external(url: str) -> bool:
         return url.startswith('http://') or url.startswith('https://') or url.startswith('//')
     if is_external(to_url):
         return to_url
@@ -74,7 +99,11 @@ def rel_link(from_path, to_url):
     rel = os.path.relpath(to_url, os.path.dirname(from_path))
     return rel
 
-def build_menu(menu, current_output_path, debug=False):
+def build_menu(menu: list[dict], current_output_path: str, debug: bool = False) -> str:
+    """
+    Build the HTML for the site menu, computing correct relative links for each item.
+    Returns the menu HTML as a string.
+    """
     items = []
     for item in sorted(menu, key=lambda x: x.get('weight', 0)):
         url = item["url"]
