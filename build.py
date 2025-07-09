@@ -91,9 +91,10 @@ def build_menu(menu, current_output_path, debug=False):
 
 def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
     html = load_layout(layout_name)
-    # Compute correct relative path to css/theme-modern.css from the output HTML file location
+    # Compute correct relative path to css/theme-modern.css and images/logo.png from the output HTML file location
     output_path = meta.get('output_path', 'index.html')
     css_rel = rel_link(output_path, 'css/theme-modern.css')
+    logo_rel = rel_link(output_path, 'images/logo.png')
     css_links = f'<link rel="stylesheet" href="{css_rel}" id="theme-style">'
     html = html.replace('</head>', f'{css_links}\n</head>')
     # Inject site title everywhere
@@ -105,6 +106,7 @@ def build_html(meta, content_html, layout_name, site, menu_html, footer_html):
         html = html.replace('{{ .SiteSubtitle }}', f'<div class="site-subtitle">{site_subtitle}</div>')
     else:
         html = html.replace('{{ .SiteSubtitle }}', '')
+    html = html.replace('{{ .LogoPath }}', logo_rel)
     html = html.replace('{{ .Title }}', meta.get('title', site_title))
     html = html.replace('{{ .Content }}', content_html)
     html = re.sub(r'<nav[^>]*>.*?</nav>', f'<nav class="site-menu" role="navigation" aria-label="Main menu">{menu_html}</nav>', html, flags=re.DOTALL)

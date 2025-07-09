@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Site",
+			"type": "shell",
+			"command": ".venv/bin/python3 build.py",
+			"group": "build",
+			"problemMatcher": [],
+			"args": []
+		}
+	]
+}
