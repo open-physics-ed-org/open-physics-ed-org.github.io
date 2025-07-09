@@ -46,7 +46,7 @@ yarn.lock
 # Hugo/static site
 public/
 resources/_gen/
-docs/
+_build
 *.bak
 
 # HTML/CSS/JS build artifacts
