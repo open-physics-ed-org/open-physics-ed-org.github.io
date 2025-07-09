@@ -1,0 +1,21 @@
+{{ define "main" }}
+<article style="max-width: 700px; margin: 0 auto; padding: 2rem 1rem; background: #fafbfc; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+  <header style="margin-bottom: 1.5rem;">
+    <h1 style="margin-bottom: 0.5rem;">{{ .Title }}</h1>
+    {{ with .Params.date }}
+      <div style="color: #888; font-size: 0.95rem; margin-bottom: 0.5rem;">{{ . | time.Format "Jan 2, 2006" }}</div>
+    {{ end }}
+    {{ with .Params.author }}
+      <div style="color: #888; font-size: 0.95rem;">By {{ . }}</div>
+    {{ end }}
+    {{ with .Params.tags }}
+      <div style="margin-top: 0.5rem;">
+        {{ range . }}<span style="background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 2px 8px; font-size: 0.85rem; margin-right: 0.5rem;">#{{ . }}</span>{{ end }}
+      </div>
+    {{ end }}
+  </header>
+  <section class="article-content">
+    {{ .Content }}
+  </section>
+</article>
+{{ end }}

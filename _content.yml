@@ -1,0 +1,36 @@
+# Site-wide content and organization
+site:
+  title: "openphysicsed.org"
+  description: "Open Physics Education - News, resources, and community."
+  author: "Open Physics Ed Team"
+  language: "en-us"
+  footer: |
+    &copy; 2025 openphysicsed.org &mdash; All rights reserved.<br>
+    Powered by Hugo
+
+menu:
+  - name: Home
+    url: /
+    weight: 10
+  - name: News
+    url: /news/
+    weight: 20
+  - name: About
+    url: /about/
+    weight: 30
+
+content:
+  - section: news
+    type: blog
+    main_page: news/_index.md
+    description: "Latest updates and articles."
+    articles:
+      folder: news/
+      list: true  # Show as blog roll
+      single_pages: true  # Each article is its own page
+  - section: about
+    type: page
+    main_page: about.md
+    description: "About Open Physics Ed."
+
+# Additional meta or structure can be added as needed

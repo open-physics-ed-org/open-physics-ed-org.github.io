@@ -1,0 +1,66 @@
+/* Minimal dark theme CSS */
+body {
+  background: #18181b;
+  color: #f3f4f6;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #60a5fa;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+article {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background: #232336;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+article header {
+  margin-bottom: 1.5rem;
+}
+article h1 {
+  margin-bottom: 0.5rem;
+}
+.article-content {
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+.article-content p {
+  margin-bottom: 1.2em;
+}
+.article-content img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 1em 0;
+}
+.article-content pre {
+  background: #232336;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.article-content code {
+  background: #232336;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+article header div, article header span {
+  color: #b3b3b3;
+  font-size: 0.95rem;
+}
+article header .tag {
+  background: #334155;
+  color: #60a5fa;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}

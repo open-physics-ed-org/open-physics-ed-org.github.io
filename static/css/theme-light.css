@@ -1,0 +1,66 @@
+/* Minimal light theme CSS */
+body {
+  background: #fff;
+  color: #222;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #2563eb;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+article {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background: #fafbfc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+article header {
+  margin-bottom: 1.5rem;
+}
+article h1 {
+  margin-bottom: 0.5rem;
+}
+.article-content {
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+.article-content p {
+  margin-bottom: 1.2em;
+}
+.article-content img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 1em 0;
+}
+.article-content pre {
+  background: #f3f4f6;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+.article-content code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+article header div, article header span {
+  color: #888;
+  font-size: 0.95rem;
+}
+article header .tag {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
