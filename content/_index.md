@@ -12,6 +12,7 @@ Open Physics Ed is a collaborative, open-source project dedicated to building ac
 
 ## Courses and Materials
 We are actively developing and deploying resources for:
+
 - **Introductory Mechanics**
 - **Electromagnetism**
 - **Classical Mechanics** (see [Modern Classical Mechanics](https://open-physics-ed-org.github.io//modern-classical-mechanics/))
@@ -19,6 +20,7 @@ We are actively developing and deploying resources for:
 - **Mathematical Methods**
 
 In the future, we plan to expand to:
+
 - **Quantum Physics**
 - **Modern Physics**
 - **Statistical Mechanics**
