@@ -55,7 +55,8 @@ docs/
 *.map
 
 # Editor/IDE
-.vscode/
+!.vscode/tasks.json
+.vscode
 .idea/
 *.sublime-workspace
 *.sublime-project

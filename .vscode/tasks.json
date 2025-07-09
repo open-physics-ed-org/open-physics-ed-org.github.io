@@ -8,6 +8,13 @@
 			"group": "build",
 			"problemMatcher": [],
 			"args": []
+		},
+		{
+			"label": "Open Built Site",
+			"type": "shell",
+			"command": "open docs/index.html",
+			"group": "build",
+			"problemMatcher": []
 		}
 	]
 }
