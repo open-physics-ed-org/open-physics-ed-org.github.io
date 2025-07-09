@@ -288,15 +288,12 @@ def main():
     content = site_content.get('content', [])
 
 
-    # Ensure modern CSS is copied to both docs/css and css
+    # Ensure modern CSS is copied to docs/css only (not project root)
     import shutil
     css_src = Path('static/css/theme-modern.css')
     css_docs = Path('docs/css/theme-modern.css')
-    css_root = Path('css/theme-modern.css')
     css_docs.parent.mkdir(parents=True, exist_ok=True)
-    css_root.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(css_src, css_docs)
-    shutil.copy2(css_src, css_root)
 
     # Copy static/images to docs/images (for logo and other assets)
     images_src = Path('static/images')
