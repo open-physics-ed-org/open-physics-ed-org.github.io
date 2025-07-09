@@ -55,7 +55,7 @@ resources/_gen/
 *.map
 
 # Editor/IDE
-.vscode/
+# .vscode/   # Allow .vscode to be committed for workspace tasks and settings
 .idea/
 *.sublime-workspace
 *.sublime-project
