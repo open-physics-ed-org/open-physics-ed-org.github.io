@@ -1,3 +1,66 @@
+/* Responsive menu: single markup, dual style */
+.site-menu {
+  background: #1976d2;
+  border-radius: 0.5rem;
+  margin-bottom: 0;
+  padding: 0.5rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(21,101,192,0.06);
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  z-index: 10;
+}
+@media (max-width: 700px) {
+  .site-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    background: #1976d2;
+    border-top: 2px solid #c5cae9;
+    box-shadow: 0 -2px 8px rgba(21,101,192,0.10);
+    border-radius: 0;
+    padding: 0.3em 0;
+    margin-bottom: 0;
+  }
+  .site-menu-list {
+    flex-direction: row;
+    gap: 1.5rem;
+    overflow-x: auto;
+    margin: 0;
+    padding: 0 1em;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+  }
+  .site-menu-item a {
+    color: #fff;
+    font-size: 1.2rem;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0.7em 1.2em;
+    border-radius: 0.375em;
+    transition: background 0.2s, color 0.2s;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .site-menu-item a:focus,
+  .site-menu-item a:hover {
+    background: #fff;
+    color: #1976d2;
+    outline: 2px solid #1976d2;
+    outline-offset: 2px;
+  }
+}
 /* --- Custom header, menu, and footer color scheme --- */
 .site-header {
   background: #e3eafc;
@@ -12,6 +75,16 @@
   font-family: 'Roboto', system-ui, sans-serif;
   margin-bottom: 0.2em;
   text-shadow: 0 2px 8px rgba(21,101,192,0.08);
+}
+@media (max-width: 700px) {
+  .site-title {
+    font-size: 1.4rem;
+    text-align: left;
+    font-weight: 800;
+    line-height: 1.1;
+    word-break: break-word;
+    padding-right: 0.5em;
+  }
 }
 .site-subtitle {
   color: #2563eb !important; /* accessible blue, matches primary */
