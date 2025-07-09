@@ -1,4 +1,4 @@
-baseURL = 'https://open-physics-ed-org.github.io/'
+baseURL = 'http://localhost:1313/'
 languageCode = 'en-us'
 title = 'openphysicsed.org'
 theme = 'PaperMod'
