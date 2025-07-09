@@ -1,36 +1,61 @@
-# Open Physics Ed dot Org
 
-A simple, accessible, and community-driven static site for open physics education resources, news, and community updates.
+# Welcome to Open Physics Ed dot Org! 🚀
 
-## Overview
-- **Not a Hugo/Jekyll/SSG site**: This is a custom Python-based static site generator.
-- **Content**: Markdown files in `content/` and `_content.yml` for structure and metadata.
-- **Build**: Python scripts (`build.py`) process content and templates into static HTML in `docs/`.
-- **Styling**: Custom CSS in `static/css/` (copied to `docs/css/`).
-- **Logo**: Accessible logo in `static/images/logo.png` (copied to `docs/images/`).
-- **Templates**: HTML templates in `layouts/`.
-- **Menu & Footer**: Generated from `_content.yml`.
+*Open Physics Ed* is a fun, friendly, and community-powered static site for sharing open physics education resources, news, and more. No Hugo, no Jekyll, no magic SSGs—just pure Python and a sprinkle of creativity!
 
-## Project Structure
+## What Makes This Site Special?
+
+- **Handcrafted Python Build**: Forget the static site generator hype. This project uses a custom Python script (`build.py`) to turn Markdown and YAML into a beautiful, accessible website.
+- **Markdown Content**: All your pages and news live in `content/` and are organized by `_content.yml`.
+- **Accessible by Design**: Color schemes, navigation, and our stylish logo are all WCAG-compliant.
+- **Easy to Hack**: Want to add a page? Just drop a Markdown file in `content/` and update `_content.yml`.
+- **No Server Needed**: Open `docs/index.html` in your browser and enjoy!
+- **VS Code Friendly**: Comes with a build task that uses your Python virtual environment for smooth, reproducible builds.
+
+## Project Map (a.k.a. "What's in this repo?")
 
 ```
-_content.yml         # Site structure, menu, meta, logo, etc.
-requirements.txt     # Python dependencies
-build.py             # Main build script
-content/             # Markdown content (pages, news, about, etc.)
-docs/                # Output static site (HTML, CSS, images)
-static/              # Static assets (css, images)
-layouts/             # HTML templates
-scripts/             # (Optional) Additional build scripts
-.vscode/tasks.json   # VS Code build task (uses .venv)
-.venv/               # Python virtual environment
+.github/              # GitHub workflows (CI, etc.)
+.vscode/              # VS Code settings and build tasks
+.venv/                # Python virtual environment (recommended!)
+_build/               # (Optional) Build logs and artifacts
+__pycache__/          # Python cache files
+_content.yml          # Site structure, menu, meta, logo, etc.
+build.py              # The main build script (the magic happens here)
+content/              # Markdown content (pages, news, about, etc.)
+css/                  # (Legacy) CSS, not used in build
+docs/                 # Output static site (HTML, CSS, images)
+generate_menu.py      # (Optional) Menu generation helper
+layouts/              # HTML templates (not Hugo, just HTML!)
+requirements.txt      # Python dependencies
+scripts/              # (Optional) Extra build scripts
+static/               # Static assets (css, images)
+
+# Inside static/:
+static/css/           # CSS themes (modern, dark, light, tailwind)
+static/images/        # Logo and other images
+
+# Inside docs/ (after build):
+docs/index.html       # Home page (open this in your browser!)
+docs/news/            # News articles
+docs/about/           # About page
+docs/css/             # CSS for the site
+docs/images/          # Logo, etc.
+
+# VS Code build task:
+.vscode/tasks.json    # Runs `.venv/bin/python3 build.py` for you
 ```
 
-## Build & Development
-See `BUILD.MD` for build instructions and workflow.
+## How Do I Build This Thing?
+
+Check out [`BUILD.MD`](BUILD.MD) for a fun, step-by-step guide to setting up your environment and building the site. Spoiler: it's just a couple of commands!
 
 ---
 
-- **Accessibility**: Color scheme, navigation, and logo are WCAG-compliant.
-- **No server required**: Just open `docs/index.html` in your browser.
-- **Contributions welcome!**
+**Questions? Ideas? PRs?**
+
+We love contributions and feedback. If you spot a typo, want to add a feature, or just want to say hi, open an issue or pull request!
+
+---
+
+*P.S. This README is best enjoyed with a cup of coffee and a sense of curiosity.*
