@@ -1,0 +1,86 @@
+# OS-specific
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+Icon?
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env
+.venv
+.mypy_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+.nox/
+pip-log.txt
+pip-delete-this-directory.txt
+build/
+dist/
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+
+# Node/npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Hugo/static site
+public/
+resources/_gen/
+docs/
+*.bak
+
+# HTML/CSS/JS build artifacts
+*.min.js
+*.min.css
+*.map
+
+# Editor/IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*~
+.project
+.settings/
+.history
+.metadata
+
+# Misc
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+.cache/
+.pdm.toml
+.pdm.lock
+.pytest_cache/
+.ipynb_checkpoints/
+.spyderproject
+.spyproject
+.ropeproject
+.coverage
+.envrc
+.direnv
