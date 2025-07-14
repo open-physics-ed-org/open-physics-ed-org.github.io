@@ -89,14 +89,52 @@ body {
 body.dark .site-header {
   border-bottom: 3px solid var(--color-link-hover);
 }
+/* Header Flex Layout */
+.header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.5em;
+  margin-bottom: 0.5em;
+  width: 100%;
+}
+.site-logo {
+  height: 4.8em; /* 50% larger than previous 3.2em */
+  width: auto;
+  margin-right: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+}
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+}
 .site-title {
-  text-align: center;
-  margin: 0;
-  font-size: 3.2em;
-  font-weight: 800;
+  text-align: left;
+  font-size: 2.2em;
+  font-weight: 700;
   color: var(--color-link);
-  letter-spacing: 0.01em;
-  line-height: 1.1;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+.site-subtitle {
+  text-align: left;
+  font-size: 1.15em;
+  font-weight: 400;
+  color: var(--color-title);
+  margin: 0.1em 0 0.7em 0;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+.theme-toggle {
+  margin-left: auto;
+  font-size: 1.5em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-link);
 }
 
 .site-nav {
