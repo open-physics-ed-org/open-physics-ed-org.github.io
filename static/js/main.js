@@ -15,7 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     themeBtn.addEventListener('click', function() {
       const href = themeLink.getAttribute('href');
       const isLight = href && href.includes('light');
-      themeLink.setAttribute('href', isLight ? 'css/theme-dark.css' : 'css/theme-light.css');
+      // Compute correct relative path for theme CSS
+      let basePath = href.replace(/theme-(light|dark)\.css$/, '');
+      let newTheme = isLight ? 'theme-dark.css' : 'theme-light.css';
+      themeLink.setAttribute('href', basePath + newTheme);
       updateThemeButton();
     });
 
