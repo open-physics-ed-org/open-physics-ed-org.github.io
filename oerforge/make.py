@@ -226,6 +226,7 @@ def build_all_markdown_files():
     config = load_yaml_config(config_path)
     site = config.get('site', {})
     toc = config.get('toc', [])
+    footer_text = config.get('footer', {}).get('text', '')
     md_files = find_markdown_files(BUILD_FILES_DIR)
     for md_path in md_files:
         ensure_output_dir(md_path)
@@ -253,6 +254,7 @@ def build_all_markdown_files():
             'toc': toc,
             'nav': nav_html,
             'site': site,
+            'footer_text': footer_text,
         }
         context = add_asset_paths(context, rel_path)
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
