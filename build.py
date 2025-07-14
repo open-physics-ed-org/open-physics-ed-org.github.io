@@ -2,8 +2,8 @@ import os
 import logging
 from oerforge.logging_utils import setup_logging
 from oerforge.db_utils import initialize_database
-from oerforge.copyfile import copy_project_files
-from oerforge.scan import scan_toc_and_populate_db, get_descendants_for_parent
+from oerforge.copyfile import copy_build_to_docs, copy_project_files
+from oerforge.scan import scan_toc_and_populate_db
 
 from oerforge.convert import batch_convert_all_content
 from oerforge.make import build_all_markdown_files, setup_logging, find_markdown_files, create_section_index_html
@@ -48,29 +48,19 @@ def run_full_workflow() -> None:
     
     # Autogenerate index.html for top-level sections from the database
     def get_top_level_sections(db_path=None):
-        logging.info("[DEBUG] Entering get_top_level_sections")
         import sqlite3
         if db_path is None:
             db_path = os.path.join(PROJECT_ROOT, 'open-physics-ed-org.github.io', 'db', 'sqlite.db')
-        logging.info(f"[DEBUG] get_top_level_sections using db_path: {db_path}")
         try:
-            logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
             conn = sqlite3.connect(db_path)
-            logging.info(f"[DB-OPEN] Database connection established: {db_path}")
             cursor = conn.cursor()
-            logging.info(f"[DB-CURSOR] Cursor created for: {db_path}")
             query = "SELECT title, output_path FROM content WHERE is_autobuilt=1 AND output_path LIKE '%/index.html'"
-            logging.info(f"[DB-QUERY] Executing query: {query}")
             cursor.execute(query)
             rows = cursor.fetchall()
-            logging.info(f"[DB-QUERY] Query executed. Number of rows fetched: {len(rows)}")
             conn.close()
-            logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
-            # output_dir is the directory containing index.html
-            # row[1] is an absolute path like /Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/build/news/index.html
-            # We want the output dir to be /Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/build/news
+
             result = [(row[0], os.path.dirname(row[1])) for row in rows]
-            logging.info(f"[DEBUG] get_top_level_sections result: {result}")
+            logging.info(f"get_top_level_sections result: {result}")
             return result
         except Exception as e:
             logging.error(f"[ERROR] get_top_level_sections failed: {e}")
@@ -83,6 +73,9 @@ def run_full_workflow() -> None:
             os.makedirs(output_dir, exist_ok=True)
         logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
         create_section_index_html(section_title, output_dir)
+
+    # Final copy: ensure build/ is copied to docs/ after all build steps
+    copy_build_to_docs()
 
     logging.info("Workflow complete. Please check the build/, docs/, and logs directories for results.")
 
