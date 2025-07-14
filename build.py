@@ -50,8 +50,10 @@ def run_full_workflow() -> None:
     # Autogenerate index.html for top-level sections from the database
     def get_top_level_sections(db_path=None):
         import sqlite3
+        print("Path to database:", db_path)
         if db_path is None:
-            db_path = os.path.join(PROJECT_ROOT, 'open-physics-ed-org.github.io', 'db', 'sqlite.db')
+            db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+            print("Using default database path:", db_path)
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
@@ -76,11 +78,15 @@ def run_full_workflow() -> None:
     print("File size:", os.path.getsize(config_path) if os.path.exists(config_path) else "N/A")
     toc = config.get('toc', [])
     print("Full TOC:", toc)
-    for section_title, output_dir in get_top_level_sections():
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-        logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
-        create_section_index_html(section_title, output_dir, {"toc": toc})
+    sections = get_top_level_sections()
+    with open(os.path.join(PROJECT_ROOT, 'debug_sections.txt'), 'w', encoding='utf-8') as dbg:
+        dbg.write(f"get_top_level_sections() returned: {sections}\n")
+        for section_title, output_dir in sections:
+            dbg.write(f"Processing section: {section_title} at {output_dir}\n")
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+            logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
+            create_section_index_html(section_title, output_dir, {"toc": toc})
 
     # Final copy: ensure build/ is copied to docs/ after all build steps
     copy_build_to_docs()

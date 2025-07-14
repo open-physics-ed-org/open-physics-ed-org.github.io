@@ -226,42 +226,54 @@ def build_all_markdown_files():
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
     # Find the section in toc
-    print(f"Building section index for: {section_title}")
-    section = next((entry for entry in context.get('toc', []) if entry.get('title') == section_title), None)
-    print("Looking for section_title:", section_title)
-    for entry in context.get('toc', []):
-        print("TOC entry title:", entry.get('title'))
-    children = []
-    if section and 'children' in section:
-        print(f"Section found: {section_title}")
-        for entry in section['children']:
-            children.append({
-                'title': entry.get('title', ''),
-                'slug': slugify(entry.get('title', '')),
-                'link': os.path.splitext(entry.get('file', ''))[0] + '.html' if entry.get('file') else slugify(entry.get('title', '')) + '/index.html'
-            })
-            print("Section:", section_title)
-            print("Children found:", children)
-    else:
-        print(f"No children found for section: {section_title}")
-        # Fallback to empty children if not found
+    import logging
+    logging.info(f"[DEBUG] create_section_index_html called for: {section_title} -> {output_dir}")
+    try:
+        section = next((entry for entry in context.get('toc', []) if entry.get('title') == section_title), None)
         children = []
-    rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
-    page_context = {
-        'Title': section_title,
-        'Children': children,
-        'toc': context.get('toc', []),
-        'nav': generate_nav_menu(context),
-        'site': context.get('site', {}),
-    }
-    page_context = add_asset_paths(page_context, rel_path)
-    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
-    top_menu = get_top_level_menu(db_path, rel_path)
-    page_context['top_menu'] = top_menu
-    html_output = render_page(page_context, 'section.html')
-    index_html_path = os.path.join(output_dir, 'index.html')
-    with open(index_html_path, 'w', encoding='utf-8') as f:
-        f.write(html_output)
+        if section and 'children' in section:
+            logging.info(f"[DEBUG] Section found in TOC: {section_title}")
+            for entry in section['children']:
+                # If child has a file, use its HTML path relative to section, else use slug/index.html
+                if entry.get('file'):
+                    # Remove any leading section path from file
+                    file_path = entry.get('file')
+                    # If file_path is like news/xxx.md, just use xxx.html
+                    base_name = os.path.splitext(os.path.basename(file_path))[0] + '.html'
+                    link = base_name
+                else:
+                    link = slugify(entry.get('title', '')) + '/index.html'
+                children.append({
+                    'title': entry.get('title', ''),
+                    'slug': slugify(entry.get('title', '')),
+                    'link': link
+                })
+            logging.info(f"[DEBUG] Children for {section_title}: {children}")
+        else:
+            logging.warning(f"[DEBUG] No children found for section: {section_title}")
+            children = []
+        rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
+        page_context = {
+            'Title': section_title,
+            'Children': children,
+            'toc': context.get('toc', []),
+            'nav': generate_nav_menu(context),
+            'site': context.get('site', {}),
+        }
+        page_context = add_asset_paths(page_context, rel_path)
+        db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+        top_menu = get_top_level_menu(db_path, rel_path)
+        page_context['top_menu'] = top_menu
+        html_output = render_page(page_context, 'section.html')
+        index_html_path = os.path.join(output_dir, 'index.html')
+        os.makedirs(output_dir, exist_ok=True)
+        with open(index_html_path, 'w', encoding='utf-8') as f:
+            f.write(html_output)
+        logging.info(f"[DEBUG] Wrote section index: {index_html_path}")
+    except Exception as e:
+        logging.error(f"[ERROR] Failed to write section index for {section_title} at {output_dir}: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
