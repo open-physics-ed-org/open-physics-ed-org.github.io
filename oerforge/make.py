@@ -254,6 +254,7 @@ def build_all_markdown_files():
         body_text = '\n'.join(body_lines)
         html_body = convert_markdown_to_html(md_path) if not found_title else convert_markdown_to_html_text(body_text)
         nav_html = generate_nav_menu({'toc': toc})
+        output_file = os.path.basename(html_path)
         context = {
             'Title': title,
             'Content': html_body,
@@ -261,6 +262,7 @@ def build_all_markdown_files():
             'nav': nav_html,
             'site': site,
             'footer_text': footer_text,
+            'output_file': output_file,
         }
         context = add_asset_paths(context, rel_path)
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')

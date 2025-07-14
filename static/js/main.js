@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', function() {
       if (container) container.style.fontFamily = value;
       const markdownBody = document.querySelector('.markdown-body');
       if (markdownBody) markdownBody.style.fontFamily = value;
-      // Set radio checked
-      const radio = document.querySelector(`input[name="font-family"][value="${value}"]`);
-      if (radio) radio.checked = true;
+      // Set select value
+      const select = document.getElementById('font-family');
+      if (select) select.value = value;
     } else {
       document.documentElement.style.setProperty('--' + setting, value);
-      // Set radio checked
-      const radio = document.querySelector(`input[name="${setting}"][value="${value}"]`);
-      if (radio) radio.checked = true;
+      // Set input value
+      const input = document.getElementById(setting);
+      if (input) input.value = value;
     }
   }
 });
@@ -63,3 +63,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+// Font controls only on homepage
+const fontControls = document.getElementById('font-controls');
+if (fontControls) {
+  document.getElementById('font-family').addEventListener('change', function(e) {
+    const value = e.target.value;
+    document.body.style.fontFamily = value;
+    const container = document.querySelector('.container');
+    if (container) container.style.fontFamily = value;
+    const markdownBody = document.querySelector('.markdown-body');
+    if (markdownBody) markdownBody.style.fontFamily = value;
+    localStorage.setItem('font-family', value);
+  });
+  document.getElementById('font-size').addEventListener('input', function(e) {
+    const value = e.target.value + 'px';
+    document.documentElement.style.setProperty('--font-size', value);
+    localStorage.setItem('font-size', value);
+  });
+  document.getElementById('letter-spacing').addEventListener('input', function(e) {
+    const value = e.target.value + 'em';
+    document.documentElement.style.setProperty('--letter-spacing', value);
+    localStorage.setItem('letter-spacing', value);
+  });
+  document.getElementById('line-height').addEventListener('input', function(e) {
+    const value = e.target.value;
+    document.documentElement.style.setProperty('--line-height', value);
+    localStorage.setItem('line-height', value);
+  });
+}
