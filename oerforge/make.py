@@ -129,6 +129,7 @@ def convert_markdown_to_html(md_path: str) -> str:
     with open(md_path, 'r', encoding='utf-8') as f:
         md_text = f.read()
     html_body = markdown.markdown(md_text, extensions=['fenced_code', 'codehilite', 'tables', 'toc', 'meta'])
+    html_body = re.sub(r'src="([^"]+)"', lambda m: f'src="build/{m.group(1)}"' if not m.group(1).startswith('build/') else m.group(0), html_body)
     # Accessibility: Add ARIA roles to elements
     html_body = html_body.replace('<table>', '<table role="table">')
     html_body = html_body.replace('<th>', '<th role="columnheader">')
@@ -146,6 +147,8 @@ def convert_markdown_to_html(md_path: str) -> str:
 # =========================
 # Page Build Workflow
 # =========================
+
+
 
 def build_all_markdown_files():
     """Build all markdown files using Hugo-style rendering."""
@@ -178,28 +181,25 @@ def build_all_markdown_files():
             f.write(html_output)
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
-    """Generate section index.html using Hugo-style templates."""
-    # Example: list all children in section
-    links_html = '<ul>'
-    for entry in context.get('toc', []):
-        if entry.get('menu', False):
-            title = entry.get('title', '')
-            slug = slugify(title)
-            link = entry.get('file', None)
-            if link:
-                link = os.path.splitext(link)[0] + '.html'
-            else:
-                link = slug + '/index.html'
-            links_html += f'<li><a href="{link}">{title}</a></li>'
-    links_html += '</ul>'
+    """Generate section index.html using section.html template."""
+    # Find the section in toc
+    section = next((entry for entry in context.get('toc', []) if entry.get('title') == section_title), None)
+    children = []
+    if section and 'children' in section:
+        for entry in section['children']:
+            children.append({
+                'title': entry.get('title', ''),
+                'slug': slugify(entry.get('title', '')),
+                'link': os.path.splitext(entry.get('file', ''))[0] + '.html' if entry.get('file') else slugify(entry.get('title', '')) + '/index.html'
+            })
     page_context = {
         'Title': section_title,
-        'Content': links_html,
+        'Children': children,
         'toc': context.get('toc', []),
         'nav': generate_nav_menu(context),
-        'site': context.get('site', {}),  # <-- Add this line
+        'site': context.get('site', {}),
     }
-    html_output = render_page(page_context, 'single.html')
+    html_output = render_page(page_context, 'section.html')
     index_html_path = os.path.join(output_dir, 'index.html')
     with open(index_html_path, 'w', encoding='utf-8') as f:
         f.write(html_output)

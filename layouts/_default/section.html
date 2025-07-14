@@ -1,0 +1,20 @@
+{% extends "_default/baseof.html" %}
+{% block main %}
+  <section>
+    <h1>{{ Title }}</h1>
+    {% if Children %}
+      <ul>
+        {% for child in Children %}
+          <li style="margin-left: {{ child.level|default(0)|int * 2 }}em;">
+            <a href="{{ child.link }}">{{ child.title }}</a>
+            {% if child.description %}
+              <div class="desc">{{ child.description }}</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No content found in this section.</p>
+    {% endif %}
+  </section>
+{% endblock %}
