@@ -148,7 +148,15 @@ def convert_markdown_to_html(md_path: str) -> str:
 # Page Build Workflow
 # =========================
 
+def get_asset_path(asset_type, asset_name, rel_path):
+    depth = rel_path.count(os.sep)
+    prefix = '../' * depth if depth > 0 else ''
+    return f"{prefix}{asset_type}/{asset_name}"
 
+def add_asset_paths(context, rel_path):
+    context['css_path'] = get_asset_path('css', 'theme-light.css', rel_path)
+    context['js_path'] = get_asset_path('js', 'main.js', rel_path)
+    return context
 
 def build_all_markdown_files():
     """Build all markdown files using Hugo-style rendering."""
@@ -176,6 +184,7 @@ def build_all_markdown_files():
             'site': site,
             # Add more site params as needed
         }
+        context = add_asset_paths(context, rel_path)
         html_output = render_page(context, 'single.html')
         with open(html_path, 'w', encoding='utf-8') as f:
             f.write(html_output)
@@ -192,6 +201,7 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
                 'slug': slugify(entry.get('title', '')),
                 'link': os.path.splitext(entry.get('file', ''))[0] + '.html' if entry.get('file') else slugify(entry.get('title', '')) + '/index.html'
             })
+    rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
     page_context = {
         'Title': section_title,
         'Children': children,
@@ -199,6 +209,7 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         'nav': generate_nav_menu(context),
         'site': context.get('site', {}),
     }
+    page_context = add_asset_paths(page_context, rel_path)
     html_output = render_page(page_context, 'section.html')
     index_html_path = os.path.join(output_dir, 'index.html')
     with open(index_html_path, 'w', encoding='utf-8') as f:
