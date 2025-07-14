@@ -1,12 +1,3 @@
----
-title: "Launching the Open Physics Education Network: A New Home for Open Physics Course Materials"
-date: 2025-07-08
-summary: "Open Physics Ed is live! Our new site will organize and support open, accessible physics courses—starting with Modern Classical Mechanics."
-type: news
-author: "Open Physics Ed Team"
-tags: [launch, open-physics-ed, open-education]
----
-
 # Launching the Open Physics Education Network
 
 ## A New Home for Open Physics Course Materials

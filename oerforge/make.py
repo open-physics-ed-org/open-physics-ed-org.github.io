@@ -173,6 +173,39 @@ def convert_markdown_to_html(md_path: str) -> str:
     html_body += mathjax_script
     return html_body
 
+def convert_markdown_to_html_text(md_text: str) -> str:
+    """Convert markdown text to HTML using markdown-it-py, rewriting local image paths to images/filename.ext without regex."""
+    from markdown_it import MarkdownIt
+    from mdit_py_plugins.footnote import footnote_plugin
+    from mdit_py_plugins.texmath import texmath_plugin
+    import os
+    import html
+    def custom_image_renderer(self, tokens, idx, options, env):
+        token = tokens[idx]
+        src = token.attrs.get('src', '')
+        if not (src.startswith('http') or src.startswith('/') or src.startswith('images/')):
+            filename = os.path.basename(src)
+            src = f'images/{filename}'
+        alt = html.escape(token.content)
+        return f'<img src="{src}" alt="{alt}">'  # basic fallback
+    md = MarkdownIt("commonmark", {"html": True, "linkify": True, "typographer": True})
+    md.use(footnote_plugin)
+    md.use(texmath_plugin)
+    md.add_render_rule('image', custom_image_renderer)
+    html_body = md.render(md_text)
+    html_body = html_body.replace('<table>', '<table role="table">')
+    html_body = html_body.replace('<th>', '<th role="columnheader">')
+    html_body = html_body.replace('<td>', '<td role="cell">')
+    html_body = html_body.replace('<ul>', '<ul role="list">')
+    html_body = html_body.replace('<ol>', '<ol role="list">')
+    html_body = html_body.replace('<li>', '<li role="listitem">')
+    html_body = html_body.replace('<nav>', '<nav role="navigation">')
+    html_body = html_body.replace('<header>', '<header role="banner">')
+    html_body = html_body.replace('<footer>', '<footer role="contentinfo">')
+    mathjax_script = '<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>'
+    html_body += mathjax_script
+    return html_body
+
 # =========================
 # Page Build Workflow
 # =========================
@@ -188,7 +221,7 @@ def add_asset_paths(context, rel_path):
     return context
 
 def build_all_markdown_files():
-    """Build all markdown files using Hugo-style rendering."""
+    """Build all markdown files using Hugo-style rendering, using first # header as title."""
     config_path = os.path.join(PROJECT_ROOT, '_content.yml')
     config = load_yaml_config(config_path)
     site = config.get('site', {})
@@ -198,12 +231,21 @@ def build_all_markdown_files():
         ensure_output_dir(md_path)
         rel_path = os.path.relpath(md_path, BUILD_FILES_DIR)
         html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path)[0] + '.html')
-        # Extract title from markdown
         with open(md_path, 'r', encoding='utf-8') as f:
             md_text = f.read()
-        match = re.search(r'^#\s+(.+)', md_text, re.MULTILINE)
-        title = match.group(1).strip() if match else "Untitled"
-        html_body = convert_markdown_to_html(md_path)
+        # Extract first # header as title
+        title = "Untitled"
+        lines = md_text.splitlines()
+        body_lines = []
+        found_title = False
+        for line in lines:
+            if not found_title and line.strip().startswith('# '):
+                title = line.strip()[2:].strip()
+                found_title = True
+                continue  # skip this line
+            body_lines.append(line)
+        body_text = '\n'.join(body_lines)
+        html_body = convert_markdown_to_html(md_path) if not found_title else convert_markdown_to_html_text(body_text)
         nav_html = generate_nav_menu({'toc': toc})
         context = {
             'Title': title,
@@ -211,7 +253,6 @@ def build_all_markdown_files():
             'toc': toc,
             'nav': nav_html,
             'site': site,
-            # Add more site params as needed
         }
         context = add_asset_paths(context, rel_path)
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
