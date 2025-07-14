@@ -79,14 +79,20 @@ def run_full_workflow() -> None:
     toc = config.get('toc', [])
     print("Full TOC:", toc)
     sections = get_top_level_sections()
-    with open(os.path.join(PROJECT_ROOT, 'debug_sections.txt'), 'w', encoding='utf-8') as dbg:
+    debug_path = os.path.join(PROJECT_ROOT, 'debug_sections.txt')
+    with open(debug_path, 'w', encoding='utf-8') as dbg:
         dbg.write(f"get_top_level_sections() returned: {sections}\n")
+        found_news = False
         for section_title, output_dir in sections:
             dbg.write(f"Processing section: {section_title} at {output_dir}\n")
+            if section_title.lower() == 'news':
+                found_news = True
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
             logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
             create_section_index_html(section_title, output_dir, {"toc": toc})
+        if not found_news:
+            dbg.write("[WARNING] News section NOT found in get_top_level_sections()!\n")
 
     # Final copy: ensure build/ is copied to docs/ after all build steps
     copy_build_to_docs()

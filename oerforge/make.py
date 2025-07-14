@@ -5,7 +5,7 @@ This script provides function stubs for a Hugo-like static site generator in Pyt
 It assumes use of a template engine (e.g., Jinja2) that supports blocks, inheritance, and partials.
 """
 
-from multiprocessing import context
+# from multiprocessing import context  # Removed invalid import
 import os
 import logging
 import yaml
@@ -69,8 +69,9 @@ def ensure_output_dir(md_path):
 def setup_template_env():
     """Set up Jinja2 template environment."""
     from jinja2 import Environment, FileSystemLoader, select_autoescape
+    layouts_default = os.path.join(LAYOUTS_DIR, '_default')
     env = Environment(
-        loader=FileSystemLoader(LAYOUTS_DIR),
+        loader=FileSystemLoader([LAYOUTS_DIR, layouts_default]),
         autoescape=select_autoescape(['html', 'xml'])
     )
     return env
@@ -266,7 +267,6 @@ def build_all_markdown_files():
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
-    # Find the section in toc
     import logging
     logging.info(f"[DEBUG] create_section_index_html called for: {section_title} -> {output_dir}")
     try:
@@ -275,11 +275,8 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         if section and 'children' in section:
             logging.info(f"[DEBUG] Section found in TOC: {section_title}")
             for entry in section['children']:
-                # If child has a file, use its HTML path relative to section, else use slug/index.html
                 if entry.get('file'):
-                    # Remove any leading section path from file
                     file_path = entry.get('file')
-                    # If file_path is like news/xxx.md, just use xxx.html
                     base_name = os.path.splitext(os.path.basename(file_path))[0] + '.html'
                     link = base_name
                 else:
@@ -294,25 +291,47 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             logging.warning(f"[DEBUG] No children found for section: {section_title}")
             children = []
         rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
+        # Ensure site.title and site.subtitle are always present
+        config_path = os.path.join(PROJECT_ROOT, '_content.yml')
+        config = load_yaml_config(config_path)
+        site = config.get('site', {})
+        footer_text = config.get('footer', {}).get('text', '')
         page_context = {
             'Title': section_title,
             'Children': children,
             'toc': context.get('toc', []),
-            'nav': generate_nav_menu(context),
-            'site': context.get('site', {}),
+            'site': site,
+            'footer_text': footer_text,
         }
         page_context = add_asset_paths(page_context, rel_path)
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
         top_menu = get_top_level_menu(db_path, rel_path)
         page_context['top_menu'] = top_menu
-        html_output = render_page(page_context, 'section.html')
-        index_html_path = os.path.join(output_dir, 'index.html')
-        os.makedirs(output_dir, exist_ok=True)
-        with open(index_html_path, 'w', encoding='utf-8') as f:
-            f.write(html_output)
-        logging.info(f"[DEBUG] Wrote section index: {index_html_path}")
+        try:
+            env = setup_template_env()
+            template = env.get_template('section.html')
+            html_output = template.render(**page_context)
+        except Exception as render_err:
+            logging.error(f"[ERROR] Template rendering failed for {section_title}: {render_err}")
+            import traceback
+            logging.error(traceback.format_exc())
+            html_output = None
+        # Ensure output directory exists
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+        except Exception as dir_err:
+            logging.error(f"[ERROR] Failed to create output directory {output_dir}: {dir_err}")
+        # Write index.html with error logging
+        if html_output:
+            try:
+                with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as f:
+                    f.write(html_output)
+            except Exception as file_err:
+                logging.error(f"[ERROR] Failed to write index.html for {section_title} in {output_dir}: {file_err}")
+                import traceback
+                logging.error(traceback.format_exc())
     except Exception as e:
-        logging.error(f"[ERROR] Failed to write section index for {section_title} at {output_dir}: {e}")
+        logging.error(f"[ERROR] Failed to create section index for {section_title}: {e}")
         import traceback
         logging.error(traceback.format_exc())
 
