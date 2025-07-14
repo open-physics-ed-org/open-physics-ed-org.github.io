@@ -1,6 +1,9 @@
 # 
+
 import sqlite3
 import os
+import logging
+from oerforge.logging_utils import setup_logging
 
 # ------------------------------------------------------------------------------
 # Database Initialization and Utility Functions for OERForge Asset Tracking
@@ -141,18 +144,7 @@ def log_event(message, level="INFO"):
     The log file is named 'scan.log' and is located at <project_root>/scan.log.
     Each log entry is timestamped.
     """
-    import datetime
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    log_line = f"[{timestamp}] [{level}] {message}\n"
-    print(log_line, end="")
-    # Write to db.log in project root
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_path = os.path.join(project_root, 'db.log')
-    try:
-        with open(log_path, 'a', encoding='utf-8') as log_file:
-            log_file.write(log_line)
-    except Exception as e:
-        print(f"[ERROR] Could not write to log file: {e}")
+    logging.log(getattr(logging, level.upper(), logging.INFO), f"[DB] {message}")
 
 def get_db_connection(db_path=None):
     """
@@ -260,10 +252,13 @@ def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
         if db_path is None:
             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             db_path = os.path.join(project_root, 'db', 'sqlite.db')
-        conn = sqlite3.connect(db_path)
-        log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
-        cursor = conn.cursor()
-        close_conn = True
+    import logging
+    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
+    conn = sqlite3.connect(db_path)
+    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
+    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
+    cursor = conn.cursor()
+    close_conn = True
     cursor.execute(f"SELECT * FROM {table_name}")
     rows = cursor.fetchall()
     col_names = [description[0] for description in cursor.description]
@@ -278,5 +273,6 @@ def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
         log_event(" | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))), level="INFO")
     if close_conn:
         log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in pretty_print_table at {time.time()}", level="DEBUG")
-        conn.close()
+    logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
+    conn.close()
 

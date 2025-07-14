@@ -16,6 +16,7 @@ Usage:
 import os
 import shutil
 import logging
+from oerforge.logging_utils import setup_logging
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_DIR = os.path.join(PROJECT_ROOT, 'build')
@@ -64,13 +65,7 @@ def copy_project_files(debug: bool = False):
     Copy project content and static assets to build directories.
     If debug is True, log detailed actions to projectroot/loh.
     """
-    log_level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s %(levelname)s %(message)s',
-        filename=LOG_PATH,
-        filemode='a'
-    )
+    setup_logging()
     logging.info("Starting copy_project_files")
     # Remove build directory if it exists (destructive)
     if os.path.exists(BUILD_DIR):

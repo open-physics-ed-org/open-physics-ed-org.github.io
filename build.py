@@ -1,51 +1,90 @@
-"""
-build.py: Complete asset DB and admin export workflow.
-"""
-
 import os
-import subprocess
-from oerforge.scan import (
-    initialize_database,
-    scan_and_populate_files_db,
-    print_table,
-    populate_site_info_from_config
-)
-from oerforge_admin.export_db_html import (
-    export_all_tables_to_html,
-    copy_static_assets_to_admin
-)
-from oerforge_admin.view_db import insert_autobuilt_page
+import logging
+from oerforge.logging_utils import setup_logging
+from oerforge.db_utils import initialize_database
+from oerforge.copyfile import copy_project_files
+from oerforge.scan import scan_toc_and_populate_db, get_descendants_for_parent
 
-def main():
-    # Set project root and key paths once
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    content_dir = os.path.join(project_root, 'content')
-    admin_output_dir = os.path.join(project_root, 'build', 'admin')
-    build_dir = os.path.join(project_root, 'build')
-    config_path = os.path.join(project_root, '_config.yml')
-    view_db_path = os.path.join(project_root, 'oerforge_admin', 'view_db.py')
+from oerforge.convert import batch_convert_all_content
+from oerforge.make import build_all_markdown_files, setup_logging, find_markdown_files, create_section_index_html
 
-    print("[DB] Initializing asset database and schema...")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
+BUILD_HTML_DIR = os.path.join(PROJECT_ROOT, 'build')
+
+def log_directory_contents(directory: str) -> None:
+    """Logs all files in the specified directory for debugging purposes."""
+    logging.info(f"[DEBUG] Contents of {directory}:")
+    for root, _, files in os.walk(directory):
+        for name in files:
+            logging.info(f"  {os.path.join(root, name)}")
+
+def log_markdown_files(directory: str) -> None:
+    """Logs all markdown files found in the specified directory."""
+    md_files = find_markdown_files(directory)
+    logging.info(f"[DEBUG] Markdown files found ({len(md_files)}):")
+    for f in md_files:
+        logging.info(f"  {f}")
+
+def run_full_workflow() -> None:
+    """Runs the complete OERForge build workflow."""
+    setup_logging()
+    logging.info("Step 1: Initializing database...")
     initialize_database()
-    populate_site_info_from_config(config_path)
 
-    print(f"[DB] Scanning and populating files from: {content_dir}")
-    scan_and_populate_files_db(content_dir)
+    logging.info("Step 2: Copying project files and static assets...")
+    copy_project_files()
+    log_directory_contents(BUILD_FILES_DIR)
 
-    print("[DB] CLI output from view_db.py --all:")
-    result = subprocess.run(['python3', view_db_path, '--all'], capture_output=True, text=True)
-    print(result.stdout)
+    logging.info("Step 3: Scanning TOC and populating database...")
+    scan_toc_and_populate_db('_config.yml')
 
-    print("[ADMIN] Exporting static HTML tables to build/admin ...")
-    export_all_tables_to_html(admin_output_dir)
-    copy_static_assets_to_admin(build_dir)
-    print(f"[ADMIN] Static admin pages and assets exported to: {admin_output_dir}")
+    logging.info("Step 4: Batch converting all content...")
+    batch_convert_all_content()
 
-    print("[DB] Inserting admin page records into pages table...")
-    for table in ['files_table.html', 'pages_files_table.html']:
-        output_path = os.path.join(admin_output_dir, table)
-        insert_autobuilt_page(output_path)
-    print("[DB] Admin page records inserted into pages table.")
+    logging.info("Step 5: Building HTML and section indexes...")
+    log_markdown_files(BUILD_FILES_DIR)
+    build_all_markdown_files(BUILD_FILES_DIR, BUILD_HTML_DIR)
+    
+    # Autogenerate index.html for top-level sections from the database
+    def get_top_level_sections(db_path=None):
+        logging.info("[DEBUG] Entering get_top_level_sections")
+        import sqlite3
+        if db_path is None:
+            db_path = os.path.join(PROJECT_ROOT, 'open-physics-ed-org.github.io', 'db', 'sqlite.db')
+        logging.info(f"[DEBUG] get_top_level_sections using db_path: {db_path}")
+        try:
+            logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
+            conn = sqlite3.connect(db_path)
+            logging.info(f"[DB-OPEN] Database connection established: {db_path}")
+            cursor = conn.cursor()
+            logging.info(f"[DB-CURSOR] Cursor created for: {db_path}")
+            query = "SELECT title, output_path FROM content WHERE is_autobuilt=1 AND output_path LIKE '%/index.html'"
+            logging.info(f"[DB-QUERY] Executing query: {query}")
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            logging.info(f"[DB-QUERY] Query executed. Number of rows fetched: {len(rows)}")
+            conn.close()
+            logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
+            # output_dir is the directory containing index.html
+            # row[1] is an absolute path like /Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/build/news/index.html
+            # We want the output dir to be /Users/caballero/repos/open-physics-ed/open-physics-ed-org.github.io/build/news
+            result = [(row[0], os.path.dirname(row[1])) for row in rows]
+            logging.info(f"[DEBUG] get_top_level_sections result: {result}")
+            return result
+        except Exception as e:
+            logging.error(f"[ERROR] get_top_level_sections failed: {e}")
+            import traceback
+            logging.error(traceback.format_exc())
+            return []
+
+    for section_title, output_dir in get_top_level_sections():
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+        logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
+        create_section_index_html(section_title, output_dir)
+
+    logging.info("Workflow complete. Please check the build/, docs/, and logs directories for results.")
 
 if __name__ == "__main__":
-    main()
+    run_full_workflow()

@@ -13,6 +13,9 @@ Main features:
 Author: [Your Name]
 """
 
+
+import logging
+from oerforge.logging_utils import setup_logging
 from oerforge.db_utils import log_event, get_records
 
 import sys
@@ -249,7 +252,10 @@ def batch_convert_all_content():
 
     all_files = walk_toc_all_files(toc)
     try:
+        import logging
+        logging.info(f"[DB-OPEN] Attempting to open database: {DB_PATH}")
         conn = sqlite3.connect(DB_PATH)
+        logging.info(f"[DB-OPEN] Database connection established: {DB_PATH}")
         for src_path, out_path in all_files:
             print(f"[DEBUG] Copying {src_path} to {out_path}")
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -265,12 +271,14 @@ def batch_convert_all_content():
                     update_markdown_image_links(out_path, images, images_root=BUILD_IMAGES_ROOT)
             else:
                 log_event(f"[ERROR] Missing file: {src_path}", level="ERROR")
+        logging.info(f"[DB-CLOSE] Database connection closed: {DB_PATH}")
         conn.close()
     except Exception as e:
         log_event(f"Batch conversion failed: {e}", level="ERROR")
 
 # --- Main Entry Point ---
 if __name__ == "__main__":
+    setup_logging()
     log_event("[convert] __main__ entry: running batch_convert_all_content()", level="INFO")
     batch_convert_all_content()
 

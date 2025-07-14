@@ -1,9 +1,12 @@
 """
 scan.py: Asset database logic for pages and files only.
 """
+
 import os
 import sqlite3
 import re
+import logging
+from oerforge.logging_utils import setup_logging
 
 # ----
 # Logging Helper for scan.py
@@ -12,17 +15,8 @@ def log_event(message, level="INFO"):
     """
     Logs an event to both stdout and scan.log in the project root.
     """
-    import datetime
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    log_line = f"[{timestamp}] [{level}] {message}\n"
-    print(log_line, end="")
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    log_path = os.path.join(project_root, 'scan.log')
-    try:
-        with open(log_path, 'a', encoding='utf-8') as log_file:
-            log_file.write(log_line)
-    except Exception as e:
-        print(f"[ERROR] Could not write to scan.log: {e}")
+    logging.log(getattr(logging, level.upper(), logging.INFO), f"[SCAN] {message}")
+    setup_logging()
 
 def batch_read_files(file_paths):
     """
@@ -564,7 +558,10 @@ def get_descendants_for_parent(parent_output_path, db_path):
     using a recursive CTE. Each result includes: id, title, output_path, parent_output_path, slug, level.
     """
     import sqlite3
+    import logging
+    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
     conn = sqlite3.connect(db_path)
+    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
     cursor = conn.cursor()
     query = '''
     WITH RECURSIVE content_hierarchy(id, title, output_path, parent_output_path, slug, level) AS (
@@ -580,6 +577,7 @@ def get_descendants_for_parent(parent_output_path, db_path):
     '''
     cursor.execute(query, (parent_output_path,))
     rows = cursor.fetchall()
+    logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
     conn.close()
     # Return as list of dicts
     return [

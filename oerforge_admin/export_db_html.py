@@ -2,14 +2,11 @@
 export_db_html.py: Export asset DB tables to static HTML using site templates (e.g., page.html).
 """
 import os
-import datetime
+import logging
+from oerforge.logging_utils import setup_logging
+
 def log_admin(msg):
-    log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "log")
-    os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.join(log_dir, "admin.log")
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_path, "a") as f:
-        f.write(f"[{timestamp}] {msg}\n")
+    logging.info(f"[ADMIN] {msg}")
 from tabulate import tabulate
 from oerforge_admin.view_db import get_db_path, get_table_names, get_table_columns, fetch_table
 
@@ -77,7 +74,7 @@ def export_table_to_html(table_name, output_path, template_path=None, columns=No
     if not template_path:
         # Default to admin_page.html in static/templates
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        template_path = os.path.join(project_root, "static", "templates", "admin_page.html")
+        template_path = os.path.join(project_root, "static", "templates", "page.html")
     table_html = render_table_html(table_name, columns, where, limit)
     inject_table_into_template(table_html, template_path, output_path)
 
@@ -133,4 +130,5 @@ if __name__ == "__main__":
     # Example usage stub
     # export_all_tables_to_html("build/admin/")
     # copy_static_assets_to_admin("build/admin/")
-    print("Run as a module or import for use in build/make workflow. Output: build/admin/")
+    setup_logging()
+    log_admin("Run as a module or import for use in build/make workflow. Output: build/admin/")

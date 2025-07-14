@@ -1,124 +1,8 @@
-from scan import get_descendants_for_parent
-
-def convert_wcag_reports_to_html():
-    print("[DEBUG] Running convert_wcag_reports_to_html...")
-    src_dir = os.path.join(PROJECT_ROOT, 'build', 'files', 'wcag-reports')
-    dest_dir = os.path.join(PROJECT_ROOT, 'docs', 'wcag-reports')
-    if not os.path.exists(dest_dir):
-        print(f"[DEBUG] Creating output directory: {dest_dir}")
-        os.makedirs(dest_dir, exist_ok=True)
-    """
-    Convert all markdown accessibility reports in build/files/wcag-reports to HTML using site templates, saving to build/docs/wcag-reports.
-    """
-    import markdown
-    src_dir = os.path.join(PROJECT_ROOT, 'build', 'files', 'wcag-reports')
-    dest_dir = os.path.join(PROJECT_ROOT, 'docs', 'wcag-reports')
-    # Always create output directory
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir, exist_ok=True)
-    # If no source directory, nothing to convert
-    if not os.path.exists(src_dir):
-        logging.info(f"No accessibility reports found in {src_dir}")
-        return
-    template_path = os.path.join(PROJECT_ROOT, 'static', 'templates', 'page.html')
-    template = load_template(template_path)
-    for dirpath, dirnames, filenames in os.walk(src_dir):
-        for filename in filenames:
-            if filename.lower().endswith('.md'):
-                src_path = os.path.join(dirpath, filename)
-                # Always flatten to dest_dir, no subfolders (unless you want to preserve them)
-                rel_path = os.path.relpath(src_path, src_dir)
-                dest_path = os.path.join(dest_dir, os.path.splitext(rel_path)[0] + '.html')
-                dest_subdir = os.path.dirname(dest_path)
-                if not os.path.exists(dest_subdir):
-                    os.makedirs(dest_subdir, exist_ok=True)
-                with open(src_path, 'r', encoding='utf-8') as f:
-                    md_text = f.read()
-                html_body = markdown.markdown(md_text, extensions=['fenced_code', 'tables', 'toc', 'meta'])
-                # Use first heading as title if present
-                import re
-                match = re.search(r'^#\s+(.+)', md_text, re.MULTILINE)
-                if match:
-                    title = match.group(1).strip()
-                else:
-                    title = filename.replace('.md', '').replace('_', ' ').title()
-                header = create_header(title, '')
-                footer = create_footer()
-                html_output = render_page(title, html_body, header, footer, dest_path)
-                with open(dest_path, 'w', encoding='utf-8') as f:
-                    f.write(html_output)
-                logging.info(f"Converted report {src_path} to {dest_path}")
-
-def get_section_children(output_dir_rel, db_path=None):
-    """
-    Returns a list of child pages for a section, using the content table.
-    Args:
-        output_dir_rel (str): The relative output directory for the section (e.g., 'chapter-01').
-        db_path (str, optional): Path to the SQLite database file.
-    Returns:
-        List of dicts: Each dict contains title and output_path for a child page.
-    """
-    import sqlite3
-    if db_path is None:
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        db_path = os.path.join(project_root, 'db', 'sqlite.db')
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    like_pattern = output_dir_rel + '/%'
-    cursor.execute(
-        "SELECT title, output_path FROM content WHERE is_autobuilt=1 AND output_path LIKE ?",
-        (like_pattern,)
-    )
-    rows = cursor.fetchall()
-    conn.close()
-    return [{"title": row[0], "output_path": row[1]} for row in rows]
-
-def copy_wcag_reports_to_docs():
-    """
-    Copy all markdown accessibility reports from build/files/wcag-reports to build/docs/wcag-reports, preserving structure.
-    """
-    src_dir = os.path.join(PROJECT_ROOT, 'build', 'files', 'wcag-reports')
-    dest_dir = os.path.join(PROJECT_ROOT, 'build', 'docs', 'wcag-reports')
-    if not os.path.exists(src_dir):
-        logging.info(f"No accessibility reports found in {src_dir}")
-        return
-    if os.path.exists(dest_dir):
-        shutil.rmtree(dest_dir)
-    os.makedirs(dest_dir, exist_ok=True)
-    for dirpath, dirnames, filenames in os.walk(src_dir):
-        for filename in filenames:
-            if filename.lower().endswith('.md'):
-                src_path = os.path.join(dirpath, filename)
-                rel_path = os.path.relpath(src_path, src_dir)
-                dest_path = os.path.join(dest_dir, rel_path)
-                dest_subdir = os.path.dirname(dest_path)
-                if not os.path.exists(dest_subdir):
-                    os.makedirs(dest_subdir, exist_ok=True)
-                shutil.copy2(src_path, dest_path)
-                logging.info(f"Copied report {src_path} to {dest_path}")
-import shutil
-def mirror_build_to_docs():
-    """Remove docs/ if exists, then copy the entire build/ folder (all files and subfolders) to docs/ in the project root."""
-    docs_dir = os.path.join(PROJECT_ROOT, 'docs')
-    build_dir = os.path.join(PROJECT_ROOT, 'build')
-    # Remove docs_dir if exists
-    if os.path.exists(docs_dir):
-        shutil.rmtree(docs_dir)
-    # Recursively copy build/ to docs/
-    def copytree(src, dst):
-        for root, dirs, files in os.walk(src):
-            rel_root = os.path.relpath(root, src)
-            target_root = os.path.join(dst, rel_root) if rel_root != '.' else dst
-            if not os.path.exists(target_root):
-                os.makedirs(target_root, exist_ok=True)
-            for file in files:
-                src_file = os.path.join(root, file)
-                dst_file = os.path.join(target_root, file)
-                shutil.copy2(src_file, dst_file)
-                logging.info(f"Copied {src_file} to {dst_file}")
-    copytree(build_dir, docs_dir)
 """
-Prototype script to convert Markdown files in build/files to accessible standalone HTML pages in build/.
+make.py - Markdown to Accessible HTML Conversion and Site Build Utilities
+
+This script provides functions to convert Markdown files in build/files to accessible standalone HTML pages in build/,
+manage WCAG accessibility reports, mirror build/ to docs/, and generate navigation and index pages using a SQLite database.
 
 Features:
 - Converts all .md files (recursively, skipping hidden files) to HTML
@@ -134,6 +18,9 @@ import os
 import logging
 import yaml
 import re
+import shutil
+import sqlite3
+from oerforge.scan import get_descendants_for_parent
 
 # --- Project Paths and Constants ---
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -141,20 +28,26 @@ BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
 BUILD_HTML_DIR = os.path.join(PROJECT_ROOT, 'build')
 LOG_PATH = os.path.join(PROJECT_ROOT, 'log', 'build.log')
 
+# =========================
+# Logging Setup
+# =========================
 
-# --- Logging Setup ---
-def setup_logging():
-    """Set up logging to overwrite log file each run."""
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s',
-        filename=LOG_PATH,
-        filemode='w'
-    )
+from oerforge.logging_utils import setup_logging
 
-# --- Utility Functions ---
+# =========================
+# Utility Functions
+# =========================
+
 def slugify(title: str) -> str:
-    """Convert a title to a slug suitable for folder names."""
+    """
+    Convert a title to a slug suitable for folder names.
+
+    Args:
+        title (str): The title to slugify.
+
+    Returns:
+        str: Slugified string.
+    """
     slug = title.lower()
     slug = re.sub(r'[^a-z0-9\s-]', '', slug)
     slug = re.sub(r'\s+', '-', slug)
@@ -162,7 +55,15 @@ def slugify(title: str) -> str:
     return slug.strip('-')
 
 def load_yaml_config(config_path: str) -> dict:
-    """Load and parse the YAML config file."""
+    """
+    Load and parse the YAML config file.
+
+    Args:
+        config_path (str): Path to the YAML config file.
+
+    Returns:
+        dict: Parsed YAML configuration.
+    """
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
@@ -173,7 +74,15 @@ def load_yaml_config(config_path: str) -> dict:
         return {}
 
 def find_markdown_files(root_dir):
-    """Recursively find all non-hidden .md files in root_dir."""
+    """
+    Recursively find all non-hidden .md files in root_dir.
+
+    Args:
+        root_dir (str): Root directory to search.
+
+    Returns:
+        list: List of markdown file paths.
+    """
     md_files = []
     for dirpath, dirnames, filenames in os.walk(root_dir):
         dirnames[:] = [d for d in dirnames if not d.startswith('.')]
@@ -185,53 +94,119 @@ def find_markdown_files(root_dir):
     return md_files
 
 def ensure_output_dir(md_path):
-    """Ensure the output directory for the HTML file exists, mirroring build/files structure."""
+    """
+    Ensure the output directory for the HTML file exists, mirroring build/files structure.
+
+    Args:
+        md_path (str): Path to the markdown file.
+    """
     rel_path = os.path.relpath(md_path, BUILD_FILES_DIR)
     output_dir = os.path.join(BUILD_HTML_DIR, os.path.dirname(rel_path))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
-# --- Template Loading and Rendering ---
+# =========================
+# Template Loading and Rendering
+# =========================
+
 def load_template(template_path: str) -> str:
-    """Load the HTML template from the given path."""
+    """
+    Load the HTML template from the given path.
+
+    Args:
+        template_path (str): Path to the HTML template.
+
+    Returns:
+        str: Template content.
+    """
     with open(template_path, 'r', encoding='utf-8') as f:
         return f.read()
 
 def render_template(template: str, title: str, content: str) -> str:
-    """Render the template with the given title and content."""
+    """
+    Render the template with the given title and content.
+
+    Args:
+        template (str): Template string.
+        title (str): Page title.
+        content (str): Page content.
+
+    Returns:
+        str: Rendered HTML.
+    """
     return template.replace('{{ title }}', title).replace('{{ content }}', content)
 
-# --- HTML Page Construction ---
+# =========================
+# HTML Page Construction
+# =========================
+
 def create_header(title: str, nav_html: str) -> str:
-    """Generate the header HTML, including nav menu."""
-    # Add theme toggle button for dark mode switching
+    """
+    Generate the header HTML, including nav menu and theme toggle button.
+
+    Args:
+        title (str): Page title.
+        nav_html (str): Navigation HTML.
+
+    Returns:
+        str: Header HTML.
+    """
     theme_toggle = '<button id="theme-toggle" aria-label="Switch theme" style="float:right; margin:0.5em 1em; font-size:1.5em;">🌙</button>'
     return f'<header class="site-header">\n{theme_toggle}\n<h1 class="site-title">{title}</h1>\n{nav_html}\n</header>'
 
 def create_footer() -> str:
-    """Generate the footer HTML, reading content from _config.yml if available."""
+    """
+    Generate the footer HTML, reading content from _config.yml if available.
+
+    Returns:
+        str: Footer HTML.
+    """
     import html
-    import re
     config_path = os.path.join(PROJECT_ROOT, "_config.yml")
     config = load_yaml_config(config_path)
     footer = config.get("footer", "<!-- footer content here -->")
-    # If footer is a dict, extract 'text' field
     if isinstance(footer, dict):
         footer_content = footer.get("text", "")
     else:
         footer_content = str(footer)
-    # Escape HTML for safety, but allow full <a ...>...</a> tags and some basic tags
-    # First, escape everything
     safe_footer = html.escape(footer_content, quote=False)
-    # Restore <a ...>...</a> tags
     safe_footer = re.sub(r'&lt;a ([^&]*)&gt;(.*?)&lt;/a&gt;', r'<a \1>\2</a>', safe_footer)
-    # Restore <br>, <strong>, <em> tags
     for tag in ["<br>", "<br/>", "<strong>", "</strong>", "<em>", "</em>"]:
         safe_footer = safe_footer.replace(html.escape(tag, quote=False), tag)
     return f'<footer>\n{safe_footer}\n</footer>'
 
+def get_top_level_sections(db_path=None):
+    """
+    Query the database for all top-level sections (is_autobuilt=1, output_path ends with 'index.html').
+    Returns a list of (title, output_dir) tuples.
+    """
+    import sqlite3
+    logging.debug(f"[DEBUG] get_top_level_sections (before db_path check): db_path={db_path}")
+    if db_path is None:
+        db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    logging.debug(f"get_top_level_sections (after db_path check): db_path={db_path}")
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("[DEBUG] SELECT title, output_path FROM content WHERE is_autobuilt=1 AND output_path LIKE '%/index.html'")
+    rows = cursor.fetchall()
+    conn.close()
+    # output_dir is the directory containing index.html
+    return [(row[0], os.path.join(PROJECT_ROOT, 'build', os.path.dirname(row[1]))) for row in rows]
+
 def render_page(title: str, content: str, header: str, footer: str, html_path: str) -> str:
-    """Render the full HTML page using header, content, and footer."""
+    """
+    Render the full HTML page using header, content, and footer.
+
+    Args:
+        title (str): Page title.
+        content (str): Page content.
+        header (str): Header HTML.
+        footer (str): Footer HTML.
+        html_path (str): Output HTML path.
+
+    Returns:
+        str: Complete HTML page.
+    """
     template_path = os.path.join(PROJECT_ROOT, 'static', 'templates', 'page.html')
     template = load_template(template_path)
     meta = (
@@ -240,7 +215,6 @@ def render_page(title: str, content: str, header: str, footer: str, html_path: s
         '<meta name="keywords" content="math, physics, open, oer">\n'
         '<meta name="robots" content="noindex,nofollow">\n'
     )
-    # Compute correct relative asset path prefix based on output HTML location
     def get_asset_prefix(html_path):
         if html_path:
             html_dir = os.path.dirname(html_path)
@@ -257,22 +231,30 @@ def render_page(title: str, content: str, header: str, footer: str, html_path: s
         f'<link rel="stylesheet" href="{rel_prefix}css/theme-dark.css" id="theme-dark" disabled>\n'
     )
     js_links = f'<script src="{rel_prefix}js/main.js" defer></script>\n'
-    # Insert CSS/JS into template only if not already present
     html = template.replace('{{ title }}', title)
     html = html.replace('{{ content }}', content)
     html = html.replace('{{ meta }}', meta)
     html = html.replace('{{ header }}', header)
     html = html.replace('{{ footer }}', footer)
-    # Remove any existing theme CSS/JS links to avoid duplicates
     html = re.sub(r'<link[^>]+id="theme-light"[^>]*>', '', html)
     html = re.sub(r'<link[^>]+id="theme-dark"[^>]*>', '', html)
     html = re.sub(r'<script[^>]+src="(\.|/)js/main.js"[^>]*></script>', '', html)
-    # Insert CSS/JS before closing </head>
     html = html.replace('</head>', f'{css_links}{js_links}</head>')
     return html
 
 def generate_nav_menu(toc: list, current_folder: str = '', folder_depth: int = 0, current_html_path: str = '') -> str:
-    """Generate navigation menu HTML from TOC."""
+    """
+    Generate navigation menu HTML from TOC.
+
+    Args:
+        toc (list): Table of contents structure.
+        current_folder (str): Current folder path.
+        folder_depth (int): Depth of folder nesting.
+        current_html_path (str): Path to current HTML file.
+
+    Returns:
+        str: Navigation HTML.
+    """
     seen_titles = set()
     nav_html = '<nav class="site-nav" role="navigation" aria-label="Main menu"><ul>'
     current_dir = os.path.dirname(current_html_path) if current_html_path else ''
@@ -302,22 +284,36 @@ def generate_nav_menu(toc: list, current_folder: str = '', folder_depth: int = 0
     nav_html += '</ul></nav>'
     return nav_html
 
-# --- Markdown to HTML Conversion ---
-import sqlite3
-def get_canonical_image_path(filename):
-    # This function previously queried build_images, which does not exist. Return None or original filename.
-    return None
+# =========================
+# Markdown to HTML Conversion
+# =========================
+
 def fix_image_paths(html, db_path=None):
-    import re, os
+    """
+    Fix image paths in HTML. Currently returns original src.
+
+    Args:
+        html (str): HTML content.
+        db_path (str, optional): Path to database.
+
+    Returns:
+        str: HTML with fixed image paths.
+    """
     def replace_src(match):
         src = match.group(1)
         filename = os.path.basename(src)
-        # No DB lookup; just return the original src
         return f'src="{src}"'
     html = re.sub(r'src="([^"]+)"', replace_src, html)
     return html
 
 def convert_markdown_to_html(md_path, html_path):
+    """
+    Convert a markdown file to HTML, inject accessibility features, and write output.
+
+    Args:
+        md_path (str): Path to markdown file.
+        html_path (str): Path to output HTML file.
+    """
     print(f"[DEBUG] convert_markdown_to_html: Reading markdown file: {md_path}")
     try:
         with open(md_path, 'r', encoding='utf-8') as f:
@@ -328,9 +324,8 @@ def convert_markdown_to_html(md_path, html_path):
     print(f"[DEBUG] Converting markdown to HTML for: {md_path}")
     print(f"[DEBUG] Output HTML path: {html_path}")
     import markdown
-    import logging
-    import re
     html_body = markdown.markdown(md_text, extensions=['fenced_code', 'codehilite', 'tables', 'toc', 'meta'])
+    # Accessibility: Add ARIA roles to elements
     html_body = html_body.replace('<table>', '<table role="table">')
     html_body = html_body.replace('<th>', '<th role="columnheader">')
     html_body = html_body.replace('<td>', '<td role="cell">')
@@ -368,31 +363,19 @@ def convert_markdown_to_html(md_path, html_path):
         print(f"[ERROR] Could not write or preview HTML {html_path}: {e}")
     logging.info(f"Wrote HTML file: {html_path}")
 
-def _find_entry_by_html(html_path, toc):
-    """Find the TOC entry for this page."""
-    html_rel = os.path.relpath(html_path, os.path.join(PROJECT_ROOT, 'build'))
-    def walk(entries):
-        for entry in entries:
-            if 'file' in entry:
-                expected_html = os.path.splitext(entry['file'])[0] + '.html'
-                if expected_html == html_rel:
-                    return entry
-            if 'children' in entry and isinstance(entry['children'], list):
-                found = walk(entry['children'])
-                if found:
-                    return found
-        return None
-    return walk(toc)
-
 # --- Build Structure and TOC Functions ---
 def build_all_markdown_files(source_dir, build_dir):
     import logging
     import sqlite3
     db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    import logging
+    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
     conn = sqlite3.connect(db_path)
+    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
     cursor = conn.cursor()
     cursor.execute("SELECT source_path, output_path FROM content WHERE source_path LIKE '%.md' AND output_path LIKE '%.html'")
     rows = cursor.fetchall()
+    logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
     conn.close()
     print(f"[DEBUG] build_all_markdown_files: Found markdown files ({len(rows)}):")
     for src_path, out_path in rows:
@@ -442,24 +425,6 @@ def create_section_index_html(section_title, output_dir, db_path=None, parent_id
     with open(index_html_path, 'w', encoding='utf-8') as f:
         f.write(page_html)
     logging.info(f"Created section index with descendant links: {index_html_path}")
-
-# --- Manual test block ---
-if __name__ == "__main__":
-    setup_logging()
-    build_all_markdown_files(BUILD_FILES_DIR, BUILD_HTML_DIR)
-    # Autogenerate index.html for top-level sections
-    top_sections = [
-        ("Docs", os.path.join(BUILD_HTML_DIR, "docs")),
-        ("Sample", os.path.join(BUILD_HTML_DIR, "sample")),
-        ("WCAG", os.path.join(BUILD_HTML_DIR, "wcag")),
-        ("Dev", os.path.join(BUILD_HTML_DIR, "dev")),
-        ("Sample Materials", os.path.join(BUILD_HTML_DIR, "sample-materials")),
-    ]
-    for section_title, output_dir in top_sections:
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-        print(f"[TEST] Generating section index for: {section_title} at {output_dir}")
-        create_section_index_html(section_title, output_dir)
 
 def get_markdown_source_and_output_paths_from_db(db_path=None):
     """
@@ -513,13 +478,13 @@ def get_markdown_source_and_output_paths_from_db(db_path=None):
 
 if __name__ == "__main__":
     setup_logging()
+    logging.info("Logging started.")
     build_all_markdown_files(BUILD_FILES_DIR, BUILD_HTML_DIR)
-    # Autogenerate index.html for top-level sections
-    top_sections = [
-        # List your top-level section titles and output dirs here
-        ("News", os.path.join(BUILD_HTML_DIR, "news"))
-    ]
-    for section_title, output_dir in top_sections:
+    logging.info("Markdown built.")
+    # Autogenerate index.html for all top-level sections from the database
+    for section_title, output_dir in get_top_level_sections():
+        logging.info(f"Section Title: {section_title}, Output Dir: {output_dir}")
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
+        logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
         create_section_index_html(section_title, output_dir)
