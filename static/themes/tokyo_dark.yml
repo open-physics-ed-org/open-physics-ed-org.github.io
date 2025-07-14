@@ -1,0 +1,19 @@
+---
+theme:
+  name: tokyo_dark
+  label: "Tokyo Night Dark"
+  description: "Tokyo Night dark theme with blue and magenta accents."
+colors:
+  color_bg: "#1a1b26"
+  color_fg: "#c0caf5"
+  color_card: "#1a1b26"
+  color_border: "#7aa2f7"
+  color_menu: "#7dcfff"
+  color_menu_hover: "#bb9af7"
+  color_link: "#7aa2f7"
+  color_link_hover: "#bb9af7"
+  color_btn: "#7dcfff"
+  color_btn_hover: "#7aa2f7"
+  color_btn_text: "#1a1b26"
+  color_btn_hover_text: "#fff"
+  color_title: "#bb9af7"

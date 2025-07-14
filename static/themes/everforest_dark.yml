@@ -1,0 +1,19 @@
+---
+theme:
+  name: everforest_dark
+  label: "Everforest Dark"
+  description: "Everforest dark theme with earthy greens and browns."
+colors:
+  color_bg: "#2b3339"
+  color_fg: "#d3c6aa"
+  color_card: "#2b3339"
+  color_border: "#a7c080"
+  color_menu: "#7fbbb3"
+  color_menu_hover: "#e69875"
+  color_link: "#a7c080"
+  color_link_hover: "#e69875"
+  color_btn: "#7fbbb3"
+  color_btn_hover: "#a7c080"
+  color_btn_text: "#2b3339"
+  color_btn_hover_text: "#fff"
+  color_title: "#e69875"

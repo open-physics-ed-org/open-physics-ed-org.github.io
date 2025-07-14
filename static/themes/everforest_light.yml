@@ -1,0 +1,19 @@
+---
+theme:
+  name: everforest_light
+  label: "Everforest Light"
+  description: "Everforest light theme with soft greens and browns."
+colors:
+  color_bg: "#fdf6e3"
+  color_fg: "#5c6a72"
+  color_card: "#fdf6e3"
+  color_border: "#a7c080"
+  color_menu: "#7fbbb3"
+  color_menu_hover: "#e69875"
+  color_link: "#a7c080"
+  color_link_hover: "#e69875"
+  color_btn: "#7fbbb3"
+  color_btn_hover: "#a7c080"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#5c6a72"
+  color_title: "#e69875"

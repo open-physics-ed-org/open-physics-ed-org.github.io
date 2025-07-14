@@ -1,0 +1,12 @@
+theme:
+  name: serif_light
+  label: Serif Light
+  description: "AAA-compliant, soft off-white light theme with deep blue-gray text."
+colors:
+  color_background: "#F8F9FA"
+  color_foreground: "#22223B"
+  color_accent: "#00796B"
+  color_secondary: "#E9ECEF"
+  color_border: "#B0B0B0"
+  color_code_background: "#E3EAF2"
+  color_code_text: "#22223B"

@@ -1,0 +1,19 @@
+---
+theme:
+  name: monokai_dark
+  label: "Monokai Dark"
+  description: "Classic Monokai dark theme with vibrant accents."
+colors:
+  color_bg: "#272822"
+  color_fg: "#f8f8f2"
+  color_card: "#272822"
+  color_border: "#f92672"
+  color_menu: "#66d9ef"
+  color_menu_hover: "#a6e22e"
+  color_link: "#fd971f"
+  color_link_hover: "#f92672"
+  color_btn: "#a6e22e"
+  color_btn_hover: "#fd971f"
+  color_btn_text: "#272822"
+  color_btn_hover_text: "#fff"
+  color_title: "#f92672"

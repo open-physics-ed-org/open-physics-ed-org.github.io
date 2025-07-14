@@ -1,0 +1,19 @@
+---
+theme:
+  name: solarized_dark
+  label: "Solarized Dark"
+  description: "Solarized dark theme with blue and yellow accents."
+colors:
+  color_bg: "#002b36"
+  color_fg: "#839496"
+  color_card: "#073642"
+  color_border: "#586e75"
+  color_menu: "#268bd2"
+  color_menu_hover: "#b58900"
+  color_link: "#2aa198"
+  color_link_hover: "#b58900"
+  color_btn: "#268bd2"
+  color_btn_hover: "#2aa198"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#073642"
+  color_title: "#b58900"

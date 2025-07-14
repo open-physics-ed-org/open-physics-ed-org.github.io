@@ -1,0 +1,12 @@
+theme:
+  name: serif_dark
+  label: Serif Dark
+  description: "AAA-compliant, deep blue-black dark theme with gold accent and off-white text."
+colors:
+  color_background: "#181926"         # Much darker background
+  color_foreground: "#E0E0E0"         # Softer off-white text
+  color_accent: "#FFD166"             # Gold accent unchanged
+  color_secondary: "#23243a"          # Darker secondary
+  color_border: "#393A4B"             # Subtle border
+  color_code_background: "#23243a"    # Match secondary for code blocks
+  color_code_text: "#E0E0E0"          # Match foreground for code

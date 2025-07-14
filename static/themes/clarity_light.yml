@@ -1,0 +1,12 @@
+theme:
+  name: clarity_light
+  label: Clarity Light
+  description: "Ultra-high contrast, AAA-compliant light theme for maximum readability."
+colors:
+  color_background: "#FFFFFF"
+  color_foreground: "#1A1A1A"
+  color_accent: "#005A9C"
+  color_secondary: "#F5F5F5"
+  color_border: "#CCCCCC"
+  color_code_background: "#F3F6FA"
+  color_code_text: "#1A1A1A"

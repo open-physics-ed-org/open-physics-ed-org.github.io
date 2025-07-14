@@ -1,0 +1,19 @@
+---
+theme:
+  name: github_light
+  label: "GitHub Light"
+  description: "GitHub's official light theme."
+colors:
+  color_bg: "#ffffff"
+  color_fg: "#24292f"
+  color_card: "#f6f8fa"
+  color_border: "#d0d7de"
+  color_menu: "#0969da"
+  color_menu_hover: "#388bfd"
+  color_link: "#0969da"
+  color_link_hover: "#388bfd"
+  color_btn: "#238636"
+  color_btn_hover: "#388bfd"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#24292f"
+  color_title: "#0969da"

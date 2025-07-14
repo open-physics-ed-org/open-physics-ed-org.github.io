@@ -1,0 +1,12 @@
+theme:
+  name: clarity_dark
+  label: Clarity Dark
+  description: "Ultra-high contrast, AAA-compliant dark theme for maximum readability."
+colors:
+  color_background: "#181A1B"
+  color_foreground: "#F5F5F5"
+  color_accent: "#00B4D8"
+  color_secondary: "#23272A"
+  color_border: "#444950"
+  color_code_background: "#23272A"
+  color_code_text: "#F5F5F5"

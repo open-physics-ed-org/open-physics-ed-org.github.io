@@ -1,0 +1,19 @@
+---
+theme:
+  name: light
+  label: "Light Theme"
+  description: "Bright, accessible palette for daylight viewing."
+colors:
+  color_bg: "#e3f2fd"
+  color_fg: "#0d3c47"
+  color_card: "#e3f2fd"
+  color_border: "#2a7fff"
+  color_menu: "#6c3fc5"
+  color_menu_hover: "#1565c0"
+  color_link: "#2a7fff"
+  color_link_hover: "#1565c0"
+  color_btn: "#ffb300"
+  color_btn_hover: "#2a7fff"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#fff"
+  color_title: "#2a7fff"

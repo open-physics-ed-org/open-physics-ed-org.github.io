@@ -1,0 +1,19 @@
+---
+theme:
+  name: tokyo_light
+  label: "Tokyo Night Light"
+  description: "Tokyo Night light theme with blue and magenta accents."
+colors:
+  color_bg: "#e1e2e7"
+  color_fg: "#3760bf"
+  color_card: "#e1e2e7"
+  color_border: "#7aa2f7"
+  color_menu: "#7dcfff"
+  color_menu_hover: "#bb9af7"
+  color_link: "#7aa2f7"
+  color_link_hover: "#bb9af7"
+  color_btn: "#7dcfff"
+  color_btn_hover: "#7aa2f7"
+  color_btn_text: "#3760bf"
+  color_btn_hover_text: "#fff"
+  color_title: "#bb9af7"

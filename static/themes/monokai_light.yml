@@ -1,0 +1,19 @@
+---
+theme:
+  name: monokai_light
+  label: "Monokai Light"
+  description: "Monokai-inspired light theme with soft backgrounds."
+colors:
+  color_bg: "#f8f8f2"
+  color_fg: "#272822"
+  color_card: "#f8f8f2"
+  color_border: "#f92672"
+  color_menu: "#66d9ef"
+  color_menu_hover: "#a6e22e"
+  color_link: "#fd971f"
+  color_link_hover: "#f92672"
+  color_btn: "#a6e22e"
+  color_btn_hover: "#fd971f"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#272822"
+  color_title: "#f92672"

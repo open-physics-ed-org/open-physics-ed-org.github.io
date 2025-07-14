@@ -1,0 +1,19 @@
+---
+theme:
+  name: dark
+  label: "Dark Theme"
+  description: "Dimmed palette for low-light and night viewing."
+colors:
+  color_bg: "#282a31"
+  color_fg: "#f9f9fb"
+  color_card: "#282a31"
+  color_border: "#b39ddb"
+  color_menu: "#b39ddb"
+  color_menu_hover: "#7c5fcf"
+  color_link: "#b39ddb"
+  color_link_hover: "#7c5fcf"
+  color_btn: "#0d3c47"
+  color_btn_hover: "#b39ddb"
+  color_btn_text: "#23242a"
+  color_btn_hover_text: "#fff"
+  color_title: "#7c5fcf"

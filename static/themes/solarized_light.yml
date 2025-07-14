@@ -1,0 +1,19 @@
+---
+theme:
+  name: solarized_light
+  label: "Solarized Light"
+  description: "Solarized light theme with blue and yellow accents."
+colors:
+  color_bg: "#fdf6e3"
+  color_fg: "#657b83"
+  color_card: "#fdf6e3"
+  color_border: "#93a1a1"
+  color_menu: "#268bd2"
+  color_menu_hover: "#b58900"
+  color_link: "#2aa198"
+  color_link_hover: "#b58900"
+  color_btn: "#268bd2"
+  color_btn_hover: "#2aa198"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#657b83"
+  color_title: "#b58900"

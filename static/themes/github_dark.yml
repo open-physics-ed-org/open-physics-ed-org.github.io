@@ -1,0 +1,19 @@
+---
+theme:
+  name: github_dark
+  label: "GitHub Dark"
+  description: "GitHub's official dark theme."
+colors:
+  color_bg: "#0d1117"
+  color_fg: "#c9d1d9"
+  color_card: "#161b22"
+  color_border: "#30363d"
+  color_menu: "#238636"
+  color_menu_hover: "#388bfd"
+  color_link: "#58a6ff"
+  color_link_hover: "#388bfd"
+  color_btn: "#238636"
+  color_btn_hover: "#388bfd"
+  color_btn_text: "#fff"
+  color_btn_hover_text: "#161b22"
+  color_title: "#58a6ff"

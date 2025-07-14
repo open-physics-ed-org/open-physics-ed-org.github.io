@@ -1,85 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Launching the Open Physics Education Network: A New Home for Open Physics Course Materials</title>
-  <!-- CSS will be injected by build.py -->
-<link rel="stylesheet" href="../css/theme-modern.css" id="theme-modern">
-
-    <button id="theme-toggle" aria-label="Switch to dark mode" style="position:absolute;top:1.5rem;right:2rem;z-index:1000;background:var(--button-bg,#eee);color:var(--button-fg,#222);border:none;padding:0.5em 1em;border-radius:2em;cursor:pointer;font-size:1.2em;box-shadow:0 2px 8px rgba(0,0,0,0.10);" tabindex="0">
-      <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
-      <span class="sr-only">Toggle theme</span>
-    </button>
-    <script>
-    (function() {
-      const btn = document.getElementById('theme-toggle');
-      const icon = document.getElementById('theme-toggle-icon');
-      function setTheme(theme) {
-        if (theme === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          icon.textContent = '☀️';
-          btn.setAttribute('aria-label', 'Switch to light mode');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
-          icon.textContent = '🌙';
-          btn.setAttribute('aria-label', 'Switch to dark mode');
-        }
-        localStorage.setItem('theme', theme);
-      }
-      function getPreferredTheme() {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'light' || stored === 'dark') return stored;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      function toggleTheme() {
-        const current = getPreferredTheme();
-        setTheme(current === 'dark' ? 'light' : 'dark');
-      }
-      document.addEventListener('DOMContentLoaded', function() {
-        setTheme(getPreferredTheme());
-        btn.addEventListener('click', toggleTheme);
-        btn.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
-        });
-      });
-    })();
-    </script>
-    <style>
-    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
-    #theme-toggle { transition: background 0.2s, color 0.2s; }
-    #theme-toggle:focus { outline: 2px solid #005fcc; outline-offset: 2px; }
-    </style>
-    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launching the Open Physics Education Network</title>
+    <!-- Theme CSS and main.js are injected by Python -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="../css/theme-light.css" id="theme-light">
+<link rel="stylesheet" href="../css/theme-dark.css" id="theme-dark" disabled>
+<script src="../js/main.js" defer></script>
 </head>
-<body>
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a href="/" class="site-logo-link" aria-label="Open Physics Ed Home">
-        <img src="../images/logo.png" alt="Open Physics Ed logo: stylized atom with orbitals" class="site-logo" role="img" />
-      </a>
-      <div class="site-title-group">
-        <span class="site-title">Open Physics Education</span>
-        <span class="site-subtitle"><div class="site-subtitle">Open, accessible, and community-driven physics education.</div></span>
-      </div>
-    </div>
-  </header>
-  <nav class="site-menu" role="navigation" aria-label="Main menu"><ul class="site-menu-list"><li class="site-menu-item"><a href="../index.html">Home</a></li><li class="site-menu-item"><a href="index.html">News</a></li><li class="site-menu-item"><a href="../about/index.html">About</a></li></ul></nav>
-  <hr class="site-divider" aria-hidden="true" />
-  <main class="site-main">
-    <h1>Launching the Open Physics Education Network</h1>
-<h2>A New Home for Open Physics Course Materials</h2>
+  <body>
+    <header class="site-header">
+<button id="theme-toggle" aria-label="Switch theme" style="float:right; margin:0.5em 1em; font-size:1.5em;">🌙</button>
+<h1 class="site-title">Launching the Open Physics Education Network</h1>
+<nav class="site-nav" role="navigation" aria-label="Main menu"><ul><li><a href="../index.html">Home</a></li><li><a href="index.html">News</a></li><li><a href="../about.html">About</a></li></ul></nav>
+</header>
+    <main role="main">
+      <div class="container">
+        
+<h2 id="a-new-home-for-open-physics-course-materials">A New Home for Open Physics Course Materials</h2>
 <p>We are excited to announce the launch of the Open Physics Education Network—a new home for open, accessible, and collaborative physics education!</p>
-<h2>Why Open?</h2>
+<h2 id="why-open">Why Open?</h2>
 <p>The Open Physics Education Network was created to organize and support the development of open, high-quality, and accessible resources for physics and computational science. Our mission is to lower barriers to learning and empower students, educators, and contributors everywhere.</p>
-<h2>What’s Here Now?</h2>
-<ul>
-<li>A modern, accessible, and WCAG-compliant site design</li>
-<li>News, updates, and community information</li>
-<li>A growing set of open courses, starting with <a href="https://dannycaballero.info/modern-classical-mechanics/">Modern Classical Mechanics</a></li>
-<li>Clear ways to get involved and contribute</li>
+<h2 id="whats-here-now">What’s Here Now?</h2>
+<ul role="list">
+<li role="listitem">A modern, accessible, and WCAG-compliant site design</li>
+<li role="listitem">News, updates, and community information</li>
+<li role="listitem">A growing set of open courses, starting with <a href="https://dannycaballero.info/modern-classical-mechanics/">Modern Classical Mechanics</a></li>
+<li role="listitem">Clear ways to get involved and contribute</li>
 </ul>
-<h2>What’s Next?</h2>
+<h2 id="whats-next">What’s Next?</h2>
 <p>We’re actively working to expand Open Physics Ed with new courses and resources, including:
 - Introductory Mechanics
 - Introductory Electromagnetism
@@ -88,17 +42,15 @@
 - Introduction to Computational and Data Science
 - Introduction to Machine Learning for Undergraduate Physics Research
 - (Coming soon) Quantum Physics, Modern Physics, and Statistical Mechanics</p>
-<h2>Get Involved</h2>
+<h2 id="get-involved">Get Involved</h2>
 <p>The Open Physics Education Network is open source and welcomes contributions from everyone. Suggest new content, report issues, or submit pull requests on our <a href="https://github.com/open-physics-ed/open-physics-ed-org.github.io">GitHub repository</a>.</p>
 <hr />
-<p>Open Physics Ed is just getting started. Join us as we build a more accessible, equitable future for physics education!</p>
-  </main>
-  <hr class="site-divider-footer" aria-hidden="true" />
-  <footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">Made in Michigan with tons of ☕️  and lots of ❤️ for students and educators everywhere.
-<br>
-<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="display:inline-block; vertical-align:middle; margin-top:0.5em;">
-  <img alt="Creative Commons License" style="border-width:0; height:22px; margin-right:0.3em; vertical-align:middle;" src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" />
-</a><a href="https://open-physics-ed-org.github.io/">openphysicsed.org</a>
+<p>Open Physics Ed is just getting started. Join us as we build a more accessible, equitable future for physics education!</p><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      </div>
+    </main>
+    <footer>
+Made with tons of ☕️  and lots of ❤️ for students and educators everywhere. | Built with <a href="https://github.com/OER-Forge/">OER Forge</a>
+
 </footer>
-</body>
+  </body>
 </html>

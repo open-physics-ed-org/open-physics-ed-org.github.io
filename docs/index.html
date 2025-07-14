@@ -1,125 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Open Physics Education</title>
-  <!-- CSS link is injected by build.py -->
-<link rel="stylesheet" href="css/theme-modern.css" id="theme-modern">
-
-    <button id="theme-toggle" aria-label="Switch to dark mode" style="position:absolute;top:1.5rem;right:2rem;z-index:1000;background:var(--button-bg,#eee);color:var(--button-fg,#222);border:none;padding:0.5em 1em;border-radius:2em;cursor:pointer;font-size:1.2em;box-shadow:0 2px 8px rgba(0,0,0,0.10);" tabindex="0">
-      <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
-      <span class="sr-only">Toggle theme</span>
-    </button>
-    <script>
-    (function() {
-      const btn = document.getElementById('theme-toggle');
-      const icon = document.getElementById('theme-toggle-icon');
-      function setTheme(theme) {
-        if (theme === 'dark') {
-          document.documentElement.setAttribute('data-theme', 'dark');
-          icon.textContent = '☀️';
-          btn.setAttribute('aria-label', 'Switch to light mode');
-        } else {
-          document.documentElement.setAttribute('data-theme', 'light');
-          icon.textContent = '🌙';
-          btn.setAttribute('aria-label', 'Switch to dark mode');
-        }
-        localStorage.setItem('theme', theme);
-      }
-      function getPreferredTheme() {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'light' || stored === 'dark') return stored;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      function toggleTheme() {
-        const current = getPreferredTheme();
-        setTheme(current === 'dark' ? 'light' : 'dark');
-      }
-      document.addEventListener('DOMContentLoaded', function() {
-        setTheme(getPreferredTheme());
-        btn.addEventListener('click', toggleTheme);
-        btn.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
-        });
-      });
-    })();
-    </script>
-    <style>
-    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
-    #theme-toggle { transition: background 0.2s, color 0.2s; }
-    #theme-toggle:focus { outline: 2px solid #005fcc; outline-offset: 2px; }
-    </style>
-    
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to the Open Physics Education Network</title>
+    <!-- Theme CSS and main.js are injected by Python -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="./css/theme-light.css" id="theme-light">
+<link rel="stylesheet" href="./css/theme-dark.css" id="theme-dark" disabled>
+<script src="./js/main.js" defer></script>
 </head>
-<body>
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a href="/" class="site-logo-link" aria-label="Open Physics Ed Home">
-        <img src="images/logo.png" alt="Open Physics Ed logo: stylized atom with orbitals" class="site-logo" role="img" />
-      </a>
-      <div class="site-title-group">
-        <span class="site-title">Open Physics Education</span>
-        <span class="site-subtitle"><div class="site-subtitle">Open, accessible, and community-driven physics education.</div></span>
-      </div>
-    </div>
-  </header>
-  <!-- Single menu markup, styled for both desktop and mobile via CSS -->
-  <nav class="site-menu" role="navigation" aria-label="Main menu"><ul class="site-menu-list"><li class="site-menu-item"><a href="index.html">Home</a></li><li class="site-menu-item"><a href="news/index.html">News</a></li><li class="site-menu-item"><a href="about/index.html">About</a></li></ul></nav>
-  <hr class="site-divider" aria-hidden="true" />
-  <main class="site-main">
-    <h1>Welcome to the Open Physics Education Network</h1>
+  <body>
+    <header class="site-header">
+<button id="theme-toggle" aria-label="Switch theme" style="float:right; margin:0.5em 1em; font-size:1.5em;">🌙</button>
+<h1 class="site-title">Welcome to the Open Physics Education Network</h1>
+<nav class="site-nav" role="navigation" aria-label="Main menu"><ul><li><a href="index.html">Home</a></li><li><a href="news/index.html">News</a></li><li><a href="about.html">About</a></li></ul></nav>
+</header>
+    <main role="main">
+      <div class="container">
+        
+<p><img alt="Open Physics Education Network Logo" src="./images/logo.png" /></p>
 <p><a href="https://open-physics-ed-org.github.io/">openphysicsed.org</a> is a collaborative, open-source project dedicated to building accessible, high-quality, and modern educational resources for physics and computational science. Our mission is to lower barriers to learning by providing free, open, and adaptable materials for students, educators, and lifelong learners everywhere.</p>
-<h2>What We Offer</h2>
-<ul>
-<li><strong>Accessible, open resources</strong> for physics and computational science</li>
-<li><strong>Modern, semantic, and screen-reader-friendly design</strong></li>
-<li><strong>Collaborative development</strong>—anyone can contribute</li>
-<li><strong>Free to use, modify, and distribute</strong></li>
-<li><strong>Open-source tools, materials, and a wide variety of formats</strong></li>
+<h2 id="what-we-offer">What We Offer</h2>
+<ul role="list">
+<li role="listitem"><strong>Accessible, open resources</strong> for physics and computational science</li>
+<li role="listitem"><strong>Modern, semantic, and screen-reader-friendly design</strong></li>
+<li role="listitem"><strong>Collaborative development</strong>—anyone can contribute</li>
+<li role="listitem"><strong>Free to use, modify, and distribute</strong></li>
+<li role="listitem"><strong>Open-source tools, materials, and a wide variety of formats</strong></li>
 </ul>
-<h2>Courses and Materials</h2>
+<h2 id="courses-and-materials">Courses and Materials</h2>
 <p>We are actively transcribing and deploying resources for:</p>
-<ul>
-<li><strong>Introductory Mechanics</strong> </li>
-<li><strong>Introductory Electromagnetism</strong></li>
-<li><strong>Sophomore-level Classical Mechanics</strong> (see <a href="https://open-physics-ed-org.github.io/modern-classical-mechanics/">Modern Classical Mechanics</a>)</li>
-<li><strong>Junior-level Electromagnetism</strong></li>
-<li><strong>Mathematical Methods</strong></li>
+<ul role="list">
+<li role="listitem"><strong>Introductory Mechanics</strong> </li>
+<li role="listitem"><strong>Introductory Electromagnetism</strong></li>
+<li role="listitem"><strong>Sophomore-level Classical Mechanics</strong> (see <a href="https://open-physics-ed-org.github.io/modern-classical-mechanics/">Modern Classical Mechanics</a>)</li>
+<li role="listitem"><strong>Junior-level Electromagnetism</strong></li>
+<li role="listitem"><strong>Mathematical Methods</strong></li>
 </ul>
 <p>In the future, we plan to expand to:</p>
-<ul>
-<li><strong>Modern Physics</strong></li>
-<li><strong>Quantum Physics</strong></li>
-<li><strong>Statistical Mechanics</strong></li>
-<li><strong>Community Proposed Areas</strong></li>
+<ul role="list">
+<li role="listitem"><strong>Modern Physics</strong></li>
+<li role="listitem"><strong>Quantum Physics</strong></li>
+<li role="listitem"><strong>Statistical Mechanics</strong></li>
+<li role="listitem"><strong>Community Proposed Areas</strong></li>
 </ul>
-<h2>Our Philosophy</h2>
+<h2 id="our-philosophy">Our Philosophy</h2>
 <p>The Open Physics Education Network is guided by the following principles:
 1. <strong>Openness:</strong> All materials are open source and free to use, modify, and distribute under non-commercial licenses.
 2. <strong>Accessibility:</strong> We strive to meet and exceed accessibility standards, ensuring our resources are usable by everyone.
 3. <strong>Collaboration:</strong> We welcome contributions from students, educators, developers, and the broader community.
 4. <strong>Simplicity:</strong> Our sites and materials are intentionally simple and easy to use, modify, and distribute.</p>
-<h2>Get Involved</h2>
+<h2 id="get-involved">Get Involved</h2>
 <p>We welcome your feedback, suggestions, and contributions! </p>
 <p>Visit our <a href="https://github.com/open-physics-ed/open-physics-ed-org.github.io">GitHub repository</a> to get started, or reach out to <a href="https://dannycab.github.io/">Danny Caballero</a> for more information.</p>
 <p>The easiest way to help is to <a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/issues">report an issue</a> or if you are so kind to clean some code, <a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/pulls">issue a pull request</a>.</p>
 <p><a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/open-physics-ed-org/open-physics-ed-org.github.io?style=social" /></a>
 <a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/open-physics-ed-org/open-physics-ed-org.github.io" /></a>
 <a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/pulls"><img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/open-physics-ed-org/open-physics-ed-org.github.io" /></a></p>
-<h2>License</h2>
+<h2 id="license">License</h2>
 <p>The site including written content and the build process are licensed with the <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.</p>
 <p><a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/open-physics-ed-org/open-physics-ed-org.github.io" /></a></p>
-<h2>Releases</h2>
+<h2 id="releases">Releases</h2>
 <p>Releases for this repo are limited to changes to <code>build.py</code> the code that builds the site from markdown. The build system is simpler and less feature rich than other static site generators, but can be used to stand up a similarly simple site.</p>
-<p><a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/open-physics-ed-org/open-physics-ed-org.github.io?include_prereleases" /></a></p>
-  </main>
-  <hr class="site-divider-footer" aria-hidden="true" />
-  <footer style="text-align: center; margin: 2rem 0 1rem 0; color: #888; font-size: 0.9rem;">Made in Michigan with tons of ☕️  and lots of ❤️ for students and educators everywhere.
-<br>
-<a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="display:inline-block; vertical-align:middle; margin-top:0.5em;">
-  <img alt="Creative Commons License" style="border-width:0; height:22px; margin-right:0.3em; vertical-align:middle;" src="https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png" />
-</a><a href="https://open-physics-ed-org.github.io/">openphysicsed.org</a>
+<p><a href="https://github.com/open-physics-ed-org/open-physics-ed-org.github.io/releases"><img alt="Releases" src="https://img.shields.io/github/v/release/open-physics-ed-org/open-physics-ed-org.github.io?include_prereleases" /></a></p><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      </div>
+    </main>
+    <footer>
+Made with tons of ☕️  and lots of ❤️ for students and educators everywhere. | Built with <a href="https://github.com/OER-Forge/">OER Forge</a>
+
 </footer>
-</body>
+  </body>
 </html>
