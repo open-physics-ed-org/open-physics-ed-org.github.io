@@ -5,6 +5,7 @@ This script provides function stubs for a Hugo-like static site generator in Pyt
 It assumes use of a template engine (e.g., Jinja2) that supports blocks, inheritance, and partials.
 """
 
+from multiprocessing import context
 import os
 import logging
 import yaml
@@ -89,6 +90,18 @@ def render_page(context: dict, template_name: str) -> str:
 # =========================
 # Navigation and Partials
 # =========================
+
+def get_top_level_menu(db_path, rel_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT title, output_path FROM content WHERE parent_output_path IS NULL OR parent_output_path = ''")
+    menu = []
+    for title, output_path in cursor.fetchall():
+        # Compute link relative to current page
+        link = os.path.relpath(output_path, os.path.dirname(os.path.join(BUILD_HTML_DIR, rel_path)))
+        menu.append({'title': title, 'link': link})
+    conn.close()
+    return menu
 
 def generate_nav_menu(context: dict) -> str:
     """Generate navigation menu HTML from TOC in context."""
@@ -185,6 +198,9 @@ def build_all_markdown_files():
             # Add more site params as needed
         }
         context = add_asset_paths(context, rel_path)
+        db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+        top_menu = get_top_level_menu(db_path, rel_path)
+        context['top_menu'] = top_menu
         html_output = render_page(context, 'single.html')
         with open(html_path, 'w', encoding='utf-8') as f:
             f.write(html_output)
@@ -210,6 +226,9 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         'site': context.get('site', {}),
     }
     page_context = add_asset_paths(page_context, rel_path)
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    top_menu = get_top_level_menu(db_path, rel_path)
+    page_context['top_menu'] = top_menu
     html_output = render_page(page_context, 'section.html')
     index_html_path = os.path.join(output_dir, 'index.html')
     with open(index_html_path, 'w', encoding='utf-8') as f:

@@ -2,10 +2,10 @@
   <button id="theme-toggle" aria-label="Switch theme" style="float:right; margin:0.5em 1em; font-size:1.5em;">🌙</button>
   <h1 class="site-title">Welcome to the Open Physics Education Network</h1>
   <nav class="site-nav" role="navigation" aria-label="Main menu">
-    <ul>
-      <li><a href="index.html">Home</a></li>
-      <li><a href="news/index.html">News</a></li>
-      <li><a href="about.html">About</a></li>
-    </ul>
-  </nav>
+  <ul>
+    {% for item in top_menu %}
+      <li><a href="{{ item.link }}">{{ item.title }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
 </header>
