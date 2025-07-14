@@ -137,30 +137,28 @@ def get_footer_partial(context: dict) -> str:
 # =========================
 
 def convert_markdown_to_html(md_path: str) -> str:
-    """Convert markdown to HTML using Python markdown."""
+    """Convert markdown to HTML using markdown-it-py, rewriting local image paths to images/filename.ext without regex."""
     from markdown_it import MarkdownIt
     from mdit_py_plugins.footnote import footnote_plugin
     from mdit_py_plugins.texmath import texmath_plugin
-    with open(md_path, 'r', encoding='utf-8') as f:
-        md_text = f.read()
+    import os
+    import html
+    def custom_image_renderer(self, tokens, idx, options, env):
+        token = tokens[idx]
+        src = token.attrs.get('src', '')
+        # Only rewrite if not external or already in images/
+        if not (src.startswith('http') or src.startswith('/') or src.startswith('images/')):
+            filename = os.path.basename(src)
+            src = f'images/{filename}'
+        alt = html.escape(token.content)
+        return f'<img src="{src}" alt="{alt}">'  # basic fallback
     md = MarkdownIt("commonmark", {"html": True, "linkify": True, "typographer": True})
     md.use(footnote_plugin)
     md.use(texmath_plugin)
+    md.add_render_rule('image', custom_image_renderer)
+    with open(md_path, 'r', encoding='utf-8') as f:
+        md_text = f.read()
     html_body = md.render(md_text)
-    # Only rewrite local image paths, not external URLs or absolute paths
-    html_body = re.sub(
-        r'src="([^"]+)"',
-        lambda m: (
-            f'src="build/{m.group(1)}"'
-            if not (
-                m.group(1).startswith('build/')
-                or m.group(1).startswith('http')
-                or m.group(1).startswith('/')
-            )
-            else m.group(0)
-        ),
-        html_body
-    )
     # Accessibility: Add ARIA roles to elements
     html_body = html_body.replace('<table>', '<table role="table">')
     html_body = html_body.replace('<th>', '<th role="columnheader">')
