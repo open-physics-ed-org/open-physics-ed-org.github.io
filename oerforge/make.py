@@ -138,11 +138,29 @@ def get_footer_partial(context: dict) -> str:
 
 def convert_markdown_to_html(md_path: str) -> str:
     """Convert markdown to HTML using Python markdown."""
-    import markdown
+    from markdown_it import MarkdownIt
+    from mdit_py_plugins.footnote import footnote_plugin
+    from mdit_py_plugins.texmath import texmath_plugin
     with open(md_path, 'r', encoding='utf-8') as f:
         md_text = f.read()
-    html_body = markdown.markdown(md_text, extensions=['fenced_code', 'codehilite', 'tables', 'toc', 'meta'])
-    html_body = re.sub(r'src="([^"]+)"', lambda m: f'src="build/{m.group(1)}"' if not m.group(1).startswith('build/') else m.group(0), html_body)
+    md = MarkdownIt("commonmark", {"html": True, "linkify": True, "typographer": True})
+    md.use(footnote_plugin)
+    md.use(texmath_plugin)
+    html_body = md.render(md_text)
+    # Only rewrite local image paths, not external URLs or absolute paths
+    html_body = re.sub(
+        r'src="([^"]+)"',
+        lambda m: (
+            f'src="build/{m.group(1)}"'
+            if not (
+                m.group(1).startswith('build/')
+                or m.group(1).startswith('http')
+                or m.group(1).startswith('/')
+            )
+            else m.group(0)
+        ),
+        html_body
+    )
     # Accessibility: Add ARIA roles to elements
     html_body = html_body.replace('<table>', '<table role="table">')
     html_body = html_body.replace('<th>', '<th role="columnheader">')
@@ -208,15 +226,26 @@ def build_all_markdown_files():
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
     # Find the section in toc
+    print(f"Building section index for: {section_title}")
     section = next((entry for entry in context.get('toc', []) if entry.get('title') == section_title), None)
+    print("Looking for section_title:", section_title)
+    for entry in context.get('toc', []):
+        print("TOC entry title:", entry.get('title'))
     children = []
     if section and 'children' in section:
+        print(f"Section found: {section_title}")
         for entry in section['children']:
             children.append({
                 'title': entry.get('title', ''),
                 'slug': slugify(entry.get('title', '')),
                 'link': os.path.splitext(entry.get('file', ''))[0] + '.html' if entry.get('file') else slugify(entry.get('title', '')) + '/index.html'
             })
+            print("Section:", section_title)
+            print("Children found:", children)
+    else:
+        print(f"No children found for section: {section_title}")
+        # Fallback to empty children if not found
+        children = []
     rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
     page_context = {
         'Title': section_title,

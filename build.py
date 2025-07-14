@@ -8,7 +8,8 @@ from oerforge.scan import scan_toc_and_populate_db
 from oerforge.convert import batch_convert_all_content
 from oerforge.make import build_all_markdown_files, find_markdown_files, create_section_index_html, load_yaml_config
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+print("Project root:", PROJECT_ROOT)
 BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
 BUILD_HTML_DIR = os.path.join(PROJECT_ROOT, 'build')
 
@@ -68,13 +69,18 @@ def run_full_workflow() -> None:
             logging.error(traceback.format_exc())
             return []
 
+    config_path = os.path.join(PROJECT_ROOT, '_content.yml')
+    config = load_yaml_config(config_path)
+    print("Config path:", config_path)
+    print("File exists:", os.path.exists(config_path))
+    print("File size:", os.path.getsize(config_path) if os.path.exists(config_path) else "N/A")
+    toc = config.get('toc', [])
+    print("Full TOC:", toc)
     for section_title, output_dir in get_top_level_sections():
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
-        config_path = os.path.join(PROJECT_ROOT, '_content.yml')
-    config = load_yaml_config(config_path)
-    create_section_index_html(section_title, output_dir, config)
+        create_section_index_html(section_title, output_dir, {"toc": toc})
 
     # Final copy: ensure build/ is copied to docs/ after all build steps
     copy_build_to_docs()
