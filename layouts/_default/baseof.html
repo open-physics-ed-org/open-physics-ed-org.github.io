@@ -11,7 +11,9 @@
 <body>
   {% include 'partials/header.html' %}
   <main id="main-content" tabindex="-1">
-    {% block main %}{% endblock %}
+    <div class="container">
+      {% block main %}{% endblock %}
+    </div>
   </main>
   {% include 'partials/footer.html' %}
 </body>
