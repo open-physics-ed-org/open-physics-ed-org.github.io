@@ -221,18 +221,20 @@ def convert_md_to_tex(content_record, conn):
     pass
 
 # --- Batch Conversion Orchestrator ---
-def batch_convert_all_content():
+def batch_convert_all_content(config_path=None):
     """
     Main entry point: batch process all files in the content table.
     For each file, check conversion flags and call appropriate conversion stubs.
     Copy original files to build/files. Organize output to mirror TOC hierarchy.
     Log all errors and warnings to log/convert.log.
+    config_path: Optional path to _config.yml. If None, uses default location.
     """
     print("[DEBUG] Starting batch conversion for all content records.")
     log_event("Starting batch conversion for all content records.", level="INFO")
     import yaml
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    config_path = os.path.join(project_root, "_config.yml")
+    if config_path is None:
+        config_path = os.path.join(project_root, "_content.yml")
     with open(config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
     toc = config.get('toc', [])

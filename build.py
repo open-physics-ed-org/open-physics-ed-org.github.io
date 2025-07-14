@@ -6,7 +6,7 @@ from oerforge.copyfile import copy_build_to_docs, copy_project_files
 from oerforge.scan import scan_toc_and_populate_db
 
 from oerforge.convert import batch_convert_all_content
-from oerforge.make import build_all_markdown_files, setup_logging, find_markdown_files, create_section_index_html
+from oerforge.make import build_all_markdown_files, find_markdown_files, create_section_index_html, load_yaml_config
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
@@ -37,14 +37,14 @@ def run_full_workflow() -> None:
     log_directory_contents(BUILD_FILES_DIR)
 
     logging.info("Step 3: Scanning TOC and populating database...")
-    scan_toc_and_populate_db('_config.yml')
+    scan_toc_and_populate_db('_content.yml')
 
     logging.info("Step 4: Batch converting all content...")
     batch_convert_all_content()
 
     logging.info("Step 5: Building HTML and section indexes...")
     log_markdown_files(BUILD_FILES_DIR)
-    build_all_markdown_files(BUILD_FILES_DIR, BUILD_HTML_DIR)
+    build_all_markdown_files()
     
     # Autogenerate index.html for top-level sections from the database
     def get_top_level_sections(db_path=None):
@@ -72,7 +72,9 @@ def run_full_workflow() -> None:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
         logging.info(f"[AUTO] Generating section index for: {section_title} at {output_dir}")
-        create_section_index_html(section_title, output_dir)
+        config_path = os.path.join(PROJECT_ROOT, '_content.yml')
+    config = load_yaml_config(config_path)
+    create_section_index_html(section_title, output_dir, config)
 
     # Final copy: ensure build/ is copied to docs/ after all build steps
     copy_build_to_docs()

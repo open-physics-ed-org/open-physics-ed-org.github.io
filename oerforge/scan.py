@@ -315,21 +315,22 @@ def extract_linked_files_from_docx_content(docx_path, page_id=None):
         log_event(f"Could not extract assets from docx {docx_path}: {e}", level="ERROR")
     return assets
 
-def populate_site_info_from_config(config_path):
+def populate_site_info_from_config(config_filename='_config.yml'):
     """
-    Reads _config.yml and populates the site_info table with site and footer info.
+    Reads the given config file (default: _config.yml) and populates the site_info table with site and footer info.
+    The config_filename should be just the name of the config file, e.g. '_config.yml' or 'myconfig.yml'.
     """
     import yaml
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     db_path = os.path.join(project_root, 'db', 'sqlite.db')
-    full_config_path = os.path.join(project_root, config_path)
+    full_config_path = os.path.join(project_root, config_filename)
     with open(full_config_path, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
     site = config.get('site', {})
     footer = config.get('footer', {})
     theme = site.get('theme', {})
     # Read header.html contents
-    header_html_path = os.path.join(project_root, 'static', 'templates', 'header.html')
+    header_html_path = os.path.join(project_root, 'layouts', 'partials', 'header.html')
     try:
         with open(header_html_path, 'r', encoding='utf-8') as hf:
             header_html = hf.read()

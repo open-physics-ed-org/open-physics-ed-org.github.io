@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}{{ Title }}{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  <link rel="icon" href="{{ site.favicon }}">
+  <link rel="stylesheet" href="{{ 'css/theme-light.css' }}" id="theme-light">
+  <link rel="stylesheet" href="{{ 'css/theme-dark.css' }}" id="theme-dark" disabled>
+  <script src="{{ 'js/main.js' }}" defer></script>
+</head>
+<body>
+  {% include 'partials/header.html' %}
+  <main id="main-content" tabindex="-1">
+    {% block main %}{% endblock %}
+  </main>
+  {% include 'partials/footer.html' %}
+</body>
+</html>
