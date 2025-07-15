@@ -4,6 +4,27 @@ import sqlite3
 import os
 import logging
 from oerforge.logging_utils import setup_logging
+"""
+OERForge Database Utilities
+==========================
+
+This module provides utility functions for initializing, managing, and interacting with the SQLite database used in the OERForge project. It supports asset tracking, page-file relationships, site metadata, and general-purpose queries and inserts.
+
+Features:
+    - Database initialization and schema setup
+    - General-purpose record fetching and insertion
+    - Logging of database events
+    - Utility functions for linking files to pages
+    - Pretty-printing tables for debugging and inspection
+
+Intended Audience:
+    - New programmers and contributors to OERForge
+    - Anyone needing to interact with or extend the database layer
+
+Usage:
+    Import this module and use the provided functions to initialize the database, insert or fetch records, and link files to pages. All functions are documented with clear arguments and return values.
+"""
+
 
 # ------------------------------------------------------------------------------
 # Database Initialization and Utility Functions for OERForge Asset Tracking
@@ -215,6 +236,20 @@ def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
     return row_ids
 
 def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
+    """
+    Link files to pages in the pages_files table.
+
+    Args:
+        file_page_pairs (list of tuple): Each tuple is (file_id, page_path).
+        db_path (str, optional): Path to the SQLite database file.
+        conn, cursor: Optional existing connection/cursor.
+
+    Returns:
+        None
+
+    Example:
+        link_files_to_pages([(1, 'index.html'), (2, 'about.html')])
+    """
     import threading
     import time
     close_conn = False
@@ -244,6 +279,20 @@ def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
 
 
 def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
+    """
+    Pretty-print all rows of a table to the log for inspection/debugging.
+
+    Args:
+        table_name (str): Name of the table to print.
+        db_path (str, optional): Path to the SQLite database file.
+        conn, cursor: Optional existing connection/cursor.
+
+    Returns:
+        None
+
+    Output:
+        Logs a formatted table to the scan.log file and stdout.
+    """
     import threading
     import time
     close_conn = False
