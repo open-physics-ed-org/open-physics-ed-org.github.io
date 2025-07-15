@@ -91,17 +91,16 @@ def generate_nav_menu(context: dict) -> str:
         if entry.get('menu', False):
             title = entry.get('title')
             logging.info(f"[MENU] Looking up menu item: '{title}'")
-            cursor.execute("SELECT output_path, slug, source_path, is_autobuilt FROM content WHERE title=? AND (parent_output_path IS NULL OR parent_output_path = '')", (title,))
+            cursor.execute("SELECT output_path, source_path FROM content WHERE title=? AND (parent_output_path IS NULL OR parent_output_path = '')", (title,))
             row = cursor.fetchone()
             if row:
-                output_path, slug, source_path, is_autobuilt = row
-                logging.info(f"[MENU] Found DB record for '{title}': output_path={output_path}, slug={slug}, source_path={source_path}, is_autobuilt={is_autobuilt}")
-                if source_path:
-                    link = output_path
-                elif slug:
-                    link = slug + '/index.html'
+                output_path, source_path = row
+                # For Home, always use 'index.html'
+                if title.lower() == 'home':
+                    link = 'index.html'
                 else:
-                    link = output_path
+                    # Strip 'build/' prefix for relative links
+                    link = output_path[6:] if output_path.startswith('build/') else output_path
                 menu_items.append({'title': title, 'link': link})
             else:
                 logging.warning(f"[MENU] No DB record found for menu item: '{title}'")
