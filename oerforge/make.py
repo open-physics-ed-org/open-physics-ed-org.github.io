@@ -82,39 +82,27 @@ def render_page(context: dict, template_name: str) -> str:
 
 def generate_nav_menu(context: dict) -> str:
     import os
-    """Generate navigation menu items for top_menu from TOC in context."""
-    toc = context.get('toc', [])
+    """Generate top-level navigation menu items from content table using relative_link and menu_context."""
     db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     menu_items = []
-    # Compute relative links based on current page's rel_path if present in context
     rel_path = context.get('rel_path', '')
-    for entry in toc:
-        if entry.get('menu', False):
-            title = entry.get('title')
-            logging.info(f"[MENU] Looking up menu item: '{title}'")
-            cursor.execute("SELECT output_path, source_path FROM content WHERE title=? AND (parent_output_path IS NULL OR parent_output_path = '')", (title,))
-            row = cursor.fetchone()
-            if row:
-                output_path, source_path = row
-                # Compute relative link from rel_path to menu target
-                if output_path.startswith('build/'):
-                    target = output_path[6:]
-                else:
-                    target = output_path.lstrip('/')
-                # For Home, always use 'index.html'
-                if title.lower() == 'home':
-                    target = 'index.html'
-                # If rel_path is set, compute relative path
-                if rel_path:
-                    import os
-                    link = os.path.relpath(target, os.path.dirname(rel_path))
-                else:
-                    link = target
-                menu_items.append({'title': title, 'link': link})
-            else:
-                logging.warning(f"[MENU] No DB record found for menu item: '{title}'")
+    # Query for top-level menu items (menu_context='main', parent_output_path is NULL or empty)
+    cursor.execute("SELECT title, relative_link FROM content WHERE menu_context='main' AND (parent_output_path IS NULL OR parent_output_path = '') ORDER BY "order";")
+    rows = cursor.fetchall()
+    for title, relative_link in rows:
+        # For Home, always use 'index.html'
+        if title and title.lower() == 'home':
+            target = 'index.html'
+        else:
+            target = relative_link
+        # If rel_path is set, compute relative path
+        if rel_path:
+            link = os.path.relpath(target, os.path.dirname(rel_path))
+        else:
+            link = target
+        menu_items.append({'title': title, 'link': link})
     conn.close()
     return menu_items
 

@@ -116,7 +116,8 @@ def initialize_database():
             can_convert_jupyter BOOLEAN DEFAULT 0,
             can_convert_ipynb BOOLEAN DEFAULT 0,
             relative_link TEXT DEFAULT NULL,
-            menu_context TEXT DEFAULT NULL
+            menu_context TEXT DEFAULT NULL,
+            "level" INTEGER DEFAULT 0
         )
     """)
     db_log("Created table: content")
@@ -304,7 +305,14 @@ def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
         values = []
         for col in columns:
             col_names.append(col)
-            values.append(record.get(col, None))
+            val = record.get(col, None)
+            # Ensure 'level' and 'order' are always int if present
+            if col in ('level', 'order') and val is not None:
+                try:
+                    val = int(val)
+                except Exception:
+                    val = 0
+            values.append(val)
         sql = f"INSERT INTO {table_name} ({', '.join(col_names)}) VALUES ({', '.join(['?' for _ in col_names])})"
         cursor.execute(sql, values)
         row_ids.append(cursor.lastrowid)

@@ -23,18 +23,20 @@ import os
 import sqlite3
 import re
 import logging
-from oerforge.logging_utils import setup_logging
 
-# =========================
-# Logging Utilities
-# =========================
+import logging
+import os
 
-def log_event(message, level="INFO"):
-    """
-    Logs an event to both stdout and scan.log in the project root.
-    """
-    logging.log(getattr(logging, level.upper(), logging.INFO), f"[SCAN] {message}")
-    setup_logging()
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+build_log_path = os.path.join(project_root, 'log', 'build.log')
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler(build_log_path, mode='a', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 # =========================
 # File Reading Utilities
@@ -58,7 +60,7 @@ def batch_read_files(file_paths):
             else:
                 contents[path] = None
         except Exception as e:
-            log_event(f"Could not read {path}: {e}", level="ERROR")
+            logging.error(f"Could not read {path}: {e}")
             contents[path] = None
     return contents
 
@@ -70,7 +72,7 @@ def read_markdown_file(path):
         with open(path, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        log_event(f"Could not read markdown file {path}: {e}", level="ERROR")
+        logging.error(f"Could not read markdown file {path}: {e}")
         return None
 
 def read_notebook_file(path):
@@ -82,7 +84,7 @@ def read_notebook_file(path):
         with open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        log_event(f"Could not read notebook file {path}: {e}", level="ERROR")
+        logging.error(f"Could not read notebook file {path}: {e}")
         return None
 
 def read_docx_file(path):
@@ -98,10 +100,10 @@ def read_docx_file(path):
             text.append(para.text)
         return '\n'.join(text)
     except ImportError:
-        log_event("python-docx is not installed. Run 'pip install python-docx' in your environment.", level="ERROR")
+        logging.error("python-docx is not installed. Run 'pip install python-docx' in your environment.")
         return None
     except Exception as e:
-        log_event(f"Could not read docx file {path}: {e}", level="ERROR")
+        logging.error(f"Could not read docx file {path}: {e}")
         return None
 
 # ==========================
@@ -161,7 +163,7 @@ def batch_extract_assets(contents_dict, content_type, **kwargs):
     import threading
     import time
     conn = get_db_connection()
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in batch_extract_assets at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in batch_extract_assets at {time.time()}")
     cursor = conn.cursor()
     # Add mime_type column to content if not present
     cursor.execute("PRAGMA table_info(content)")
@@ -177,12 +179,12 @@ def batch_extract_assets(contents_dict, content_type, **kwargs):
         cursor.execute("SELECT id FROM content WHERE source_path=?", (source_path,))
         if cursor.fetchone() is None:
             cursor.execute("INSERT INTO content (source_path, output_path, is_autobuilt, mime_type) VALUES (?, ?, ?, ?)", (source_path, None, 0, mime_type))
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in batch_extract_assets at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in batch_extract_assets at {time.time()}")
     try:
         conn.commit()
     except Exception as e:
         import traceback
-        log_event(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in batch_extract_assets: {e}\n{traceback.format_exc()}", level="ERROR")
+        logging.error(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in batch_extract_assets: {e}\n{traceback.format_exc()}")
         raise
     # Extract assets for each file type
     for path, content in contents_dict.items():
@@ -236,7 +238,7 @@ def batch_extract_assets(contents_dict, content_type, **kwargs):
             idx += 1
     if file_page_links:
         link_files_to_pages(file_page_links, conn=conn, cursor=cursor)
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in batch_extract_assets at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in batch_extract_assets at {time.time()}")
     conn.close()
     return assets
 
@@ -349,7 +351,7 @@ def extract_linked_files_from_docx_content(docx_path, page_id=None):
                     'is_embedded': True
                 })
     except Exception as e:
-        log_event(f"Could not extract assets from docx {docx_path}: {e}", level="ERROR")
+        logging.error(f"Could not extract assets from docx {docx_path}: {e}")
     return assets
 
 def populate_site_info_from_config(config_filename='_config.yml'):
@@ -374,11 +376,11 @@ def populate_site_info_from_config(config_filename='_config.yml'):
             header_html = hf.read()
     except Exception:
         header_html = ''
-    log_event(f"[DEBUG] header_html read from file (first 500 chars): {repr(header_html)[:500]}", level="DEBUG")
+    logging.debug(f"[DEBUG] header_html read from file (first 500 chars): {repr(header_html)[:500]}")
     import threading
     import time
     conn = sqlite3.connect(db_path)
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in populate_site_info_from_config at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in populate_site_info_from_config at {time.time()}")
     cursor = conn.cursor()
     cursor.execute("DELETE FROM site_info")
     cursor.execute(
@@ -401,14 +403,14 @@ def populate_site_info_from_config(config_filename='_config.yml'):
             header_html
         )
     )
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in populate_site_info_from_config at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in populate_site_info_from_config at {time.time()}")
     try:
         conn.commit()
     except Exception as e:
         import traceback
-        log_event(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in populate_site_info_from_config: {e}\n{traceback.format_exc()}", level="ERROR")
+        logging.error(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in populate_site_info_from_config: {e}\n{traceback.format_exc()}")
         raise
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in populate_site_info_from_config at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in populate_site_info_from_config at {time.time()}")
     conn.close()
 
 # ----
@@ -460,7 +462,7 @@ def scan_toc_and_populate_db(config_path):
     import threading
     import time
     conn = get_db_connection()
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in scan_toc_and_populate_db at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in scan_toc_and_populate_db at {time.time()}")
     cursor = conn.cursor()
     cursor.execute("DELETE FROM content")
     seen_paths = set()
@@ -468,13 +470,14 @@ def scan_toc_and_populate_db(config_path):
     # Removed outdated import of insert_file_records; link_files_to_pages is already imported above
 
     from oerforge.db_utils import set_relative_link, set_menu_context
-    def walk_toc(items, parent_output_path=None, parent_slug=None, parent_menu_context=None):
+    def walk_toc(items, parent_output_path=None, parent_slug=None, parent_menu_context=None, level=0):
         content_records = []
         for idx, item in enumerate(items):
             file_path = item.get('file')
             title = item.get('title', None)
-            order = idx
-            log_event(f"[DEBUG][walk_toc] idx={idx} title={title} file_path={file_path} item={item}", level="DEBUG")
+            order = int(idx)
+            # Debug: log order and level for each item
+            logging.debug(f"[DEBUG][walk_toc] idx={idx} title={title} file_path={file_path} item={item} order={order} (type={type(order)}) level={level} (type={type(level)})")
             item_slug = item.get('slug', re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_')) if title else f'section_{idx}'
             effective_slug = parent_slug if parent_slug else item_slug
             menu_context = item.get('menu_context', parent_menu_context if parent_menu_context else 'main')
@@ -496,7 +499,7 @@ def scan_toc_and_populate_db(config_path):
                     output_path_debug = 'DEFAULT'
                 # Compute relative_link for menu (strip 'build/' if present)
                 relative_link = output_path[6:] if output_path.startswith('build/') else output_path
-                log_event(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})", level="DEBUG")
+                logging.debug(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})")
                 flags = get_conversion_flags(ext)
                 content_record = {
                     'title': title,
@@ -513,18 +516,19 @@ def scan_toc_and_populate_db(config_path):
                     'can_convert_ipynb': flags['can_convert_ipynb'],
                     'parent_output_path': parent_output_path,
                     'slug': effective_slug,
-                    'order': order,
+                    'order': int(order),
                     'relative_link': relative_link,
-                    'menu_context': menu_context
+                    'menu_context': menu_context,
+                    'level': int(level)
                 }
-                log_event(f"[DEBUG][walk_toc] content_record={content_record}", level="DEBUG")
+                logging.debug(f"[DEBUG][walk_toc] content_record={content_record}")
                 content_records.append(content_record)
                 abs_path = os.path.join(project_root, source_path)
                 file_paths.append(abs_path)
                 # Optionally set in DB after insert (not needed here, but available)
                 children = item.get('children', [])
                 if children:
-                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=effective_slug, parent_menu_context=menu_context)
+                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=effective_slug, parent_menu_context=menu_context, level=int(level)+1)
                     content_records.extend(child_records)
             elif item.get('children'):
                 output_path = os.path.join('build', item_slug, 'index.html')
@@ -544,15 +548,16 @@ def scan_toc_and_populate_db(config_path):
                     'can_convert_ipynb': False,
                     'parent_output_path': parent_output_path,
                     'slug': item_slug,
-                    'order': order,
+                    'order': int(order),
                     'relative_link': relative_link,
-                    'menu_context': menu_context
+                    'menu_context': menu_context,
+                    'level': int(level)
                 }
-                log_event(f"[DEBUG][walk_toc] content_record (section)={content_record}", level="DEBUG")
+                logging.debug(f"[DEBUG][walk_toc] content_record (section)={content_record}")
                 content_records.append(content_record)
                 children = item.get('children', [])
                 if children:
-                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=item_slug, parent_menu_context=menu_context)
+                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=item_slug, parent_menu_context=menu_context, level=int(level)+1)
                     content_records.extend(child_records)
         return content_records
 
@@ -567,20 +572,17 @@ def scan_toc_and_populate_db(config_path):
             unique_records[key] = rec
     deduped_records = list(unique_records.values())
 
-    # Ensure order is an integer
+    # Debug: log all deduped records' order and level, and show their types
     for rec in deduped_records:
-        try:
-            rec['order'] = int(rec.get('order', 0))
-        except Exception:
-            rec['order'] = 0
+        logging.debug(f"[DEBUG][deduped] title={rec.get('title')} order={rec.get('order')} (type={type(rec.get('order'))}) level={rec.get('level')} (type={type(rec.get('level'))})")
 
     insert_records('content', deduped_records, db_path=os.path.join(project_root, 'db', 'sqlite.db'), conn=conn, cursor=cursor)
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in scan_toc_and_populate_db at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Committing DB in scan_toc_and_populate_db at {time.time()}")
     try:
         conn.commit()
     except Exception as e:
         import traceback
-        log_event(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in scan_toc_and_populate_db: {e}\n{traceback.format_exc()}", level="ERROR")
+        logging.error(f"[ERROR][{os.getpid()}][{threading.get_ident()}] Commit failed in scan_toc_and_populate_db: {e}\n{traceback.format_exc()}")
         raise
 
     # Read all files and extract assets
@@ -595,7 +597,7 @@ def scan_toc_and_populate_db(config_path):
         elif ext == '.docx':
             batch_extract_assets({path: contents[path]}, 'docx', conn=conn, cursor=cursor)
         # Add more types as needed
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in scan_toc_and_populate_db at {time.time()}", level="DEBUG")
+    logging.debug(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in scan_toc_and_populate_db at {time.time()}")
     conn.close()
 
 # ----
@@ -644,3 +646,12 @@ def get_descendants_for_parent(parent_output_path, db_path):
         }
         for row in rows
     ]
+
+if __name__ == "__main__":
+    # Default config file name
+    config_file = "_content.yml"
+    import sys
+    if len(sys.argv) > 1:
+        config_file = sys.argv[1]
+    logging.info(f"[MAIN] Running scan_toc_and_populate_db with config: {config_file}")
+    scan_toc_and_populate_db(config_file)
