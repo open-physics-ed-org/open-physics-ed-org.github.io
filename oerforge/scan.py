@@ -467,65 +467,37 @@ def scan_toc_and_populate_db(config_path):
     file_paths = []
     # Removed outdated import of insert_file_records; link_files_to_pages is already imported above
 
-    def walk_toc(items, parent_output_path=None, parent_slug=None):
+    from oerforge.db_utils import set_relative_link, set_menu_context
+    def walk_toc(items, parent_output_path=None, parent_slug=None, parent_menu_context=None):
         content_records = []
         for idx, item in enumerate(items):
             file_path = item.get('file')
             title = item.get('title', None)
             order = idx
             log_event(f"[DEBUG][walk_toc] idx={idx} title={title} file_path={file_path} item={item}", level="DEBUG")
-            # Determine slug for this item
             item_slug = item.get('slug', re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_')) if title else f'section_{idx}'
-            # If parent_slug is set, use it for children output paths
             effective_slug = parent_slug if parent_slug else item_slug
+            menu_context = item.get('menu_context', parent_menu_context if parent_menu_context else 'main')
             if file_path:
                 source_path = file_path if file_path.startswith('content/') else f'content/{file_path}'
                 ext = os.path.splitext(source_path)[1].lower()
                 rel_path = source_path[8:] if source_path.startswith('content/') else source_path
                 base_name = os.path.splitext(os.path.basename(rel_path))[0]
                 parent_dir = os.path.basename(os.path.dirname(source_path))
-                log_event(f"[DEBUG][walk_toc] source_path={source_path}, rel_path={rel_path}, base_name={base_name}, parent_dir={parent_dir}, dirname={os.path.dirname(source_path)}", level="DEBUG")
-                # Hugo-style: top-level files are those matching content/<base_name>.md and not index.md
+                # Compute relative_link for menu (strip 'build/' and use output_path)
                 if source_path == f'content/{base_name}.md' and base_name != 'index':
                     output_path = os.path.join('build', base_name, 'index.html')
                     output_path_debug = 'TOP-LEVEL-EXPLICIT'
-                # If file is in a subfolder and matches parent folder name, use index.html
                 elif base_name == parent_dir:
                     output_path = os.path.join('build', effective_slug, 'index.html')
                     output_path_debug = 'SUBFOLDER-MATCH'
                 else:
                     output_path = os.path.join('build', effective_slug, base_name + '.html')
                     output_path_debug = 'DEFAULT'
+                # Compute relative_link for menu (strip 'build/' if present)
+                relative_link = output_path[6:] if output_path.startswith('build/') else output_path
                 log_event(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})", level="DEBUG")
-                log_event(f"[DEBUG][walk_toc] rel_path={rel_path}, base_name={base_name}, parent_dir={parent_dir}", level="DEBUG")
-                # Hugo-style: top-level files are those directly under content/ (not index.md)
-                if os.path.dirname(source_path) == 'content' and base_name != 'index':
-                    output_path = os.path.join('build', base_name, 'index.html')
-                    output_path_debug = 'TOP-LEVEL'
-                # If file is in a subfolder and matches parent folder name, use index.html
-                elif base_name == parent_dir:
-                    output_path = os.path.join('build', effective_slug, 'index.html')
-                    output_path_debug = 'SUBFOLDER-MATCH'
-                else:
-                    output_path = os.path.join('build', effective_slug, base_name + '.html')
-                    output_path_debug = 'DEFAULT'
-                log_event(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})", level="DEBUG")
-                if source_path in seen_paths:
-                    log_event(f"[WARN] TOC: Duplicate file path '{source_path}' in toc", level="WARN")
-                    pass
-                seen_paths.add(source_path)
-                abs_path = os.path.join(project_root, source_path)
-                if not os.path.exists(abs_path):
-                    log_event(f"[ERROR] TOC: Missing file '{source_path}' (expected at {abs_path})", level="ERROR")
-                    pass
-                intended_html_path = os.path.abspath(output_path)
-                log_event(f"[DEBUG][walk_toc] Intended output_path for '{title}': {output_path} (abs: {intended_html_path})", level="DEBUG")
-                if os.path.exists(intended_html_path):
-                    log_event(f"[DEBUG][walk_toc] HTML file exists for '{title}' at {intended_html_path}", level="DEBUG")
-                else:
-                    log_event(f"[WARN][walk_toc] HTML file does NOT exist for '{title}' at {intended_html_path}", level="WARN")
                 flags = get_conversion_flags(ext)
-                log_event(f"[DEBUG][walk_toc] LOGGING SLUG: slug='{effective_slug}' for title='{title}'", level="DEBUG")
                 content_record = {
                     'title': title,
                     'source_path': source_path,
@@ -541,18 +513,22 @@ def scan_toc_and_populate_db(config_path):
                     'can_convert_ipynb': flags['can_convert_ipynb'],
                     'parent_output_path': parent_output_path,
                     'slug': effective_slug,
-                    'order': order
+                    'order': order,
+                    'relative_link': relative_link,
+                    'menu_context': menu_context
                 }
                 log_event(f"[DEBUG][walk_toc] content_record={content_record}", level="DEBUG")
                 content_records.append(content_record)
+                abs_path = os.path.join(project_root, source_path)
                 file_paths.append(abs_path)
+                # Optionally set in DB after insert (not needed here, but available)
                 children = item.get('children', [])
                 if children:
-                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=effective_slug)
+                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=effective_slug, parent_menu_context=menu_context)
                     content_records.extend(child_records)
             elif item.get('children'):
-                # Section index (no file)
                 output_path = os.path.join('build', item_slug, 'index.html')
+                relative_link = output_path[6:] if output_path.startswith('build/') else output_path
                 content_record = {
                     'title': title,
                     'source_path': None,
@@ -568,13 +544,15 @@ def scan_toc_and_populate_db(config_path):
                     'can_convert_ipynb': False,
                     'parent_output_path': parent_output_path,
                     'slug': item_slug,
-                    'order': order
+                    'order': order,
+                    'relative_link': relative_link,
+                    'menu_context': menu_context
                 }
                 log_event(f"[DEBUG][walk_toc] content_record (section)={content_record}", level="DEBUG")
                 content_records.append(content_record)
                 children = item.get('children', [])
                 if children:
-                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=item_slug)
+                    child_records = walk_toc(children, parent_output_path=output_path, parent_slug=item_slug, parent_menu_context=menu_context)
                     content_records.extend(child_records)
         return content_records
 
