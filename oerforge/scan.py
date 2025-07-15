@@ -550,7 +550,7 @@ def scan_toc_and_populate_db(config_path):
                     'slug': item_slug,
                     'order': int(order),
                     'relative_link': relative_link,
-                    'menu_context': menu_context,
+                    'menu_context': 'main',  # Always set menu_context for section index
                     'level': int(level)
                 }
                 logging.debug(f"[DEBUG][walk_toc] content_record (section)={content_record}")

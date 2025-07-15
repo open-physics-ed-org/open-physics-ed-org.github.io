@@ -97,29 +97,46 @@ def generate_nav_menu(context: dict) -> list:
     rows = cursor.fetchall()
     logging.info(f"[TEST3] SQL query for nav menu: {sql}")
     logging.info(f"[TEST3] SQL query results: {rows}")
+    # Detect if this is a section index page (e.g., 'sample-resources/index.html', not 'index.html' at root)
+    is_section_index = False
+    if rel_path:
+        parts = rel_path.split(os.sep)
+        if rel_path != 'index.html' and rel_path.endswith('index.html') and len(parts) == 2:
+            is_section_index = True
+    logging.info(f"[MENU] rel_path={rel_path}, is_section_index={is_section_index}")
     for title, relative_link in rows:
         # For Home, always use 'index.html'
         if title and title.lower() == 'home':
             target = 'index.html'
         else:
             target = relative_link
-        # Compute robust relative link for menu item
+        # Compute menu links relative to the current page's directory
+    for title, relative_link in rows:
+        # For Home, always use 'index.html'
+        if title and title.lower() == 'home':
+            target = 'index.html'
+        else:
+            target = relative_link
+        # Special-case for section index pages (autogen)
         if rel_path:
-            # If target is absolute (starts with /), use as is
-            if os.path.isabs(target):
-                link = target
+            current_dir = os.path.dirname(rel_path)
+            is_section_index = (
+                rel_path.endswith('index.html') and
+                current_dir and
+                rel_path != 'index.html'
+            )
+            if is_section_index:
+                # If this menu item is the current section, use "index.html"
+                if target == rel_path or os.path.normpath(target) == os.path.normpath(rel_path):
+                    link = "index.html"
+                else:
+                    link = "../" + target
             else:
-                # Compute relative path from current page to menu target
-                link = os.path.relpath(target, os.path.dirname(rel_path))
+                link = os.path.relpath(target, current_dir) if not os.path.isabs(target) else target
         else:
             link = target
-        logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}")
+        logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}, is_section_index={is_section_index}")
         menu_items.append({'title': title, 'link': link})
-    logging.info(f"[MENU] Final menu_items for rel_path {rel_path}: {menu_items}")
-    conn.close()
-    logging.info(f"[TEST2] Final menu_items for rel_path {rel_path}: {menu_items}")
-    return menu_items
-
 def get_header_partial(context: dict) -> str:
     """Render header partial using Jinja2."""
     env = setup_template_env()
@@ -146,6 +163,8 @@ def convert_markdown_to_html(md_path: str) -> str:
     def custom_image_renderer(self, tokens, idx, options, env):
         token = tokens[idx]
         src = token.attrs.get('src', '')
+    if not menu_items:
+        return []
         # Only rewrite if not external or already in images/
         if not (src.startswith('http') or src.startswith('/') or src.startswith('images/')):
             filename = os.path.basename(src)
@@ -257,7 +276,10 @@ def build_all_markdown_files():
                 body_lines.append(line)
             body_text = '\n'.join(body_lines)
             html_body = convert_markdown_to_html_text(body_text)
-            top_menu = generate_nav_menu({'toc': toc})
+            rel_path_home = 'index.html'
+            top_menu = generate_nav_menu({'rel_path': rel_path_home, 'toc': toc})
+            if top_menu is None:
+                top_menu = []
             rel_path = 'index.html'
             context = {
                 'Title': title,
@@ -311,18 +333,26 @@ def build_all_markdown_files():
             # Only patch if file is in a subfolder and matches parent folder name (e.g. about.md in about/)
             if md_basename == parent_dir:
                 output_dir = os.path.join(BUILD_HTML_DIR, parent_dir)
-                os.makedirs(output_dir, exist_ok=True)
+                try:
+                    os.makedirs(output_dir, exist_ok=True)
+                except Exception as dir_err:
+                    logging.error(f"[ERROR] Failed to create output directory {output_dir}: {dir_err}")
                 output_path_final = os.path.join(output_dir, 'index.html')
                 rel_path = os.path.relpath(output_path_final, BUILD_HTML_DIR)
                 output_file = 'index.html'
             else:
                 output_path_final = output_path
+                out_dir = os.path.dirname(output_path_final)
+                try:
+                    os.makedirs(out_dir, exist_ok=True)
+                except Exception as dir_err:
+                    logging.error(f"[ERROR] Failed to create output directory {out_dir}: {dir_err}")
                 rel_path = os.path.relpath(output_path_final, BUILD_HTML_DIR)
                 output_file = os.path.basename(output_path_final)
-                out_dir = os.path.dirname(output_path_final)
-                os.makedirs(out_dir, exist_ok=True)
             logging.info(f"[TEST1] Building page: source_path={source_path}, output_path={output_path_final}, rel_path={rel_path}, title={title}")
             top_menu = generate_nav_menu({'rel_path': rel_path, 'toc': toc})
+            if top_menu is None:
+                top_menu = []
             logging.info(f"[TEST2] Rendered top_menu for output_file {output_file}: {top_menu}")
             context = {
                 'Title': title,
@@ -334,12 +364,19 @@ def build_all_markdown_files():
                 'output_file': output_file,
             }
             context = add_asset_paths(context, rel_path)
-            html_output = render_page(context, 'single.html')
             try:
-                with open(output_path_final, 'w', encoding='utf-8') as f:
-                    f.write(html_output)
-            except Exception as e:
-                logging.error(f"Failed to write HTML file {output_path_final}: {e}")
+                html_output = render_page(context, 'single.html')
+            except Exception as render_err:
+                logging.error(f"[ERROR] Template rendering failed for {source_path}: {render_err}")
+                import traceback
+                logging.error(traceback.format_exc())
+                html_output = None
+            if html_output:
+                try:
+                    with open(output_path_final, 'w', encoding='utf-8') as f:
+                        f.write(html_output)
+                except Exception as e:
+                    logging.error(f"Failed to write HTML file {output_path_final}: {e}")
     conn.close()
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
@@ -374,7 +411,10 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         site = config.get('site', {})
         footer_text = config.get('footer', {}).get('text', '')
         # Add top_menu to page_context for navigation
-        top_menu = generate_nav_menu({'toc': context.get('toc', [])})
+        nav_context = {'rel_path': rel_path}
+        top_menu = generate_nav_menu(nav_context)
+        if top_menu is None:
+            top_menu = []
         page_context = {
             'Title': section_title,
             'Children': children,
