@@ -4,7 +4,7 @@ from oerforge.logging_utils import setup_logging
 from oerforge.db_utils import initialize_database
 from oerforge.copyfile import copy_build_to_docs_safe
 from oerforge.scan import scan_toc_and_populate_db
-
+from oerforge.export_all import export_all
 from oerforge.convert import batch_convert_all_content
 from oerforge.make import build_all_markdown_files, create_section_index_html, load_yaml_config
 
@@ -35,6 +35,9 @@ def run_full_workflow() -> None:
 
     logging.info("Step 4: Batch converting all content...")
     batch_convert_all_content()
+    
+    logging.info("Step 4.5: Exporting all content to DOCX...")
+    export_all()
 
     logging.info("Step 5: Building HTML and section indexes...")
     build_all_markdown_files()

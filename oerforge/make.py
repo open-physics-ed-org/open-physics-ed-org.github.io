@@ -14,6 +14,37 @@ import shutil
 import sqlite3
 # from jinja2 import Environment, FileSystemLoader  # Uncomment when implementing
 
+# Stub for copying static assets (CSS, JS, images) to build/
+def copy_static_assets_to_build():
+    """
+    Copy static assets (css, js, images) from static/ to build/.
+    Creates build/css/, build/js/, build/images/ if missing.
+    Overwrites files each time it is called.
+    """
+    import logging
+    import shutil
+    import os
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BUILD_DIR = os.path.join(PROJECT_ROOT, 'build')
+    CSS_SRC = os.path.join(PROJECT_ROOT, 'static', 'css')
+    CSS_DST = os.path.join(BUILD_DIR, 'css')
+    JS_SRC = os.path.join(PROJECT_ROOT, 'static', 'js')
+    JS_DST = os.path.join(BUILD_DIR, 'js')
+    IMAGES_SRC = os.path.join(PROJECT_ROOT, 'static', 'images')
+    IMAGES_DST = os.path.join(BUILD_DIR, 'images')
+    def copytree_overwrite(src, dst):
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+        if os.path.exists(src):
+            shutil.copytree(src, dst)
+            logging.info(f"Copied {src} to {dst}")
+        else:
+            logging.warning(f"Source directory not found: {src}")
+    copytree_overwrite(CSS_SRC, CSS_DST)
+    copytree_overwrite(JS_SRC, JS_DST)
+    copytree_overwrite(IMAGES_SRC, IMAGES_DST)
+    logging.info("[ASSET] Static assets copied to build/.")
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
 BUILD_HTML_DIR = os.path.join(PROJECT_ROOT, 'build')
@@ -23,6 +54,65 @@ LAYOUTS_DIR = os.path.join(PROJECT_ROOT, 'layouts')
 # =========================
 # Utility Functions
 # =========================
+def get_available_downloads_for_page(rel_path, page_dir=None):
+    """
+    Scan the published output directory for this page and return a list of available download formats.
+    Returns: [{'label': 'PDF', 'filename': 'index.pdf', 'theme': 'light', ...}, ...]
+    """
+    # Determine the directory containing downloadable files
+    if page_dir is None:
+        # rel_path like 'about/index.html' -> docs/about/
+        if rel_path == 'index.html':
+            page_dir = os.path.join(PROJECT_ROOT, 'docs')
+        else:
+            page_dir = os.path.join(PROJECT_ROOT, 'docs', os.path.dirname(rel_path))
+    # List of supported formats and labels
+    formats = [
+        ('.pdf', 'PDF', 'download-pdf'),
+        ('.docx', 'Word', 'download-docx'),
+        ('.tex', 'LaTeX', 'download-tex'),
+        ('.md', 'Markdown', 'download-md'),
+        ('.txt', 'Plain Text', 'download-txt'),
+    ]
+    # Always look for index.* in the directory
+    downloads = []
+    try:
+        files = os.listdir(page_dir)
+    except Exception as e:
+        logging.warning(f"[DOWNLOAD] Could not list files in {page_dir}: {e}")
+        files = []
+    for ext, label, theme in formats:
+        fname = 'index' + ext
+        if fname in files:
+            downloads.append({
+                'label': label,
+                'filename': fname,
+                'theme': theme,
+                'aria_label': f"Download as {label}",
+            })
+    return downloads
+
+def build_download_buttons_context(rel_path, page_dir=None):
+    """
+    Build the download_buttons context for a page.
+    - rel_path: relative path to the HTML file (e.g., 'about/index.html')
+    - page_dir: directory containing downloadable files (default: docs/about/)
+    Returns: list of button dicts for the template.
+    """
+    downloads = get_available_downloads_for_page(rel_path, page_dir)
+    # Build full path for href (relative to HTML file)
+    # rel_path: 'about/index.html' -> buttons should link to 'index.pdf', etc.
+    # If page is in subdir, links are just 'index.pdf', etc.
+    # If at root, links are 'index.pdf', etc.
+    buttons = []
+    for d in downloads:
+        buttons.append({
+            'label': d['label'],
+            'href': d['filename'],
+            'theme': d['theme'],
+            'aria_label': d['aria_label'],
+        })
+    return buttons
 
 def slugify(title: str) -> str:
     """Convert a title to a slug suitable for folder names."""
@@ -366,6 +456,8 @@ def build_all_markdown_files():
                 'output_file': output_file,
             }
             context = add_asset_paths(context, rel_path)
+            # Add download_buttons context for template
+            context['download_buttons'] = build_download_buttons_context(rel_path)
             try:
                 html_output = render_page(context, 'single.html')
             except Exception as render_err:
@@ -380,6 +472,9 @@ def build_all_markdown_files():
                 except Exception as e:
                     logging.error(f"Failed to write HTML file {output_path_final}: {e}")
     conn.close()
+    
+    copy_static_assets_to_build()
+    logging.info("[AUTO] All markdown files built.")
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
