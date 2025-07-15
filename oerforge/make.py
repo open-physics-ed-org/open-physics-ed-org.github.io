@@ -43,18 +43,6 @@ def load_yaml_config(config_path: str) -> dict:
         logging.error(f"Failed to load YAML config: {e}")
         return {}
 
-def find_markdown_files(root_dir):
-    """Recursively find all non-hidden .md files in root_dir."""
-    md_files = []
-    for dirpath, dirnames, filenames in os.walk(root_dir):
-        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
-        for filename in filenames:
-            if filename.startswith('.'):
-                continue
-            if filename.lower().endswith('.md'):
-                md_files.append(os.path.join(dirpath, filename))
-    return md_files
-
 def ensure_output_dir(md_path):
     """Ensure the output directory for the HTML file exists, mirroring build/files structure."""
     rel_path = os.path.relpath(md_path, BUILD_FILES_DIR)
@@ -91,18 +79,6 @@ def render_page(context: dict, template_name: str) -> str:
 # =========================
 # Navigation and Partials
 # =========================
-
-def get_top_level_menu(db_path, rel_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT title, output_path FROM content WHERE parent_output_path IS NULL OR parent_output_path = ''")
-    menu = []
-    for title, output_path in cursor.fetchall():
-        # Compute link relative to current page
-        link = os.path.relpath(output_path, os.path.dirname(os.path.join(BUILD_HTML_DIR, rel_path)))
-        menu.append({'title': title, 'link': link})
-    conn.close()
-    return menu
 
 def generate_nav_menu(context: dict) -> str:
     """Generate navigation menu HTML from TOC in context."""
@@ -241,6 +217,44 @@ def build_all_markdown_files():
     cursor = conn.cursor()
     cursor.execute("SELECT source_path, output_path, title, mime_type FROM content")
     records = cursor.fetchall()
+    # Build homepage from content/index.md to build/index.html
+    homepage_md = os.path.join(PROJECT_ROOT, 'content', 'index.md')
+    homepage_html = os.path.join(BUILD_HTML_DIR, 'index.html')
+    if os.path.exists(homepage_md):
+        try:
+            with open(homepage_md, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            # Use first # header as title
+            title = "Home"
+            lines = md_text.splitlines()
+            body_lines = []
+            found_title = False
+            for line in lines:
+                if not found_title and line.strip().startswith('# '):
+                    title = line.strip()[2:].strip()
+                    found_title = True
+                    continue
+                body_lines.append(line)
+            body_text = '\n'.join(body_lines)
+            html_body = convert_markdown_to_html_text(body_text)
+            nav_html = generate_nav_menu({'toc': toc})
+            rel_path = 'index.html'
+            context = {
+                'Title': title,
+                'Content': html_body,
+                'toc': toc,
+                'nav': nav_html,
+                'site': site,
+                'footer_text': footer_text,
+                'output_file': 'index.html',
+            }
+            context = add_asset_paths(context, rel_path)
+            html_output = render_page(context, 'single.html')
+            with open(homepage_html, 'w', encoding='utf-8') as f:
+                f.write(html_output)
+            logging.info(f"[AUTO] Built homepage: {homepage_html}")
+        except Exception as e:
+            logging.error(f"Failed to build homepage from {homepage_md}: {e}")
     # Filter for markdown files robustly by extension or mime_type
     for source_path, output_path, db_title, mime_type in records:
         # Skip records with missing source_path or output_path
@@ -284,8 +298,6 @@ def build_all_markdown_files():
                 'output_file': output_file,
             }
             context = add_asset_paths(context, rel_path)
-            top_menu = get_top_level_menu(db_path, rel_path)
-            context['top_menu'] = top_menu
             html_output = render_page(context, 'single.html')
             # Ensure output directory exists
             out_dir = os.path.dirname(output_path)
@@ -336,9 +348,6 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             'footer_text': footer_text,
         }
         page_context = add_asset_paths(page_context, rel_path)
-        db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
-        top_menu = get_top_level_menu(db_path, rel_path)
-        page_context['top_menu'] = top_menu
         try:
             env = setup_template_env()
             template = env.get_template('section.html')
@@ -366,7 +375,3 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         logging.error(f"[ERROR] Failed to create section index for {section_title}: {e}")
         import traceback
         logging.error(traceback.format_exc())
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    build_all_markdown_files()

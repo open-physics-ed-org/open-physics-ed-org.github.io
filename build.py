@@ -6,7 +6,7 @@ from oerforge.copyfile import copy_build_to_docs_safe, copy_project_files
 from oerforge.scan import scan_toc_and_populate_db
 
 from oerforge.convert import batch_convert_all_content
-from oerforge.make import build_all_markdown_files, find_markdown_files, create_section_index_html, load_yaml_config
+from oerforge.make import build_all_markdown_files, create_section_index_html, load_yaml_config
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 print("Project root:", PROJECT_ROOT)
@@ -19,13 +19,6 @@ def log_directory_contents(directory: str) -> None:
     for root, _, files in os.walk(directory):
         for name in files:
             logging.info(f"  {os.path.join(root, name)}")
-
-def log_markdown_files(directory: str) -> None:
-    """Logs all markdown files found in the specified directory."""
-    md_files = find_markdown_files(directory)
-    logging.info(f"[DEBUG] Markdown files found ({len(md_files)}):")
-    for f in md_files:
-        logging.info(f"  {f}")
 
 def run_full_workflow() -> None:
     """Runs the complete OERForge build workflow."""
@@ -44,42 +37,7 @@ def run_full_workflow() -> None:
     batch_convert_all_content()
 
     logging.info("Step 5: Building HTML and section indexes...")
-    log_markdown_files(BUILD_FILES_DIR)
     build_all_markdown_files()
-
-    # Enforce output paths from the database
-    import sqlite3
-    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT output_path FROM content WHERE output_path IS NOT NULL AND output_path != ''")
-    db_output_paths = set(row[0] for row in cursor.fetchall())
-    conn.close()
-
-    # Check for missing files and log them
-    missing_files = []
-    for out_path in db_output_paths:
-        abs_path = os.path.join(PROJECT_ROOT, out_path) if not os.path.isabs(out_path) else out_path
-        if not os.path.exists(abs_path):
-            missing_files.append(abs_path)
-    if missing_files:
-        logging.warning(f"[DB ENFORCE] Missing files (should be generated/copied):\n" + '\n'.join(missing_files))
-    else:
-        logging.info("[DB ENFORCE] All database output paths exist.")
-
-    # Optionally, log extra files in output directories not listed in the DB
-    output_dirs = [os.path.join(PROJECT_ROOT, 'build'), os.path.join(PROJECT_ROOT, 'docs')]
-    extra_files = []
-    for out_dir in output_dirs:
-        for root, _, files in os.walk(out_dir):
-            for name in files:
-                rel_path = os.path.relpath(os.path.join(root, name), PROJECT_ROOT)
-                if rel_path not in db_output_paths:
-                    extra_files.append(rel_path)
-    if extra_files:
-        logging.warning(f"[DB ENFORCE] Extra files not in DB output paths:\n" + '\n'.join(extra_files))
-    else:
-        logging.info("[DB ENFORCE] No extra files found in output directories.")
     
     # Autogenerate index.html for top-level sections from the database
     def get_top_level_sections(db_path=None):
