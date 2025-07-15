@@ -81,12 +81,15 @@ def render_page(context: dict, template_name: str) -> str:
 # =========================
 
 def generate_nav_menu(context: dict) -> str:
+    import os
     """Generate navigation menu items for top_menu from TOC in context."""
     toc = context.get('toc', [])
     db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     menu_items = []
+    # Compute relative links based on current page's rel_path if present in context
+    rel_path = context.get('rel_path', '')
     for entry in toc:
         if entry.get('menu', False):
             title = entry.get('title')
@@ -95,12 +98,20 @@ def generate_nav_menu(context: dict) -> str:
             row = cursor.fetchone()
             if row:
                 output_path, source_path = row
+                # Compute relative link from rel_path to menu target
+                if output_path.startswith('build/'):
+                    target = output_path[6:]
+                else:
+                    target = output_path.lstrip('/')
                 # For Home, always use 'index.html'
                 if title.lower() == 'home':
-                    link = 'index.html'
+                    target = 'index.html'
+                # If rel_path is set, compute relative path
+                if rel_path:
+                    import os
+                    link = os.path.relpath(target, os.path.dirname(rel_path))
                 else:
-                    # Strip 'build/' prefix for relative links
-                    link = output_path[6:] if output_path.startswith('build/') else output_path
+                    link = target
                 menu_items.append({'title': title, 'link': link})
             else:
                 logging.warning(f"[MENU] No DB record found for menu item: '{title}'")
@@ -358,10 +369,13 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         config = load_yaml_config(config_path)
         site = config.get('site', {})
         footer_text = config.get('footer', {}).get('text', '')
+        # Add top_menu to page_context for navigation
+        top_menu = generate_nav_menu({'toc': context.get('toc', [])})
         page_context = {
             'Title': section_title,
             'Children': children,
             'toc': context.get('toc', []),
+            'top_menu': top_menu,
             'site': site,
             'footer_text': footer_text,
         }
