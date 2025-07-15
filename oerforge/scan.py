@@ -441,13 +441,21 @@ def scan_toc_and_populate_db(config_path):
             file_path = item.get('file')
             title = item.get('title', None)
             order = idx
+            # Log the raw TOC item for debugging
+            log_event(f"[DEBUG][walk_toc] idx={idx} title={title} file_path={file_path} item={item}", level="DEBUG")
             if file_path:
                 source_path = file_path if file_path.startswith('content/') else f'content/{file_path}'
                 ext = os.path.splitext(source_path)[1].lower()
                 rel_path = source_path[8:] if source_path.startswith('content/') else source_path
                 out_dir = os.path.dirname(rel_path)
                 base_name = os.path.splitext(os.path.basename(rel_path))[0]
-                output_path = os.path.join('build', out_dir, base_name + '.html') if out_dir else os.path.join('build', base_name + '.html')
+                # If parent_slug is set, override output_path and slug to use parent_slug as directory for all children
+                if parent_slug:
+                    slug = parent_slug
+                    output_path = os.path.join('build', parent_slug, base_name + '.html')
+                else:
+                    slug = item.get('slug', re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_')) if title else f'section_{idx}'
+                    output_path = os.path.join('build', out_dir, base_name + '.html') if out_dir else os.path.join('build', base_name + '.html')
                 if source_path in seen_paths:
                     log_event(f"[WARN] TOC: Duplicate file path '{source_path}' in toc", level="WARN")
                     pass
@@ -456,8 +464,17 @@ def scan_toc_and_populate_db(config_path):
                 if not os.path.exists(abs_path):
                     log_event(f"[ERROR] TOC: Missing file '{source_path}' (expected at {abs_path})", level="ERROR")
                     pass
+                # Log the intended output path and check if the file will be written
+                intended_html_path = os.path.abspath(output_path)
+                log_event(f"[DEBUG][walk_toc] Intended output_path for '{title}': {output_path} (abs: {intended_html_path})", level="DEBUG")
+                # Log whether the file exists at the intended output path
+                if os.path.exists(intended_html_path):
+                    log_event(f"[DEBUG][walk_toc] HTML file exists for '{title}' at {intended_html_path}", level="DEBUG")
+                else:
+                    log_event(f"[WARN][walk_toc] HTML file does NOT exist for '{title}' at {intended_html_path}", level="WARN")
                 flags = get_possible_conversions(ext)
-                slug = re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_') if title else f'section_{idx}'
+                log_event(f"[DEBUG][walk_toc] LOGGING SLUG at line 462: slug='{slug}' for title='{title}'", level="DEBUG")
+                log_event(f"[DEBUG][walk_toc] Chosen slug for title='{title}': slug='{slug}'", level="DEBUG")
                 content_record = {
                     'title': title,
                     'source_path': source_path,
@@ -475,6 +492,7 @@ def scan_toc_and_populate_db(config_path):
                     'slug': slug,
                     'order': order
                 }
+                log_event(f"[DEBUG][walk_toc] content_record={content_record}", level="DEBUG")
                 content_records.append(content_record)
                 file_paths.append(abs_path)
                 children = item.get('children', [])
@@ -482,7 +500,8 @@ def scan_toc_and_populate_db(config_path):
                     child_records = walk_toc(children, parent_output_path=output_path, parent_slug=slug)
                     content_records.extend(child_records)
             elif item.get('children'):
-                slug = re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_') if title else f'section_{idx}'
+                slug = item.get('slug', re.sub(r'[^a-zA-Z0-9]+', '_', title.lower()).strip('_')) if title else f'section_{idx}'
+                log_event(f"[DEBUG][walk_toc] Chosen slug for section title='{title}': slug='{slug}'", level="DEBUG")
                 output_path = os.path.join('build', slug, 'index.html')
                 content_record = {
                     'title': title,
@@ -501,6 +520,7 @@ def scan_toc_and_populate_db(config_path):
                     'slug': slug,
                     'order': order
                 }
+                log_event(f"[DEBUG][walk_toc] content_record (section)={content_record}", level="DEBUG")
                 content_records.append(content_record)
                 children = item.get('children', [])
                 if children:

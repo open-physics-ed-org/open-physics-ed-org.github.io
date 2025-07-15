@@ -95,12 +95,13 @@ def render_page(context: dict, template_name: str) -> str:
 def get_top_level_menu(db_path, rel_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("SELECT title, output_path FROM content WHERE parent_output_path IS NULL OR parent_output_path = ''")
+    cursor.execute("SELECT title, output_path, slug FROM content WHERE parent_output_path IS NULL OR parent_output_path = ''")
     menu = []
-    for title, output_path in cursor.fetchall():
+    for title, output_path, slug in cursor.fetchall():
         # Compute link relative to current page
         link = os.path.relpath(output_path, os.path.dirname(os.path.join(BUILD_HTML_DIR, rel_path)))
-        menu.append({'title': title, 'link': link})
+        logging.info(f"[DEBUG][get_top_level_menu] title={title} output_path={output_path} slug={slug} link={link}")
+        menu.append({'title': title, 'link': link, 'slug': slug, 'output_path': output_path})
     conn.close()
     return menu
 
@@ -111,13 +112,22 @@ def generate_nav_menu(context: dict) -> str:
     for entry in toc:
         if entry.get('menu', False):
             title = entry.get('title', '')
-            slug = slugify(title)
-            link = entry.get('file', None)
-            if link:
-                link = os.path.splitext(link)[0] + '.html'
-            else:
-                link = slug + '/index.html'
-            nav_html += f'<li><a href="{link}">{title}</a></li>'
+            slug = entry.get('slug', slugify(title))
+            # Top-level link
+            link = slug + '/index.html'
+            nav_html += f'<li><a href="{link}">{title}</a>'
+            # If section has children, ensure children adopt parent's slug for their links
+            children = entry.get('children', [])
+            if children:
+                nav_html += '<ul>'
+                for child in children:
+                    child_title = child.get('title', '')
+                    child_slug = child.get('slug', slugify(child_title))
+                    # Child link always uses parent slug as base
+                    child_link = slug + '/index.html'
+                    nav_html += f'<li><a href="{child_link}">{child_title}</a></li>'
+                nav_html += '</ul>'
+            nav_html += '</li>'
     nav_html += '</ul></nav>'
     return nav_html
 
@@ -234,12 +244,40 @@ def build_all_markdown_files():
     toc = config.get('toc', [])
     footer_text = config.get('footer', {}).get('text', '')
     md_files = find_markdown_files(BUILD_FILES_DIR)
+    # Build a mapping from markdown file path to parent section slug (from TOC)
+    toc_section_map = {}
+    for section in toc:
+        section_slug = section.get('slug', slugify(section.get('title', '')))
+        children = section.get('children', [])
+        for child in children:
+            if 'file' in child:
+                child_file = child['file']
+                toc_section_map[os.path.normpath(child_file)] = section_slug
+    logging.info(f"[TRACE][TOC] toc_section_map={toc_section_map}")
+
     for md_path in md_files:
-        ensure_output_dir(md_path)
+        logging.info(f"[TRACE][build_all_markdown_files] Processing markdown file: {md_path}")
         rel_path = os.path.relpath(md_path, BUILD_FILES_DIR)
-        html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path)[0] + '.html')
-        with open(md_path, 'r', encoding='utf-8') as f:
-            md_text = f.read()
+        # Determine parent section slug override if present
+        parent_section_slug = toc_section_map.get(rel_path)
+        if parent_section_slug:
+            # Place child HTML under parent section slug directory
+            output_dir = os.path.join(BUILD_HTML_DIR, parent_section_slug)
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+            html_path = os.path.join(output_dir, os.path.splitext(os.path.basename(rel_path))[0] + '.html')
+            logging.info(f"[TRACE][build_all_markdown_files] Using parent section slug override: {parent_section_slug} for {rel_path} -> html_path={html_path}")
+        else:
+            ensure_output_dir(md_path)
+            html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path)[0] + '.html')
+            logging.info(f"[TRACE][build_all_markdown_files] No parent section slug override for {rel_path} -> html_path={html_path}")
+        try:
+            with open(md_path, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            logging.info(f"[TRACE][build_all_markdown_files] Successfully read markdown file: {md_path}")
+        except Exception as read_err:
+            logging.error(f"[ERROR][build_all_markdown_files] Failed to read markdown file: {md_path} | {read_err}")
+            continue
         # Extract first # header as title
         title = "Untitled"
         lines = md_text.splitlines()
@@ -267,10 +305,26 @@ def build_all_markdown_files():
         context = add_asset_paths(context, rel_path)
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
         top_menu = get_top_level_menu(db_path, rel_path)
+        logging.info(f"[TRACE][build_all_markdown_files] rel_path={rel_path} top_menu={top_menu}")
+        for item in top_menu:
+            logging.info(f"[TRACE][top_menu] title={item['title']} link={item['link']} output_path={item['output_path']} slug={item['slug']}")
         context['top_menu'] = top_menu
-        html_output = render_page(context, 'single.html')
-        with open(html_path, 'w', encoding='utf-8') as f:
-            f.write(html_output)
+        try:
+            html_output = render_page(context, 'single.html')
+            logging.info(f"[TRACE][build_all_markdown_files] Rendered HTML for: {html_path}")
+        except Exception as render_err:
+            logging.error(f"[ERROR][build_all_markdown_files] Failed to render HTML for: {html_path} | {render_err}")
+            continue
+        try:
+            with open(html_path, 'w', encoding='utf-8') as f:
+                f.write(html_output)
+            logging.info(f"[TRACE][build_all_markdown_files] HTML file written: {html_path}")
+        except Exception as write_err:
+            logging.error(f"[ERROR][build_all_markdown_files] Failed to write HTML file: {html_path} | {write_err}")
+        if os.path.exists(html_path):
+            logging.info(f"[TRACE][build_all_markdown_files] HTML file exists after write: {html_path}")
+        else:
+            logging.warning(f"[WARN][build_all_markdown_files] HTML file NOT found after write: {html_path}")
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
@@ -287,16 +341,22 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
                     base_name = os.path.splitext(os.path.basename(file_path))[0] + '.html'
                     link = base_name
                 else:
-                    link = slugify(entry.get('title', '')) + '/index.html'
+                    child_slug = entry.get('slug', slugify(entry.get('title', '')))
+                    link = child_slug + '/index.html'
                 children.append({
                     'title': entry.get('title', ''),
-                    'slug': slugify(entry.get('title', '')),
+                    'slug': entry.get('slug', slugify(entry.get('title', ''))),
                     'link': link
                 })
             logging.info(f"[DEBUG] Children for {section_title}: {children}")
         else:
             logging.warning(f"[DEBUG] No children found for section: {section_title}")
             children = []
+        # Use slug override for output_dir, but check if section is None
+        if section:
+            output_dir = os.path.join(BUILD_HTML_DIR, section.get('slug', slugify(section['title'])))
+        else:
+            output_dir = os.path.join(BUILD_HTML_DIR, slugify(section_title))
         rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
         # Ensure site.title and site.subtitle are always present
         config_path = os.path.join(PROJECT_ROOT, '_content.yml')

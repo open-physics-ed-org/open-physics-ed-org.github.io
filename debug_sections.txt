@@ -1,3 +1,3 @@
-get_top_level_sections() returned: [('News', 'build/news'), ('Documentation', 'build/documentation')]
-Processing section: News at build/news
-Processing section: Documentation at build/documentation
+get_top_level_sections() returned: [('News', 'build/news-roll'), ('Docs', 'build/documentation')]
+Processing section: News at build/news-roll
+Processing section: Docs at build/documentation
