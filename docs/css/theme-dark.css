@@ -99,11 +99,18 @@ body.dark .site-header {
   width: 100%;
 }
 .site-logo {
-  height: 4.8em; /* 50% larger than previous 3.2em */
+  height: 5.0em;
   width: auto;
   margin-right: 1em;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+}
+.header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5em;
+  margin-bottom: 0.5em;
 }
 .header-titles {
   display: flex;

@@ -1,11 +1,13 @@
 <header class="site-header">
   <div class="header-flex">
     <img src="{{ logo_path }}" alt="Site Logo" class="site-logo" />
-    <div class="header-titles">
-      <h1 class="site-title">{{ site.title }}</h1>
-      <h2 class="site-subtitle">{{ site.subtitle }}</h2>
+    <div class="header-titles" style="display: flex; align-items: center; gap: 1em;">
+      <div>
+        <h1 class="site-title">{{ site.title }}</h1>
+        <h2 class="site-subtitle">{{ site.subtitle }}</h2>
+      </div>
+      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙</button>
     </div>
-    <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙</button>
   </div>
   <nav class="site-nav" role="navigation" aria-label="Main menu">
     <ul class="nav-menu">
