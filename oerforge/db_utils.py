@@ -1,9 +1,3 @@
-# 
-
-import sqlite3
-import os
-import logging
-from oerforge.logging_utils import setup_logging
 """
 OERForge Database Utilities
 ==========================
@@ -18,12 +12,18 @@ Features:
     - Pretty-printing tables for debugging and inspection
 
 Intended Audience:
-    - New programmers and contributors to OERForge
+    - Contributors to OERForge
     - Anyone needing to interact with or extend the database layer
 
 Usage:
     Import this module and use the provided functions to initialize the database, insert or fetch records, and link files to pages. All functions are documented with clear arguments and return values.
 """
+
+import sqlite3
+import os
+import logging
+import threading
+import time
 
 
 # ------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ def initialize_database():
     This function creates the following tables:
         - files: Stores metadata about tracked files/assets.
         - pages_files: Maps files to pages where they are referenced.
-        - pages: Tracks source and output paths for pages.
+        - content: Tracks source and output paths for content.
         - site_info: Stores site-wide metadata and configuration.
 
     Existing tables are dropped before creation to ensure a clean state.
@@ -122,8 +122,25 @@ def initialize_database():
         );
     """)
 
-# General-purpose Query Function
-# 
+# ------------------------------------------------------------------------------
+# General Purpose Functions for DB Interactions
+# ------------------------------------------------------------------------------
+
+def get_db_connection(db_path=None):
+    """
+    Returns a sqlite3 connection to the database.
+
+    Args:
+        db_path (str, optional): Path to the SQLite database file.
+            If None, defaults to <project_root>/db/sqlite.db.
+
+        sqlite3.Connection: A connection object to the SQLite database.
+    """
+    if db_path is None:
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(project_root, 'db', 'sqlite.db')
+    return sqlite3.connect(db_path)
+
 def get_records(table_name, where_clause=None, params=None, db_path=None, conn=None, cursor=None):
     """
     Fetch records from a table with optional WHERE clause and parameters.
@@ -154,34 +171,6 @@ def get_records(table_name, where_clause=None, params=None, db_path=None, conn=N
         conn.close()
     return records
 
-def log_event(message, level="INFO"):
-    """
-    Logs an event to both stdout and a log file in the project root.
-
-    Args:
-        message (str): The log message to record.
-        level (str): The severity level (e.g., "INFO", "ERROR", "WARNING").
-
-    The log file is named 'scan.log' and is located at <project_root>/scan.log.
-    Each log entry is timestamped.
-    """
-    logging.log(getattr(logging, level.upper(), logging.INFO), f"[DB] {message}")
-
-def get_db_connection(db_path=None):
-    """
-    Returns a sqlite3 connection to the database.
-
-    Args:
-        db_path (str, optional): Path to the SQLite database file.
-            If None, defaults to <project_root>/db/sqlite.db.
-
-        sqlite3.Connection: A connection object to the SQLite database.
-    """
-    if db_path is None:
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        db_path = os.path.join(project_root, 'db', 'sqlite.db')
-    return sqlite3.connect(db_path)
-
 def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
     """
     General-purpose batch insert for any table.
@@ -194,8 +183,6 @@ def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
     Returns:
         list of int: List of inserted row ids.
     """
-    import threading
-    import time
     close_conn = False
     if conn is None or cursor is None:
         conn = get_db_connection(db_path)
@@ -235,6 +222,65 @@ def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
         conn.close()
     return row_ids
 
+def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
+    """
+    Pretty-print all rows of a table to the log for inspection/debugging.
+
+    Args:
+        table_name (str): Name of the table to print.
+        db_path (str, optional): Path to the SQLite database file.
+        conn, cursor: Optional existing connection/cursor.
+
+    Returns:
+        None
+
+    Output:
+        Logs a formatted table to the scan.log file and stdout.
+    """
+    close_conn = False
+    if conn is None or cursor is None:
+        # If db_path is None, default to project_root/db/sqlite.db
+        if db_path is None:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            db_path = os.path.join(project_root, 'db', 'sqlite.db')
+
+    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
+    conn = sqlite3.connect(db_path)
+    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
+    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
+    cursor = conn.cursor()
+    close_conn = True
+    cursor.execute(f"SELECT * FROM {table_name}")
+    rows = cursor.fetchall()
+    col_names = [description[0] for description in cursor.description]
+    # Calculate column widths for pretty printing
+    col_widths = [max(len(str(col)), max((len(str(row[i])) for row in rows), default=0)) for i, col in enumerate(col_names)]
+    # Print header row
+    header = " | ".join(str(col).ljust(col_widths[i]) for i, col in enumerate(col_names))
+    log_event(header, level="INFO")
+    log_event("-" * len(header), level="INFO")
+    # Print each row
+    for row in rows:
+        log_event(" | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))), level="INFO")
+    if close_conn:
+        log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in pretty_print_table at {time.time()}", level="DEBUG")
+    logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
+    conn.close()
+
+def log_event(message, level="INFO"):
+    """
+    Logs an event to both stdout and a log file in the project root.
+
+    Args:
+        message (str): The log message to record.
+        level (str): The severity level (e.g., "INFO", "ERROR", "WARNING").
+
+    The log file is named 'scan.log' and is located at <project_root>/scan.log.
+    Each log entry is timestamped.
+    """
+    logging.log(getattr(logging, level.upper(), logging.INFO), f"[DB] {message}")
+
+
 def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
     """
     Link files to pages in the pages_files table.
@@ -250,8 +296,6 @@ def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
     Example:
         link_files_to_pages([(1, 'index.html'), (2, 'about.html')])
     """
-    import threading
-    import time
     close_conn = False
     if conn is None or cursor is None:
         conn = get_db_connection(db_path)
@@ -276,52 +320,4 @@ def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
     if close_conn:
         log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in link_files_to_pages at {time.time()}", level="DEBUG")
         conn.close()
-
-
-def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
-    """
-    Pretty-print all rows of a table to the log for inspection/debugging.
-
-    Args:
-        table_name (str): Name of the table to print.
-        db_path (str, optional): Path to the SQLite database file.
-        conn, cursor: Optional existing connection/cursor.
-
-    Returns:
-        None
-
-    Output:
-        Logs a formatted table to the scan.log file and stdout.
-    """
-    import threading
-    import time
-    close_conn = False
-    if conn is None or cursor is None:
-        # If db_path is None, default to project_root/db/sqlite.db
-        if db_path is None:
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            db_path = os.path.join(project_root, 'db', 'sqlite.db')
-    import logging
-    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
-    conn = sqlite3.connect(db_path)
-    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
-    cursor = conn.cursor()
-    close_conn = True
-    cursor.execute(f"SELECT * FROM {table_name}")
-    rows = cursor.fetchall()
-    col_names = [description[0] for description in cursor.description]
-    # Calculate column widths for pretty printing
-    col_widths = [max(len(str(col)), max((len(str(row[i])) for row in rows), default=0)) for i, col in enumerate(col_names)]
-    # Print header row
-    header = " | ".join(str(col).ljust(col_widths[i]) for i, col in enumerate(col_names))
-    log_event(header, level="INFO")
-    log_event("-" * len(header), level="INFO")
-    # Print each row
-    for row in rows:
-        log_event(" | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))), level="INFO")
-    if close_conn:
-        log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in pretty_print_table at {time.time()}", level="DEBUG")
-    logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
-    conn.close()
 
