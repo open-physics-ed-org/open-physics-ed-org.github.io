@@ -11,6 +11,9 @@ Features:
     - Utility functions for linking files to pages
     - Pretty-printing tables for debugging and inspection
 
+Note:
+    Conversion status is NOT tracked in the content table. If conversion results need to be tracked, use a separate table (e.g., conversion_results) or check for file existence.
+
 Intended Audience:
     - Contributors to OERForge
     - Anyone needing to interact with or extend the database layer
@@ -68,6 +71,22 @@ def initialize_database():
     db_log("Dropped table: site_info")
     cursor.execute("DROP TABLE IF EXISTS conversion_capabilities")
     db_log("Dropped table: conversion_capabilities")
+    cursor.execute("DROP TABLE IF EXISTS conversion_results")
+    db_log("Dropped table: conversion_results")
+    # Create conversion_results table for tracking conversion outputs
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS conversion_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_id INTEGER NOT NULL,
+            source_format TEXT NOT NULL,
+            target_format TEXT NOT NULL,
+            output_path TEXT,
+            conversion_time TEXT,
+            status TEXT,
+            FOREIGN KEY(content_id) REFERENCES content(id)
+        )
+    """)
+    db_log("Created table: conversion_results")
 
     # Create tables
     cursor.execute("""
@@ -120,7 +139,7 @@ def initialize_database():
             "level" INTEGER DEFAULT 0
         )
     """)
-    db_log("Created table: content")
+    db_log("Created table: content") 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS site_info (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -371,13 +390,12 @@ def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
         if db_path is None:
             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             db_path = os.path.join(project_root, 'db', 'sqlite.db')
-
-    logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
-    conn = sqlite3.connect(db_path)
-    logging.info(f"[DB-OPEN] Database connection established: {db_path}")
-    log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
-    cursor = conn.cursor()
-    close_conn = True
+        logging.info(f"[DB-OPEN] Attempting to open database: {db_path}")
+        conn = sqlite3.connect(db_path)
+        logging.info(f"[DB-OPEN] Database connection established: {db_path}")
+        log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Opened DB connection in pretty_print_table at {time.time()}", level="DEBUG")
+        cursor = conn.cursor()
+        close_conn = True
     cursor.execute(f"SELECT * FROM {table_name}")
     rows = cursor.fetchall()
     col_names = [description[0] for description in cursor.description]
@@ -454,3 +472,5 @@ def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
         log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in link_files_to_pages at {time.time()}", level="DEBUG")
         conn.close()
 
+if __name__ == "__main__":
+    pass

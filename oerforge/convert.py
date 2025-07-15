@@ -172,16 +172,28 @@ def convert_md_to_docx(src_path, out_path, record_id=None, conn=None):
         logging.info(f"[DOCX] Converted {src_path} to {out_path}")
         if record_id:
             from oerforge.db_utils import get_db_connection, log_event
+            import datetime
             try:
                 db_conn = conn if conn is not None else get_db_connection()
                 db_cursor = db_conn.cursor()
-                db_cursor.execute("UPDATE content SET converted_docx=1 WHERE id=?", (record_id,))
+                # Insert conversion result into conversion_results table
+                db_cursor.execute(
+                    "INSERT INTO conversion_results (content_id, source_format, target_format, output_path, conversion_time, status) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        record_id,
+                        '.md',
+                        '.docx',
+                        out_path,
+                        datetime.datetime.now().isoformat(),
+                        'success'
+                    )
+                )
                 db_conn.commit()
-                log_event(f"[DOCX] DB updated: converted_docx=1 for id {record_id}", level="INFO")
+                log_event(f"[DOCX] conversion_results updated for id {record_id}", level="INFO")
                 if conn is None:
                     db_conn.close()
             except Exception as e:
-                log_event(f"[DOCX] DB update failed for id {record_id}: {e}", level="ERROR")
+                log_event(f"[DOCX] conversion_results insert failed for id {record_id}: {e}", level="ERROR")
     except Exception as e:
         logging.error(f"[DOCX] Pandoc conversion failed for {src_path}: {e}")
 
