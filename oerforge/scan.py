@@ -1,5 +1,22 @@
 """
-scan.py: Asset database logic for pages and files only.
+scan.py
+--------
+Static Site Asset and Content Scanner
+
+This module provides functions for scanning site content, extracting assets, and populating the SQLite database
+with page, section, and file records. It supports Markdown, Jupyter Notebooks, and DOCX files, and maintains
+hierarchical relationships from the Table of Contents (TOC) YAML. All functions are documented and organized for
+clarity and maintainability. Logging is standardized and all major operations are traced for debugging.
+
+Key Features:
+- Batch reading and asset extraction for supported file types
+- Hierarchical TOC walking and database population
+- Asset linking and MIME type detection
+- Section and descendant queries using recursive CTEs
+
+Usage:
+    Import and call scan_toc_and_populate_db(config_path) to scan the TOC and populate the database.
+    Use get_descendants_for_parent() to query section hierarchies.
 """
 
 import os
@@ -8,15 +25,20 @@ import re
 import logging
 from oerforge.logging_utils import setup_logging
 
-# ----
-# Logging Helper for scan.py
-# ----
+# =========================
+# Logging Utilities
+# =========================
+
 def log_event(message, level="INFO"):
     """
     Logs an event to both stdout and scan.log in the project root.
     """
     logging.log(getattr(logging, level.upper(), logging.INFO), f"[SCAN] {message}")
     setup_logging()
+
+# =========================
+# File Reading Utilities
+# =========================
 
 def batch_read_files(file_paths):
     """
@@ -82,6 +104,9 @@ def read_docx_file(path):
         log_event(f"Could not read docx file {path}: {e}", level="ERROR")
         return None
 
+# ==========================
+# Asset Extraction Utilities
+# ==========================
 def batch_extract_assets(contents_dict, content_type, **kwargs):
     """
     Extracts assets from multiple file contents in one pass.
@@ -217,8 +242,12 @@ def batch_extract_assets(contents_dict, content_type, **kwargs):
 
 def extract_linked_files_from_markdown_content(md_text, page_id=None):
     """
-    Extracts asset links from markdown text.
-    Returns a list of file records.
+    Extract asset links from markdown text.
+    Args:
+        md_text (str): Markdown content.
+        page_id (optional): Page identifier for DB linking.
+    Returns:
+        list: File record dicts for each asset found.
     """
     import re
     asset_pattern = re.compile(r'!\[[^\]]*\]\(([^)]+)\)|\[[^\]]*\]\(([^)]+)\)')
@@ -235,8 +264,12 @@ def extract_linked_files_from_markdown_content(md_text, page_id=None):
 
 def extract_linked_files_from_notebook_cell_content(cell, nb_path=None):
     """
-    Extracts asset links from a notebook cell.
-    Returns a list of file records.
+    Extract asset links from a notebook cell.
+    Args:
+        cell (dict): Notebook cell.
+        nb_path (str, optional): Notebook file path.
+    Returns:
+        list: File record dicts for each asset found.
     """
     assets = []
     # Extract markdown-linked images
@@ -277,8 +310,12 @@ def extract_linked_files_from_notebook_cell_content(cell, nb_path=None):
 
 def extract_linked_files_from_docx_content(docx_path, page_id=None):
     """
-    Extracts asset links from a docx file.
-    Returns a list of file records.
+    Extract asset links from a DOCX file.
+    Args:
+        docx_path (str): Path to DOCX file.
+        page_id (optional): Page identifier for DB linking.
+    Returns:
+        list: File record dicts for each asset found.
     """
     assets = []
     try:
@@ -317,8 +354,9 @@ def extract_linked_files_from_docx_content(docx_path, page_id=None):
 
 def populate_site_info_from_config(config_filename='_config.yml'):
     """
-    Reads the given config file (default: _config.yml) and populates the site_info table with site and footer info.
-    The config_filename should be just the name of the config file, e.g. '_config.yml' or 'myconfig.yml'.
+    Populate the site_info table from the given config file (default: _config.yml).
+    Args:
+        config_filename (str): Name of the config file (e.g., '_config.yml').
     """
     import yaml
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -379,9 +417,11 @@ def populate_site_info_from_config(config_filename='_config.yml'):
 
 def get_possible_conversions(extension):
     """
-    Returns a dict of possible conversions for a given file extension.
-    Keys are can_convert_md, can_convert_tex, can_convert_pdf, can_convert_docx, can_convert_ppt, can_convert_jupyter, can_convert_ipynb.
-    Values are booleans (True/False) indicating if conversion is possible.
+    Get possible conversion flags for a given file extension.
+    Args:
+        extension (str): File extension (e.g., '.md', '.ipynb').
+    Returns:
+        dict: Conversion capability flags.
     """
     ext = extension.lower()
     # Default all to False
@@ -415,7 +455,10 @@ def get_possible_conversions(extension):
 
 def scan_toc_and_populate_db(config_path):
     """
-    Walks the toc: from _config.yml, reads each file, extracts assets/images, and populates the DB with both content and asset records, maintaining TOC hierarchy.
+    Walk the TOC from the config YAML, read each file, extract assets/images, and populate the DB with content and asset records.
+    Maintains TOC hierarchy and section relationships.
+    Args:
+        config_path (str): Path to the config YAML file.
     """
     import yaml
     from oerforge.db_utils import get_db_connection, insert_records, link_files_to_pages
@@ -575,8 +618,12 @@ def scan_toc_and_populate_db(config_path):
 # ----
 def get_descendants_for_parent(parent_output_path, db_path):
     """
-    Returns all children and grandchildren (and deeper) for a given parent_output_path,
-    using a recursive CTE. Each result includes: id, title, output_path, parent_output_path, slug, level.
+    Query all children, grandchildren, and deeper descendants for a given parent_output_path using a recursive CTE.
+    Args:
+        parent_output_path (str): Output path of the parent section.
+        db_path (str): Path to the SQLite database.
+    Returns:
+        list: Dicts for each descendant (id, title, output_path, parent_output_path, slug, level).
     """
     import sqlite3
     import logging
