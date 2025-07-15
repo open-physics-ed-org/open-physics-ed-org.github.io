@@ -42,8 +42,10 @@ toc:
     menu: true
     slug: documentation
     children:
-      - title: "`db_utils.py` — OERForge Database Utilities"
+      - title: "db_utils.py — OERForge Database Utilities"
         file: documentation/db_utils.md
+      - title: "scan.py - OERForge Content Scanner"
+        file: documentation/scan.md
   - title: "About"
     menu: true
     file: about.md
