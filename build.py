@@ -2,7 +2,7 @@ import os
 import logging
 from oerforge.logging_utils import setup_logging
 from oerforge.db_utils import initialize_database
-from oerforge.copyfile import copy_build_to_docs, copy_project_files
+from oerforge.copyfile import copy_build_to_docs_safe, copy_project_files
 from oerforge.scan import scan_toc_and_populate_db
 
 from oerforge.convert import batch_convert_all_content
@@ -95,7 +95,7 @@ def run_full_workflow() -> None:
             dbg.write("[WARNING] News section NOT found in get_top_level_sections()!\n")
 
     # Final copy: ensure build/ is copied to docs/ after all build steps
-    copy_build_to_docs()
+    copy_build_to_docs_safe()
 
     logging.info("Workflow complete. Please check the build/, docs/, and logs directories for results.")
 
