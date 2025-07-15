@@ -105,12 +105,17 @@ def get_available_downloads_for_page(rel_path, page_dir=None):
         if rel_link_base.endswith('.html'):
             rel_link_base = rel_link_base[:-5]
         # Compute download links for children and grandchildren
-        rel_link_base_with_files = f"files/{rel_link_base}"
+        # Compute the relative path from the HTML file's directory to the file in build/files/
+        html_dir = os.path.dirname(os.path.join(PROJECT_ROOT, 'build', rel_path))
+        file_path_base = os.path.join(PROJECT_ROOT, 'build', 'files', rel_link_base)
         for ext, label, theme in formats:
             fname = base_name + ext
             logging.debug(f"[DOWNLOAD][DEBUG] Checking for file: {fname} in files: {files}")
+            file_path = f"{file_path_base}{ext}"
+            # Only add button if file exists in files list
             if fname in files:
-                href = f"{rel_link_base_with_files}{ext}"
+                # Compute relative href from HTML file's directory to the file
+                href = os.path.relpath(file_path, html_dir)
                 logging.debug(f"[DOWNLOAD][DEBUG] Found downloadable file for button: {fname} in {page_dir}, href={href}")
                 downloads.append({
                     'label': label,
