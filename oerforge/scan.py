@@ -483,8 +483,33 @@ def scan_toc_and_populate_db(config_path):
                 ext = os.path.splitext(source_path)[1].lower()
                 rel_path = source_path[8:] if source_path.startswith('content/') else source_path
                 base_name = os.path.splitext(os.path.basename(rel_path))[0]
-                # Always use effective_slug for output path directory
-                output_path = os.path.join('build', effective_slug, base_name + '.html')
+                parent_dir = os.path.basename(os.path.dirname(source_path))
+                log_event(f"[DEBUG][walk_toc] source_path={source_path}, rel_path={rel_path}, base_name={base_name}, parent_dir={parent_dir}, dirname={os.path.dirname(source_path)}", level="DEBUG")
+                # Hugo-style: top-level files are those matching content/<base_name>.md and not index.md
+                if source_path == f'content/{base_name}.md' and base_name != 'index':
+                    output_path = os.path.join('build', base_name, 'index.html')
+                    output_path_debug = 'TOP-LEVEL-EXPLICIT'
+                # If file is in a subfolder and matches parent folder name, use index.html
+                elif base_name == parent_dir:
+                    output_path = os.path.join('build', effective_slug, 'index.html')
+                    output_path_debug = 'SUBFOLDER-MATCH'
+                else:
+                    output_path = os.path.join('build', effective_slug, base_name + '.html')
+                    output_path_debug = 'DEFAULT'
+                log_event(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})", level="DEBUG")
+                log_event(f"[DEBUG][walk_toc] rel_path={rel_path}, base_name={base_name}, parent_dir={parent_dir}", level="DEBUG")
+                # Hugo-style: top-level files are those directly under content/ (not index.md)
+                if os.path.dirname(source_path) == 'content' and base_name != 'index':
+                    output_path = os.path.join('build', base_name, 'index.html')
+                    output_path_debug = 'TOP-LEVEL'
+                # If file is in a subfolder and matches parent folder name, use index.html
+                elif base_name == parent_dir:
+                    output_path = os.path.join('build', effective_slug, 'index.html')
+                    output_path_debug = 'SUBFOLDER-MATCH'
+                else:
+                    output_path = os.path.join('build', effective_slug, base_name + '.html')
+                    output_path_debug = 'DEFAULT'
+                log_event(f"[DEBUG][walk_toc] output_path chosen for '{title}': {output_path} (mode: {output_path_debug})", level="DEBUG")
                 if source_path in seen_paths:
                     log_event(f"[WARN] TOC: Duplicate file path '{source_path}' in toc", level="WARN")
                     pass
