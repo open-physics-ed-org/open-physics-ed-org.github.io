@@ -216,24 +216,42 @@ def batch_convert_all_content(config_path=None):
         config = yaml.safe_load(f)
     toc = config.get('toc', [])
 
-    def walk_toc_all_files(items, parent_path=""):
-        file_entries = []
-        for item in items:
-            file_path = item.get('file')
-            if file_path:
-                out_path = os.path.join(BUILD_FILES_ROOT, file_path)
-                src_path = os.path.join(CONTENT_ROOT, file_path)
-                file_entries.append((src_path, out_path))
-            children = item.get('children', [])
-            if children:
-                file_entries.extend(walk_toc_all_files(children, parent_path))
-        return file_entries
-
-    all_files = walk_toc_all_files(toc)
-    try:
-        import logging
-    except Exception as e:
-        log_event(f"Batch conversion failed: {e}", level="ERROR")
+    # --- Generic Conversion Logic ---
+    import sqlite3
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Get all enabled conversions
+    cursor.execute("SELECT source_ext, target_ext FROM conversion_capabilities WHERE enabled=1")
+    conversions = cursor.fetchall()
+    # Get all content files
+    cursor.execute("SELECT id, source_path FROM content")
+    content_files = cursor.fetchall()
+    for record_id, source_path in content_files:
+        src_ext = os.path.splitext(source_path)[1]
+        rel_path = os.path.relpath(source_path, CONTENT_ROOT)
+        src_path = os.path.join(CONTENT_ROOT, rel_path)
+        for conv_src, conv_target in conversions:
+            if src_ext == conv_src:
+                # Compute output path
+                out_dir = os.path.join(BUILD_FILES_ROOT, os.path.dirname(rel_path))
+                os.makedirs(out_dir, exist_ok=True)
+                out_name = os.path.splitext(os.path.basename(rel_path))[0] + conv_target
+                out_path = os.path.join(out_dir, out_name)
+                # Dispatch conversion
+                if conv_src == ".md" and conv_target == ".md":
+                    # Copy markdown as-is
+                    try:
+                        shutil.copy2(src_path, out_path)
+                        log_event(f"Copied .md to {out_path}", level="INFO")
+                    except Exception as e:
+                        log_event(f"Failed to copy .md: {e}", level="ERROR")
+                elif conv_src == ".md" and conv_target == ".docx":
+                    convert_md_to_docx(src_path, out_path, record_id, conn)
+                elif conv_src == ".ipynb" and conv_target == ".jupyter":
+                    # Stub: convert notebook to JupyterBook (implement as needed)
+                    log_event(f"[JUPYTER] Would convert {src_path} to JupyterBook at {out_path}", level="INFO")
+                # Add more elifs for other conversions as needed
+    conn.close()
 
 # --- Main Entry Point ---
 if __name__ == "__main__":
