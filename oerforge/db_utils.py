@@ -114,7 +114,9 @@ def initialize_database():
             can_convert_docx BOOLEAN DEFAULT 0,
             can_convert_ppt BOOLEAN DEFAULT 0,
             can_convert_jupyter BOOLEAN DEFAULT 0,
-            can_convert_ipynb BOOLEAN DEFAULT 0
+            can_convert_ipynb BOOLEAN DEFAULT 0,
+            relative_link TEXT DEFAULT NULL,
+            menu_context TEXT DEFAULT NULL
         )
     """)
     db_log("Created table: content")
@@ -184,6 +186,39 @@ def initialize_database():
 # =============================================
 # General Purpose Functions for DB Interactions
 # =============================================
+def set_relative_link(content_id, relative_link, db_path=None):
+    """
+    Update the relative_link for a content item.
+    """
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE content SET relative_link=? WHERE id=?", (relative_link, content_id))
+    conn.commit()
+    conn.close()
+
+def set_menu_context(content_id, menu_context, db_path=None):
+    """
+    Update the menu_context for a content item.
+    """
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE content SET menu_context=? WHERE id=?", (menu_context, content_id))
+    conn.commit()
+    conn.close()
+
+def get_menu_items(db_path=None):
+    """
+    Fetch all menu items with their links and context.
+    Returns: list of dicts with id, title, relative_link, menu_context
+    """
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title, relative_link, menu_context FROM content")
+    rows = cursor.fetchall()
+    col_names = [desc[0] for desc in cursor.description]
+    items = [dict(zip(col_names, row)) for row in rows]
+    conn.close()
+    return items
 
 def get_db_connection(db_path=None):
     """
