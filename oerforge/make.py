@@ -403,21 +403,21 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             parent_slug = section.get('slug', slugify(section.get('title', '')))
             logging.info(f"[DEBUG][create_section_index_html] children={section['children']}")
             for entry in section['children']:
+                link = None
                 if entry.get('file'):
-                    file_path = entry.get('file')
-                    base_name = os.path.splitext(os.path.basename(file_path))[0] + '.html'
-                    # Avoid redundant parent_slug/base_name if base_name == parent_slug.html
-                    if base_name == parent_slug + '.html':
-                        link = parent_slug + '.html'
-                    else:
-                        link = parent_slug + '/' + base_name
+                    # Compute output HTML path for child
+                    child_file = entry['file']
+                    base_name = os.path.splitext(os.path.basename(child_file))[0] + '.html'
+                    child_html_path = os.path.join(parent_slug, base_name)
+                    # Compute relative link from section index to child HTML
+                    rel_link = os.path.relpath(child_html_path, parent_slug)
+                    link = rel_link.replace('\\', '/')
                 else:
                     child_slug = entry.get('slug', slugify(entry.get('title', '')))
-                    # Avoid redundant parent_slug/child_slug/index.html if child_slug == parent_slug
                     if child_slug == parent_slug:
-                        link = parent_slug + '/index.html'
+                        link = 'index.html'
                     else:
-                        link = parent_slug + '/' + child_slug + '/index.html'
+                        link = child_slug + '/index.html'
                 logging.info(f"[DEBUG][create_section_index_html] child_entry={entry} link={link}")
                 children.append({
                     'title': entry.get('title', ''),
