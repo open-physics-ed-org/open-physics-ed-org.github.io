@@ -1,3 +1,6 @@
+# Don't add the database
+db/
+
 # OS-specific
 .DS_Store
 Thumbs.db
