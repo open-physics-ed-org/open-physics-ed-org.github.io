@@ -5,20 +5,18 @@
   <title>About the Open Physics Education Network</title>
   
   <link rel="icon" href="static/images/favicon.ico">
-  <link rel="stylesheet" href="css/theme-light.css" id="theme-css">
+  <link rel="stylesheet" href="css/theme-dark.css" id="theme-css">
   <script src="js/main.js" defer></script>
 </head>
 <body>
   <header class="site-header">
   <div class="header-flex">
     <img src="images/logo.png" alt="Site Logo" class="site-logo" />
-    <div class="header-titles" style="display: flex; align-items: center; gap: 1em;">
-      <div>
-        <h1 class="site-title">Open Physics Education</h1>
-        <h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
-      </div>
-      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙</button>
+    <div class="header-titles">
+      <h1 class="site-title">Open Physics Education</h1>
+      <h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
     </div>
+    <!-- Theme toggle button moved to main content container in baseof.html -->
   </div>
   <nav class="site-nav" role="navigation" aria-label="Main menu">
     <ul class="nav-menu">
@@ -38,6 +36,9 @@
 </header>
   <main id="main-content" tabindex="-1">
     <div class="container">
+      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙
+        <span class="visually-hidden">Toggle dark/light theme</span>
+      </button>
       
   <article>
     <h1>About the Open Physics Education Network</h1>

@@ -217,7 +217,7 @@ def get_asset_path(asset_type, asset_name, rel_path):
     return f"{prefix}{asset_type}/{asset_name}"
 
 def add_asset_paths(context, rel_path):
-    context['css_path'] = get_asset_path('css', 'theme-light.css', rel_path)
+    context['css_path'] = get_asset_path('css', 'theme-dark.css', rel_path)
     context['js_path'] = get_asset_path('js', 'main.js', rel_path)
     # Add logo_path for correct logo asset referencing
     logo_file = context.get('site', {}).get('logo', 'static/images/logo.png')

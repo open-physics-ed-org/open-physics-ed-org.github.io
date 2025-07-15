@@ -221,12 +221,15 @@ def batch_convert_all_content(config_path=None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     # Get all enabled conversions
-    cursor.execute("SELECT source_ext, target_ext FROM conversion_capabilities WHERE enabled=1")
+    cursor.execute("SELECT source_format, target_format FROM conversion_capabilities WHERE is_enabled=1")
     conversions = cursor.fetchall()
     # Get all content files
     cursor.execute("SELECT id, source_path FROM content")
     content_files = cursor.fetchall()
     for record_id, source_path in content_files:
+        if not source_path:
+            log_event(f"Skipping content record id={record_id} with None source_path", level="WARNING")
+            continue
         src_ext = os.path.splitext(source_path)[1]
         rel_path = os.path.relpath(source_path, CONTENT_ROOT)
         src_path = os.path.join(CONTENT_ROOT, rel_path)

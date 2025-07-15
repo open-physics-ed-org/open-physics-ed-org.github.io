@@ -93,6 +93,13 @@ def copy_project_files(debug: bool = False):
     copytree_overwrite(CONTENT_SRC, CONTENT_DST)
     copytree_overwrite(CSS_SRC, CSS_DST)
     copytree_overwrite(JS_SRC, JS_DST)
+    # Copy images directory
+    IMAGES_SRC = os.path.join(PROJECT_ROOT, 'static', 'images')
+    IMAGES_DST = os.path.join(BUILD_DIR, 'images')
+    if os.path.exists(IMAGES_SRC):
+        copytree_overwrite(IMAGES_SRC, IMAGES_DST)
+    else:
+        logging.warning(f"Images source directory not found: {IMAGES_SRC}")
     create_nojekyll(NOJEKYLL_PATH)
     logging.info("Finished copy_project_files")
 

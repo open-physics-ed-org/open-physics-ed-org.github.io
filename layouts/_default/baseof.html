@@ -12,6 +12,9 @@
   {% include 'partials/header.html' %}
   <main id="main-content" tabindex="-1">
     <div class="container">
+      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙
+        <span class="visually-hidden">Toggle dark/light theme</span>
+      </button>
       {% block main %}{% endblock %}
     </div>
   </main>
