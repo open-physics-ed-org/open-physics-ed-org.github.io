@@ -383,6 +383,17 @@ def build_all_markdown_files():
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_output)
             logging.info(f"[TRACE][build_all_markdown_files] HTML file written: {html_path}")
+            # Update DB with output path
+            try:
+                db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                cursor.execute("UPDATE content SET output_path=? WHERE source_path=?", (html_path, md_path))
+                conn.commit()
+                conn.close()
+                logging.info(f"[DB][build_all_markdown_files] Updated output_path for {md_path} -> {html_path}")
+            except Exception as db_err:
+                logging.error(f"[DB][build_all_markdown_files] Failed to update output_path for {md_path}: {db_err}")
         except Exception as write_err:
             logging.error(f"[ERROR][build_all_markdown_files] Failed to write HTML file: {html_path} | {write_err}")
         if os.path.exists(html_path):
