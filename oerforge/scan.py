@@ -415,42 +415,31 @@ def populate_site_info_from_config(config_filename='_config.yml'):
 # Conversion Capability Helper
 # ----
 
-def get_possible_conversions(extension):
+def get_conversion_flags(extension):
+    # Local import to avoid circular import issues
+    from oerforge.db_utils import get_enabled_conversions
     """
-    Get possible conversion flags for a given file extension.
+    Get conversion flags for a given file extension using the DB.
     Args:
         extension (str): File extension (e.g., '.md', '.ipynb').
     Returns:
         dict: Conversion capability flags.
     """
-    ext = extension.lower()
-    # Default all to False
-    flags = {
-        'can_convert_md': False,
-        'can_convert_tex': False,
-        'can_convert_pdf': False,
-        'can_convert_docx': False,
-        'can_convert_ppt': False,
-        'can_convert_jupyter': False,
-        'can_convert_ipynb': False
+    targets = get_enabled_conversions(extension)
+    # Map target formats to flags
+    flag_map = {
+        '.md': 'can_convert_md',
+        '.tex': 'can_convert_tex',
+        '.pdf': 'can_convert_pdf',
+        '.docx': 'can_convert_docx',
+        '.ppt': 'can_convert_ppt',
+        '.jupyter': 'can_convert_jupyter',
+        '.ipynb': 'can_convert_ipynb'
     }
-    if ext == '.ipynb':
-        flags['can_convert_md'] = True
-        flags['can_convert_docx'] = True
-        flags['can_convert_tex'] = True
-        flags['can_convert_jupyter'] = True
-        flags['can_convert_pdf'] = True
-    elif ext == '.md':
-        flags['can_convert_docx'] = True
-        flags['can_convert_pdf'] = True
-        flags['can_convert_tex'] = True
-        flags['can_convert_jupyter'] = True
-    elif ext == '.docx':
-        flags['can_convert_md'] = True
-        flags['can_convert_tex'] = True
-        flags['can_convert_pdf'] = True
-        flags['can_convert_docx'] = True
-        flags['can_convert_jupyter'] = True
+    flags = {v: False for v in flag_map.values()}
+    for t in targets:
+        if t in flag_map:
+            flags[flag_map[t]] = True
     return flags
 
 def scan_toc_and_populate_db(config_path):
@@ -515,7 +504,7 @@ def scan_toc_and_populate_db(config_path):
                     log_event(f"[DEBUG][walk_toc] HTML file exists for '{title}' at {intended_html_path}", level="DEBUG")
                 else:
                     log_event(f"[WARN][walk_toc] HTML file does NOT exist for '{title}' at {intended_html_path}", level="WARN")
-                flags = get_possible_conversions(ext)
+                flags = get_conversion_flags(ext)
                 log_event(f"[DEBUG][walk_toc] LOGGING SLUG at line 462: slug='{slug}' for title='{title}'", level="DEBUG")
                 log_event(f"[DEBUG][walk_toc] Chosen slug for title='{title}': slug='{slug}'", level="DEBUG")
                 content_record = {

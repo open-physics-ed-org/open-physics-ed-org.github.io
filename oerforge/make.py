@@ -236,6 +236,42 @@ def add_asset_paths(context, rel_path):
     context['logo_path'] = get_asset_path('images', logo_name, rel_path)
     return context
 
+def get_available_downloads(source_path, output_dir):
+    """
+    Query DB for available formats for a source file (markdown, docx, ipynb, etc.) and return a downloads list.
+    This is future-proof for any input type tracked in the DB.
+    """
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT can_convert_pdf, can_convert_docx, can_convert_tex, can_convert_ipynb, can_convert_md, can_convert_jupyter
+        FROM content WHERE source_path=?
+    """, (source_path,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return []
+    formats = [
+        ('PDF', 'pdf', row[0]),
+        ('DOCX', 'docx', row[1]),
+        ('TeX', 'tex', row[2]),
+        ('Notebook', 'ipynb', row[3]),
+        ('Markdown', 'md', row[4]),
+        ('Jupyter', 'jupyter', row[5]),
+    ]
+    downloads = []
+    base_name = os.path.splitext(os.path.basename(source_path))[0]
+    for label, ext, available in formats:
+        if available:
+            # For jupyter, use a special filename if needed
+            if ext == 'jupyter':
+                file_name = base_name + '.jupyter'
+            else:
+                file_name = base_name + '.' + ext
+            file_path = os.path.join(output_dir, file_name)
+            downloads.append({'format': label, 'file': file_name, 'path': file_path})
+    return downloads
 def build_all_markdown_files():
     logging.info("[DEBUG][build_all_markdown_files] Starting markdown to HTML build loop.")
     # Load config and site-wide variables for index build
@@ -330,6 +366,7 @@ def build_all_markdown_files():
             html_path = os.path.join(output_dir, os.path.splitext(os.path.basename(rel_path_norm))[0] + '.html')
             logging.info(f"[TRACE][build_all_markdown_files] Using parent section slug override: {parent_section_slug} for {rel_path_norm} -> html_path={html_path}")
         else:
+            output_dir = os.path.join(BUILD_HTML_DIR, os.path.dirname(rel_path_norm))
             ensure_output_dir(md_path)
             html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path_norm)[0] + '.html')
             logging.info(f"[TRACE][build_all_markdown_files] No parent section slug override for {rel_path_norm} -> html_path={html_path}")
@@ -366,6 +403,9 @@ def build_all_markdown_files():
             'output_file': output_file,
         }
         context = add_asset_paths(context, rel_path)
+        # Add downloads list for conditional download buttons
+        downloads = get_available_downloads(md_path, output_dir)
+        context['downloads'] = downloads
         db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
         top_menu = get_top_level_menu(db_path, rel_path)
         logging.info(f"[TRACE][build_all_markdown_files] rel_path={rel_path} top_menu={top_menu}")

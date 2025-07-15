@@ -24,6 +24,25 @@ import os
 import logging
 import threading
 import time
+import sys
+import logging
+
+# Setup logging to log/db.log
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+log_dir = os.path.join(project_root, 'log')
+os.makedirs(log_dir, exist_ok=True)
+db_log_path = os.path.join(log_dir, 'db.log')
+db_logger = logging.getLogger('db_utils')
+db_logger.setLevel(logging.INFO)
+if not db_logger.handlers:
+    handler = logging.FileHandler(db_log_path)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    handler.setFormatter(formatter)
+    db_logger.addHandler(handler)
+
+def db_log(message, level=logging.INFO):
+    db_logger.log(level, message)
+    print(f"[DB] {message}", file=sys.stdout)
 
 
 # ------------------------------------------------------------------------------
@@ -31,28 +50,26 @@ import time
 # ------------------------------------------------------------------------------
 
 def initialize_database():
-    """
-    Initializes the SQLite database for asset tracking in the OERForge project.
-
-    This function creates the following tables:
-        - files: Stores metadata about tracked files/assets.
-        - pages_files: Maps files to pages where they are referenced.
-        - content: Tracks source and output paths for content.
-        - site_info: Stores site-wide metadata and configuration.
-
-    Existing tables are dropped before creation to ensure a clean state.
-    The database file is located at <project_root>/db/sqlite.db.
-    """
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     db_dir = os.path.join(project_root, 'db')
     db_path = os.path.join(db_dir, 'sqlite.db')
     os.makedirs(db_dir, exist_ok=True)
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+
+    # Drop tables
     cursor.execute("DROP TABLE IF EXISTS files")
+    db_log("Dropped table: files")
     cursor.execute("DROP TABLE IF EXISTS pages_files")
+    db_log("Dropped table: pages_files")
     cursor.execute("DROP TABLE IF EXISTS content")
+    db_log("Dropped table: content")
     cursor.execute("DROP TABLE IF EXISTS site_info")
+    db_log("Dropped table: site_info")
+    cursor.execute("DROP TABLE IF EXISTS conversion_capabilities")
+    db_log("Dropped table: conversion_capabilities")
+
+    # Create tables
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,6 +87,7 @@ def initialize_database():
             is_embedded BOOLEAN
         )
     """)
+    db_log("Created table: files")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS pages_files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,6 +96,7 @@ def initialize_database():
             FOREIGN KEY(file_id) REFERENCES files(id)
         )
     """)
+    db_log("Created table: pages_files")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS content (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,22 +107,17 @@ def initialize_database():
             mime_type TEXT,
             parent_output_path TEXT DEFAULT NULL,
             slug TEXT DEFAULT NULL,
-            can_convert_md BOOLEAN DEFAULT NULL,
-            can_convert_tex BOOLEAN DEFAULT NULL,
-            can_convert_pdf BOOLEAN DEFAULT NULL,
-            can_convert_docx BOOLEAN DEFAULT NULL,
-            can_convert_ppt BOOLEAN DEFAULT NULL,
-            can_convert_jupyter BOOLEAN DEFAULT NULL,
-            can_convert_ipynb BOOLEAN DEFAULT NULL,
-            converted_md BOOLEAN DEFAULT NULL,
-            converted_pdf BOOLEAN DEFAULT NULL,
-            converted_docx BOOLEAN DEFAULT NULL,
-            converted_ppt BOOLEAN DEFAULT NULL,
-            converted_jupyter BOOLEAN DEFAULT NULL,
-            converted_ipynb BOOLEAN DEFAULT NULL,
-            wcag_status_html TEXT DEFAULT NULL
+            wcag_status_html TEXT DEFAULT NULL,
+            can_convert_md BOOLEAN DEFAULT 0,
+            can_convert_tex BOOLEAN DEFAULT 0,
+            can_convert_pdf BOOLEAN DEFAULT 0,
+            can_convert_docx BOOLEAN DEFAULT 0,
+            can_convert_ppt BOOLEAN DEFAULT 0,
+            can_convert_jupyter BOOLEAN DEFAULT 0,
+            can_convert_ipynb BOOLEAN DEFAULT 0
         )
     """)
+    db_log("Created table: content")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS site_info (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,10 +135,55 @@ def initialize_database():
             header TEXT
         );
     """)
+    db_log("Created table: site_info")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS conversion_capabilities (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_format TEXT NOT NULL,
+            target_format TEXT NOT NULL,
+            is_enabled BOOLEAN DEFAULT 1,
+            UNIQUE(source_format, target_format)
+        )
+    """)
+    db_log("Created table: conversion_capabilities")
 
-# ------------------------------------------------------------------------------
+    # Default conversion rules: source_format -> [target_formats]
+    default_conversion_matrix = {
+        '.md':     ['.md', '.marp', '.tex', '.pdf', '.docx', '.ppt', '.jupyter'],
+        '.marp':   ['.md', '.marp', '.pdf', '.docx', '.ppt'],
+        '.tex':    ['.md', '.tex', '.pdf', '.docx'],
+        '.ipynb':  ['.md', '.tex', '.pdf', '.docx', '.jupyter', '.ipynb'],
+        '.jupyter':['.md', '.tex', '.pdf', '.docx', '.jupyter', '.ipynb'],
+        '.docx':   ['.md', '.tex', '.pdf', '.docx'],
+        '.ppt':    ['.ppt'],
+    }
+    # Check if conversion_capabilities is empty, then insert defaults
+    cursor.execute("SELECT COUNT(*) FROM conversion_capabilities")
+    if cursor.fetchone()[0] == 0:
+        records = []
+        for source, targets in default_conversion_matrix.items():
+            for target in targets:
+                records.append({
+                    'source_format': source,
+                    'target_format': target,
+                    'is_enabled': True
+                })
+        for record in records:
+            cursor.execute(
+                "INSERT OR IGNORE INTO conversion_capabilities (source_format, target_format, is_enabled) VALUES (?, ?, ?)",
+                (record['source_format'], record['target_format'], int(record['is_enabled']))
+            )
+            db_log(f"Inserted conversion capability: {record['source_format']} -> {record['target_format']}")
+        conn.commit()
+        db_log("Committed all default conversion capabilities.")
+
+    conn.close()
+    db_log("Closed DB connection after initialization.")
+    
+    
+# =============================================
 # General Purpose Functions for DB Interactions
-# ------------------------------------------------------------------------------
+# =============================================
 
 def get_db_connection(db_path=None):
     """
@@ -132,6 +191,8 @@ def get_db_connection(db_path=None):
 
     Args:
         db_path (str, optional): Path to the SQLite database file.
+    db_log("Created table: conversion_capabilities")
+    db_log(f"Opening DB connection to {db_path if db_path else 'default path'}.")
             If None, defaults to <project_root>/db/sqlite.db.
 
         sqlite3.Connection: A connection object to the SQLite database.
@@ -142,6 +203,7 @@ def get_db_connection(db_path=None):
     return sqlite3.connect(db_path)
 
 def get_records(table_name, where_clause=None, params=None, db_path=None, conn=None, cursor=None):
+    db_log(f"Fetching records from table: {table_name}")
     """
     Fetch records from a table with optional WHERE clause and parameters.
     Args:
@@ -172,6 +234,7 @@ def get_records(table_name, where_clause=None, params=None, db_path=None, conn=N
     return records
 
 def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
+    db_log(f"Inserting records into table: {table_name}")
     """
     General-purpose batch insert for any table.
     Checks if table exists, inserts records, returns list of inserted row ids.
@@ -222,9 +285,31 @@ def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
         conn.close()
     return row_ids
 
-def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
+def get_enabled_conversions(source_format, db_path=None):
     """
-    Pretty-print all rows of a table to the log for inspection/debugging.
+    Returns a list of enabled target formats for a given source format.
+
+    Args:
+        source_format (str): The source file extension (e.g., '.md').
+        db_path (str, optional): Path to the SQLite database file.
+
+    Returns:
+        List[str]: List of enabled target formats (e.g., ['.pdf', '.docx']).
+    """
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT target_format FROM conversion_capabilities WHERE source_format=? AND is_enabled=1",
+        (source_format,)
+    )
+    results = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return results
+
+def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
+    db_log(f"Pretty printing table: {table_name}")
+    """
+    Pretty-print all rows of a table to the log and terminal for inspection/debugging.
 
     Args:
         table_name (str): Name of the table to print.
@@ -235,7 +320,7 @@ def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
         None
 
     Output:
-        Logs a formatted table to the scan.log file and stdout.
+        Logs a formatted table to the scan.log file and prints to stdout.
     """
     close_conn = False
     if conn is None or cursor is None:
@@ -259,9 +344,13 @@ def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
     header = " | ".join(str(col).ljust(col_widths[i]) for i, col in enumerate(col_names))
     log_event(header, level="INFO")
     log_event("-" * len(header), level="INFO")
+    print(header)
+    print("-" * len(header))
     # Print each row
     for row in rows:
-        log_event(" | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row))), level="INFO")
+        row_str = " | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(row)))
+        log_event(row_str, level="INFO")
+        print(row_str)
     if close_conn:
         log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in pretty_print_table at {time.time()}", level="DEBUG")
     logging.info(f"[DB-CLOSE] Database connection closed: {db_path}")
@@ -282,6 +371,7 @@ def log_event(message, level="INFO"):
 
 
 def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
+    db_log(f"Linking files to pages in table: pages_files")
     """
     Link files to pages in the pages_files table.
 
