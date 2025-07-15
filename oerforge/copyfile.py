@@ -1,3 +1,21 @@
+def copy_build_to_docs_safe():
+    """
+    Non-destructively copy everything from build/ to docs/.
+    Creates docs/ if missing, copies files over themselves, does not remove docs/.
+    """
+    DOCS_DIR = os.path.join(PROJECT_ROOT, 'docs')
+    BUILD_DIR = os.path.join(PROJECT_ROOT, 'build')
+    if not os.path.exists(DOCS_DIR):
+        os.makedirs(DOCS_DIR)
+    for root, dirs, files in os.walk(BUILD_DIR):
+        rel_path = os.path.relpath(root, BUILD_DIR)
+        target_dir = os.path.join(DOCS_DIR, rel_path) if rel_path != '.' else DOCS_DIR
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        for file in files:
+            src_file = os.path.join(root, file)
+            dst_file = os.path.join(target_dir, file)
+            shutil.copy2(src_file, dst_file)
 """
 Module to copy project content and static assets into build directories for deployment.
 

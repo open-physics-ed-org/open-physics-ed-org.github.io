@@ -8,10 +8,15 @@ Logs all actions and errors to log/export.log.
 import os
 import sys
 import sqlite3
-import shutil
-import subprocess
 import logging
 import yaml
+# Ensure project root is in sys.path for module imports
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+from oerforge.convert import convert_md_to_docx
+from oerforge.path_utils import get_output_path_for_format
+from oerforge.copyfile import copy_build_to_docs_safe
 
 # --- Constants ---
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,24 +33,6 @@ logging.basicConfig(
     handlers=[logging.FileHandler(LOG_PATH, encoding="utf-8"), logging.StreamHandler(sys.stdout)]
 )
 
-# --- DOCX Conversion Function ---
-def convert_md_to_docx(src_path, out_path, record_id=None, conn=None):
-    """
-    Convert a Markdown file to DOCX using Pandoc.
-    Copy converted file to build/files. Update DB conversion status if record_id and conn provided.
-    """
-    logging.info(f"[DOCX] Starting conversion: {src_path} -> {out_path}")
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    try:
-        subprocess.run(["pandoc", src_path, "-o", out_path], check=True)
-        logging.info(f"[DOCX] Converted {src_path} to {out_path}")
-        if record_id and conn:
-            cursor = conn.cursor()
-            cursor.execute("UPDATE content SET converted_docx=1 WHERE id=?", (record_id,))
-            conn.commit()
-            logging.info(f"[DOCX] DB updated: converted_docx=1 for id {record_id}")
-    except Exception as e:
-        logging.error(f"[DOCX] Pandoc conversion failed for {src_path}: {e}")
 
 # --- Batch Export Orchestrator ---
 def export_all_docx(config_path=None):
@@ -58,37 +45,42 @@ def export_all_docx(config_path=None):
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
     toc = config.get("toc", [])
-    def walk_toc_md_files(items):
-        md_entries = []
-        for item in items:
-            file_path = item.get("file")
-            if file_path and file_path.endswith(".md"):
-                src_path = os.path.join(CONTENT_ROOT, file_path)
-                out_path = os.path.join(BUILD_ROOT, os.path.splitext(file_path)[0] + ".docx")
-                md_entries.append((src_path, out_path, file_path))
-            children = item.get("children", [])
-            if children:
-                md_entries.extend(walk_toc_md_files(children))
-        return md_entries
-    md_files = walk_toc_md_files(toc)
+    # Load TOC from config
+    with open(config_path, "r", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    toc = config.get("toc", [])
     conn = None
     if os.path.exists(DB_PATH):
         conn = sqlite3.connect(DB_PATH)
-    for src_path, out_path, file_path in md_files:
-        if os.path.exists(src_path):
-            record_id = None
-            if conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT id FROM content WHERE source_path=?", (src_path,))
-                row = cursor.fetchone()
-                if row:
-                    record_id = row[0]
-            convert_md_to_docx(src_path, out_path, record_id, conn)
-        else:
-            logging.warning(f"[EXPORT] Missing Markdown file: {src_path}")
     if conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, source_path FROM content WHERE source_path LIKE '%.md'")
+        records = cursor.fetchall()
+        for record in records:
+            record_id, source_path = record
+            src_path = os.path.join(PROJECT_ROOT, source_path) if not os.path.isabs(source_path) else source_path
+            out_path = get_output_path_for_format(toc, os.path.relpath(source_path, CONTENT_ROOT), "docx", BUILD_ROOT)
+            if os.path.exists(src_path):
+                logging.info(f"[EXPORT] Converting: {src_path} -> {out_path}")
+                convert_md_to_docx(src_path, out_path, record_id, conn)
+            else:
+                logging.warning(f"[EXPORT] Missing Markdown file: {src_path}")
         conn.close()
     logging.info("[EXPORT] Batch DOCX export complete.")
 
+def export_build_to_docs():
+    """
+    Copy build/ directory to docs/ using the project utility.
+    """
+    logging.info("[EXPORT] Copying build/ to docs/ (non-destructive)")
+    copy_build_to_docs_safe()
+    logging.info("[EXPORT] build/ copied to docs/ (non-destructive)")
+
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Batch export and copy build to docs.")
+    parser.add_argument("--copy", action="store_true", help="Copy build/ to docs/")
+    args = parser.parse_args()
     export_all_docx()
+    if args.copy:
+        export_build_to_docs()

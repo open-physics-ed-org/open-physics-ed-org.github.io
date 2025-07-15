@@ -158,66 +158,43 @@ def handle_images_for_markdown(content_record, conn):
     update_markdown_image_links(md_path, images, images_root=BUILD_IMAGES_ROOT)
     log_event(f"[IMAGES] Finished handling images for {md_path}", level="INFO")
     
-def convert_md_to_docx(content_record, conn):
+def convert_md_to_docx(src_path, out_path, record_id=None, conn=None):
     """
     Convert a Markdown file to DOCX using Pandoc.
-    Copy converted file to build/files. Update DB conversion status.
+    Copy converted file to build/files. Update DB conversion status if record_id and conn provided.
     """
-    src_path = content_record['source_path']
-    print(f"[DEBUG] Starting Markdown to DOCX conversion for: {src_path}")
-    # Determine output path: change extension to .docx, mirror TOC hierarchy
-    rel_path = os.path.relpath(src_path, CONTENT_ROOT)
-    out_path = os.path.join(BUILD_ROOT, os.path.splitext(rel_path)[0] + '.docx')
-    print(f"[DEBUG] Output DOCX path: {out_path}")
+    import logging
+    logging.info(f"[DOCX] Starting conversion: {src_path} -> {out_path}")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    abs_src_path = os.path.join(CONTENT_ROOT, rel_path)
-    # Copy original .md to build/files if not already there
-    build_md_path = os.path.join(BUILD_ROOT, rel_path)
-    print(f"[DEBUG] Build Markdown path: {build_md_path}")
-    if not os.path.exists(build_md_path):
-        try:
-            shutil.copy2(abs_src_path, build_md_path)
-            print(f"[DEBUG] Copied original md to {build_md_path}")
-            log_event(f"Copied original md to {build_md_path}", level="INFO")
-        except Exception as e:
-            print(f"[ERROR] Failed to copy md: {e}")
-            log_event(f"Failed to copy md: {e}", level="ERROR")
-            return
-    # Run Pandoc to convert md to docx
     try:
-        print(f"[DEBUG] Running Pandoc: pandoc {build_md_path} -o {out_path}")
-        subprocess.run([
-            "pandoc",
-            build_md_path,
-            "-o",
-            out_path
-        ], check=True)
-        print(f"[DEBUG] Converted {build_md_path} to DOCX at {out_path}")
-        log_event(f"Converted {build_md_path} to DOCX at {out_path}", level="INFO")
-        # Update DB: set converted_docx = 1 for this record
-        cursor = conn.cursor()
-        cursor.execute("UPDATE content SET converted_docx=1 WHERE id=?", (content_record['id'],))
-        conn.commit()
-        print(f"[DEBUG] DB updated: converted_docx=1 for id {content_record['id']}")
-        log_event(f"DB updated: converted_docx=1 for id {content_record['id']}", level="INFO")
+        import subprocess
+        subprocess.run(["pandoc", src_path, "-o", out_path], check=True)
+        logging.info(f"[DOCX] Converted {src_path} to {out_path}")
+        if record_id:
+            from oerforge.db_utils import get_db_connection, log_event
+            try:
+                db_conn = conn if conn is not None else get_db_connection()
+                db_cursor = db_conn.cursor()
+                db_cursor.execute("UPDATE content SET converted_docx=1 WHERE id=?", (record_id,))
+                db_conn.commit()
+                log_event(f"[DOCX] DB updated: converted_docx=1 for id {record_id}", level="INFO")
+                if conn is None:
+                    db_conn.close()
+            except Exception as e:
+                log_event(f"[DOCX] DB update failed for id {record_id}: {e}", level="ERROR")
     except Exception as e:
-        print(f"[ERROR] Pandoc conversion failed: {e}")
-        log_event(f"Pandoc conversion failed: {e}", level="ERROR")
+        logging.error(f"[DOCX] Pandoc conversion failed for {src_path}: {e}")
 
-def convert_md_to_pdf(content_record, conn):
+def convert_md_to_pdf(src_path, out_path, record_id=None, conn=None):
     """
-    Convert a Markdown file to PDF using Pandoc.
-    Copy converted file to build/files. Update DB conversion status.
+    Convert a Markdown file to PDF using Pandoc. (Stub)
     """
-    log_event(f"[STUB] Converting md to pdf for {content_record['source_path']}", level="DEBUG")
     pass
 
-def convert_md_to_tex(content_record, conn):
+def convert_md_to_tex(src_path, out_path, record_id=None, conn=None):
     """
-    Convert a Markdown file to LaTeX using Pandoc.
-    Copy converted file to build/files. Update DB conversion status.
+    Convert a Markdown file to LaTeX using Pandoc. (Stub)
     """
-    log_event(f"[STUB] Converting md to tex for {content_record['source_path']}", level="DEBUG")
     pass
 
 # --- Batch Conversion Orchestrator ---
@@ -255,26 +232,6 @@ def batch_convert_all_content(config_path=None):
     all_files = walk_toc_all_files(toc)
     try:
         import logging
-        logging.info(f"[DB-OPEN] Attempting to open database: {DB_PATH}")
-        conn = sqlite3.connect(DB_PATH)
-        logging.info(f"[DB-OPEN] Database connection established: {DB_PATH}")
-        for src_path, out_path in all_files:
-            print(f"[DEBUG] Copying {src_path} to {out_path}")
-            os.makedirs(os.path.dirname(out_path), exist_ok=True)
-            if os.path.exists(src_path):
-                shutil.copy2(src_path, out_path)
-                log_event(f"Copied {src_path} to {out_path}", level="INFO")
-                # Query and copy all referenced images for this file
-                content_record = {'source_path': src_path}
-                images = query_images_for_content(content_record, conn)
-                copy_images_to_build(images, images_root=BUILD_IMAGES_ROOT, conn=conn)
-                # If the file is markdown, update image links in the copied file
-                if out_path.endswith('.md'):
-                    update_markdown_image_links(out_path, images, images_root=BUILD_IMAGES_ROOT)
-            else:
-                log_event(f"[ERROR] Missing file: {src_path}", level="ERROR")
-        logging.info(f"[DB-CLOSE] Database connection closed: {DB_PATH}")
-        conn.close()
     except Exception as e:
         log_event(f"Batch conversion failed: {e}", level="ERROR")
 
