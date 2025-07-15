@@ -54,12 +54,15 @@ def export_all_docx(config_path=None):
         conn = sqlite3.connect(DB_PATH)
     if conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, source_path FROM content WHERE source_path LIKE '%.md'")
+        cursor.execute("SELECT id, source_path, slug FROM content WHERE source_path LIKE '%.md'")
         records = cursor.fetchall()
         for record in records:
-            record_id, source_path = record
+            record_id, source_path, slug = record
             src_path = os.path.join(PROJECT_ROOT, source_path) if not os.path.isabs(source_path) else source_path
-            out_path = get_output_path_for_format(toc, os.path.relpath(source_path, CONTENT_ROOT), "docx", BUILD_ROOT)
+            base_name = os.path.splitext(os.path.basename(source_path))[0]
+            # Use slug from DB for output path
+            out_dir = os.path.join(BUILD_ROOT, slug) if slug else BUILD_ROOT
+            out_path = os.path.join(out_dir, base_name + ".docx")
             if os.path.exists(src_path):
                 logging.info(f"[EXPORT] Converting: {src_path} -> {out_path}")
                 convert_md_to_docx(src_path, out_path, record_id, conn)
