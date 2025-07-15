@@ -137,6 +137,10 @@ def generate_nav_menu(context: dict) -> list:
             link = target
         logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}, is_section_index={is_section_index}")
         menu_items.append({'title': title, 'link': link})
+    logging.info(f"[MENU] Final menu_items: {menu_items}")
+    conn.close()
+    return menu_items
+
 def get_header_partial(context: dict) -> str:
     """Render header partial using Jinja2."""
     env = setup_template_env()
@@ -163,8 +167,6 @@ def convert_markdown_to_html(md_path: str) -> str:
     def custom_image_renderer(self, tokens, idx, options, env):
         token = tokens[idx]
         src = token.attrs.get('src', '')
-    if not menu_items:
-        return []
         # Only rewrite if not external or already in images/
         if not (src.startswith('http') or src.startswith('/') or src.startswith('images/')):
             filename = os.path.basename(src)
