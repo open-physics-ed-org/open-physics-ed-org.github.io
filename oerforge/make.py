@@ -14,6 +14,37 @@ import shutil
 import sqlite3
 # from jinja2 import Environment, FileSystemLoader  # Uncomment when implementing
 
+# Stub for copying static assets (CSS, JS, images) to build/
+def copy_static_assets_to_build():
+    """
+    Copy static assets (css, js, images) from static/ to build/.
+    Creates build/css/, build/js/, build/images/ if missing.
+    Overwrites files each time it is called.
+    """
+    import logging
+    import shutil
+    import os
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BUILD_DIR = os.path.join(PROJECT_ROOT, 'build')
+    CSS_SRC = os.path.join(PROJECT_ROOT, 'static', 'css')
+    CSS_DST = os.path.join(BUILD_DIR, 'css')
+    JS_SRC = os.path.join(PROJECT_ROOT, 'static', 'js')
+    JS_DST = os.path.join(BUILD_DIR, 'js')
+    IMAGES_SRC = os.path.join(PROJECT_ROOT, 'static', 'images')
+    IMAGES_DST = os.path.join(BUILD_DIR, 'images')
+    def copytree_overwrite(src, dst):
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+        if os.path.exists(src):
+            shutil.copytree(src, dst)
+            logging.info(f"Copied {src} to {dst}")
+        else:
+            logging.warning(f"Source directory not found: {src}")
+    copytree_overwrite(CSS_SRC, CSS_DST)
+    copytree_overwrite(JS_SRC, JS_DST)
+    copytree_overwrite(IMAGES_SRC, IMAGES_DST)
+    logging.info("[ASSET] Static assets copied to build/.")
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD_FILES_DIR = os.path.join(PROJECT_ROOT, 'build', 'files')
 BUILD_HTML_DIR = os.path.join(PROJECT_ROOT, 'build')
@@ -23,6 +54,105 @@ LAYOUTS_DIR = os.path.join(PROJECT_ROOT, 'layouts')
 # =========================
 # Utility Functions
 # =========================
+def get_available_downloads_for_page(rel_path, page_dir=None):
+    """
+    Scan the published output directory for this page and return a list of available download formats.
+    Returns: [{'label': 'PDF', 'filename': 'index.pdf', 'theme': 'light', ...}, ...]
+    """
+    # Determine the directory containing downloadable files
+    if page_dir is None:
+        # rel_path like 'about/index.html' -> build/files/about/
+        if rel_path == 'index.html':
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
+        else:
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+    logging.debug(f"[DOWNLOAD][DEBUG] get_available_downloads_for_page called with rel_path={rel_path}, page_dir={page_dir}")
+    # List of supported formats and labels
+    formats = [
+        ('.pdf', 'PDF', 'download-pdf'),
+        ('.docx', 'Word', 'download-docx'),
+        ('.tex', 'LaTeX', 'download-tex'),
+        ('.md', 'Markdown', 'download-md'),
+        ('.txt', 'Plain Text', 'download-txt'),
+    ]
+    # Look for files matching the page's base name (e.g., db_utils.pdf for db_utils.html)
+    downloads = []
+    try:
+        files = os.listdir(page_dir)
+        logging.debug(f"[DOWNLOAD][DEBUG] Listing files in {page_dir}: {files}")
+    except Exception as e:
+        logging.warning(f"[DOWNLOAD] Could not list files in {page_dir}: {e}")
+        files = []
+    logging.debug(f"[DOWNLOAD][DEBUG] Supported formats: {[f[0] for f in formats]}")
+    # Determine base name for this page (e.g., db_utils for db_utils.html)
+    base_name = os.path.splitext(os.path.basename(rel_path))[0]
+    section = os.path.dirname(rel_path)
+    # If rel_path is a section index page (endswith index.html and not at root), skip buttons
+    is_section_index = rel_path.endswith('index.html') and section and rel_path != 'index.html'
+    if is_section_index:
+        logging.debug(f"[DOWNLOAD][DEBUG] Skipping download buttons for section index page: {rel_path}")
+        return []
+    # Get relative_link from DB for this rel_path
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    # Find the DB row for this HTML file
+    cursor.execute("SELECT relative_link FROM content WHERE output_path LIKE ?", (f"%{rel_path}",))
+    row = cursor.fetchone()
+    conn.close()
+    if row and row[0]:
+        rel_link_base = row[0]
+        if rel_link_base.endswith('.html'):
+            rel_link_base = rel_link_base[:-5]
+        # Compute download links for children and grandchildren
+        # Compute the relative path from the HTML file's directory to the file in build/files/
+        html_dir = os.path.dirname(os.path.join(PROJECT_ROOT, 'build', rel_path))
+        file_path_base = os.path.join(PROJECT_ROOT, 'build', 'files', rel_link_base)
+        for ext, label, theme in formats:
+            fname = base_name + ext
+            logging.debug(f"[DOWNLOAD][DEBUG] Checking for file: {fname} in files: {files}")
+            file_path = f"{file_path_base}{ext}"
+            # Only add button if file exists in files list
+            if fname in files:
+                # Compute relative href from HTML file's directory to the file
+                href = os.path.relpath(file_path, html_dir)
+                logging.debug(f"[DOWNLOAD][DEBUG] Found downloadable file for button: {fname} in {page_dir}, href={href}")
+                downloads.append({
+                    'label': label,
+                    'filename': fname,
+                    'href': href,
+                    'theme': theme,
+                    'aria_label': f"Download as {label}",
+                })
+    else:
+        # No DB mapping, do not show download buttons
+        logging.debug(f"[DOWNLOAD][DEBUG] No DB mapping for rel_path={rel_path}, skipping download buttons.")
+        downloads = []
+    logging.debug(f"[DOWNLOAD][DEBUG] Final downloads list for rel_path={rel_path}, page_dir={page_dir}: {downloads}")
+    return downloads
+
+def build_download_buttons_context(rel_path, page_dir=None):
+    """
+    Build the download_buttons context for a page.
+    - rel_path: relative path to the HTML file (e.g., 'about/index.html')
+    - page_dir: directory containing downloadable files (default: docs/about/)
+    Returns: list of button dicts for the template.
+    """
+    logging.debug(f"[BUTTONS][DEBUG] build_download_buttons_context called for rel_path={rel_path}, page_dir={page_dir}")
+    downloads = get_available_downloads_for_page(rel_path, page_dir)
+    logging.debug(f"[BUTTONS][DEBUG] Downloads found for rel_path={rel_path}: {downloads}")
+    buttons = []
+    for d in downloads:
+        button = {
+            'label': d['label'],
+            'href': d['href'],
+            'theme': d['theme'],
+            'aria_label': d['aria_label'],
+        }
+        logging.debug(f"[BUTTONS][DEBUG] Adding button for rel_path={rel_path}: {button}")
+        buttons.append(button)
+    logging.debug(f"[BUTTONS][DEBUG] Final buttons list for rel_path={rel_path}: {buttons}")
+    return buttons
 
 def slugify(title: str) -> str:
     """Convert a title to a slug suitable for folder names."""
@@ -97,27 +227,48 @@ def generate_nav_menu(context: dict) -> list:
     rows = cursor.fetchall()
     logging.info(f"[TEST3] SQL query for nav menu: {sql}")
     logging.info(f"[TEST3] SQL query results: {rows}")
+    # Detect if this is a section index page (e.g., 'sample-resources/index.html', not 'index.html' at root)
+    is_section_index = False
+    if rel_path:
+        parts = rel_path.split(os.sep)
+        if rel_path != 'index.html' and rel_path.endswith('index.html') and len(parts) == 2:
+            is_section_index = True
+    logging.info(f"[MENU] rel_path={rel_path}, is_section_index={is_section_index}")
     for title, relative_link in rows:
         # For Home, always use 'index.html'
         if title and title.lower() == 'home':
             target = 'index.html'
         else:
             target = relative_link
-        # Compute robust relative link for menu item
+        # Compute menu links relative to the current page's directory
+    for title, relative_link in rows:
+        # For Home, always use 'index.html'
+        if title and title.lower() == 'home':
+            target = 'index.html'
+        else:
+            target = relative_link
+        # Special-case for section index pages (autogen)
         if rel_path:
-            # If target is absolute (starts with /), use as is
-            if os.path.isabs(target):
-                link = target
+            current_dir = os.path.dirname(rel_path)
+            is_section_index = (
+                rel_path.endswith('index.html') and
+                current_dir and
+                rel_path != 'index.html'
+            )
+            if is_section_index:
+                # If this menu item is the current section, use "index.html"
+                if target == rel_path or os.path.normpath(target) == os.path.normpath(rel_path):
+                    link = "index.html"
+                else:
+                    link = "../" + target
             else:
-                # Compute relative path from current page to menu target
-                link = os.path.relpath(target, os.path.dirname(rel_path))
+                link = os.path.relpath(target, current_dir) if not os.path.isabs(target) else target
         else:
             link = target
-        logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}")
+        logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}, is_section_index={is_section_index}")
         menu_items.append({'title': title, 'link': link})
-    logging.info(f"[MENU] Final menu_items for rel_path {rel_path}: {menu_items}")
+    logging.info(f"[MENU] Final menu_items: {menu_items}")
     conn.close()
-    logging.info(f"[TEST2] Final menu_items for rel_path {rel_path}: {menu_items}")
     return menu_items
 
 def get_header_partial(context: dict) -> str:
@@ -257,7 +408,10 @@ def build_all_markdown_files():
                 body_lines.append(line)
             body_text = '\n'.join(body_lines)
             html_body = convert_markdown_to_html_text(body_text)
-            top_menu = generate_nav_menu({'toc': toc})
+            rel_path_home = 'index.html'
+            top_menu = generate_nav_menu({'rel_path': rel_path_home, 'toc': toc})
+            if top_menu is None:
+                top_menu = []
             rel_path = 'index.html'
             context = {
                 'Title': title,
@@ -311,18 +465,26 @@ def build_all_markdown_files():
             # Only patch if file is in a subfolder and matches parent folder name (e.g. about.md in about/)
             if md_basename == parent_dir:
                 output_dir = os.path.join(BUILD_HTML_DIR, parent_dir)
-                os.makedirs(output_dir, exist_ok=True)
+                try:
+                    os.makedirs(output_dir, exist_ok=True)
+                except Exception as dir_err:
+                    logging.error(f"[ERROR] Failed to create output directory {output_dir}: {dir_err}")
                 output_path_final = os.path.join(output_dir, 'index.html')
                 rel_path = os.path.relpath(output_path_final, BUILD_HTML_DIR)
                 output_file = 'index.html'
             else:
                 output_path_final = output_path
+                out_dir = os.path.dirname(output_path_final)
+                try:
+                    os.makedirs(out_dir, exist_ok=True)
+                except Exception as dir_err:
+                    logging.error(f"[ERROR] Failed to create output directory {out_dir}: {dir_err}")
                 rel_path = os.path.relpath(output_path_final, BUILD_HTML_DIR)
                 output_file = os.path.basename(output_path_final)
-                out_dir = os.path.dirname(output_path_final)
-                os.makedirs(out_dir, exist_ok=True)
             logging.info(f"[TEST1] Building page: source_path={source_path}, output_path={output_path_final}, rel_path={rel_path}, title={title}")
             top_menu = generate_nav_menu({'rel_path': rel_path, 'toc': toc})
+            if top_menu is None:
+                top_menu = []
             logging.info(f"[TEST2] Rendered top_menu for output_file {output_file}: {top_menu}")
             context = {
                 'Title': title,
@@ -334,13 +496,29 @@ def build_all_markdown_files():
                 'output_file': output_file,
             }
             context = add_asset_paths(context, rel_path)
-            html_output = render_page(context, 'single.html')
+            # Add download_buttons context for template
+            if rel_path == 'index.html':
+                page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
+            else:
+                page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+            context['download_buttons'] = build_download_buttons_context(rel_path, page_dir)
             try:
-                with open(output_path_final, 'w', encoding='utf-8') as f:
-                    f.write(html_output)
-            except Exception as e:
-                logging.error(f"Failed to write HTML file {output_path_final}: {e}")
+                html_output = render_page(context, 'single.html')
+            except Exception as render_err:
+                logging.error(f"[ERROR] Template rendering failed for {source_path}: {render_err}")
+                import traceback
+                logging.error(traceback.format_exc())
+                html_output = None
+            if html_output:
+                try:
+                    with open(output_path_final, 'w', encoding='utf-8') as f:
+                        f.write(html_output)
+                except Exception as e:
+                    logging.error(f"Failed to write HTML file {output_path_final}: {e}")
     conn.close()
+    
+    copy_static_assets_to_build()
+    logging.info("[AUTO] All markdown files built.")
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
     """Generate section index.html using section.html template."""
@@ -374,7 +552,10 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         site = config.get('site', {})
         footer_text = config.get('footer', {}).get('text', '')
         # Add top_menu to page_context for navigation
-        top_menu = generate_nav_menu({'toc': context.get('toc', [])})
+        nav_context = {'rel_path': rel_path}
+        top_menu = generate_nav_menu(nav_context)
+        if top_menu is None:
+            top_menu = []
         page_context = {
             'Title': section_title,
             'Children': children,
@@ -383,6 +564,12 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             'site': site,
             'footer_text': footer_text,
         }
+        # Add download_buttons context for section index page
+        if rel_path == 'index.html':
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
+        else:
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+        page_context['download_buttons'] = build_download_buttons_context(rel_path, page_dir)
         page_context = add_asset_paths(page_context, rel_path)
         try:
             env = setup_template_env()

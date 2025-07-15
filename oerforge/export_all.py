@@ -15,7 +15,6 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 from oerforge.convert import convert_md_to_docx
-from oerforge.path_utils import get_output_path_for_format
 from oerforge.copyfile import copy_build_to_docs_safe
 
 # --- Constants ---
@@ -35,7 +34,7 @@ logging.basicConfig(
 
 
 # --- Batch Export Orchestrator ---
-def export_all_docx(config_path=None):
+def export_all(config_path=None):
     """
     Batch process all Markdown files in the TOC and convert to DOCX.
     """
