@@ -80,30 +80,44 @@ def render_page(context: dict, template_name: str) -> str:
 # Navigation and Partials
 # =========================
 
-def generate_nav_menu(context: dict) -> str:
+def generate_nav_menu(context: dict) -> list:
     import os
-    """Generate top-level navigation menu items from content table using relative_link and menu_context."""
+    """Generate top-level navigation menu items from content table using relative_link and menu_context.
+    Returns a list of menu item dicts: [{"title": ..., "link": ...}, ...]
+    """
     db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     menu_items = []
     rel_path = context.get('rel_path', '')
+    logging.info(f"[TEST1] generate_nav_menu called with rel_path: {rel_path}")
     # Query for top-level menu items (menu_context='main', parent_output_path is NULL or empty)
-    cursor.execute("SELECT title, relative_link FROM content WHERE menu_context='main' AND (parent_output_path IS NULL OR parent_output_path = '') ORDER BY "order";")
+    sql = "SELECT title, relative_link FROM content WHERE menu_context='main' AND (parent_output_path IS NULL OR parent_output_path = '') ORDER BY \"order\";"
+    cursor.execute(sql)
     rows = cursor.fetchall()
+    logging.info(f"[TEST3] SQL query for nav menu: {sql}")
+    logging.info(f"[TEST3] SQL query results: {rows}")
     for title, relative_link in rows:
         # For Home, always use 'index.html'
         if title and title.lower() == 'home':
             target = 'index.html'
         else:
             target = relative_link
-        # If rel_path is set, compute relative path
+        # Compute robust relative link for menu item
         if rel_path:
-            link = os.path.relpath(target, os.path.dirname(rel_path))
+            # If target is absolute (starts with /), use as is
+            if os.path.isabs(target):
+                link = target
+            else:
+                # Compute relative path from current page to menu target
+                link = os.path.relpath(target, os.path.dirname(rel_path))
         else:
             link = target
+        logging.info(f"[MENU] Menu item: title={title}, target={target}, computed_link={link}, rel_path={rel_path}, dirname={os.path.dirname(rel_path)}")
         menu_items.append({'title': title, 'link': link})
+    logging.info(f"[MENU] Final menu_items for rel_path {rel_path}: {menu_items}")
     conn.close()
+    logging.info(f"[TEST2] Final menu_items for rel_path {rel_path}: {menu_items}")
     return menu_items
 
 def get_header_partial(context: dict) -> str:
@@ -291,7 +305,6 @@ def build_all_markdown_files():
                 body_lines.append(line)
             body_text = '\n'.join(body_lines)
             html_body = convert_markdown_to_html(source_path) if not found_title else convert_markdown_to_html_text(body_text)
-            top_menu = generate_nav_menu({'toc': toc})
             # Patch: output single files as folder/index.html
             md_basename = os.path.splitext(os.path.basename(source_path))[0]
             parent_dir = os.path.basename(os.path.dirname(source_path))
@@ -308,6 +321,9 @@ def build_all_markdown_files():
                 output_file = os.path.basename(output_path_final)
                 out_dir = os.path.dirname(output_path_final)
                 os.makedirs(out_dir, exist_ok=True)
+            logging.info(f"[TEST1] Building page: source_path={source_path}, output_path={output_path_final}, rel_path={rel_path}, title={title}")
+            top_menu = generate_nav_menu({'rel_path': rel_path, 'toc': toc})
+            logging.info(f"[TEST2] Rendered top_menu for output_file {output_file}: {top_menu}")
             context = {
                 'Title': title,
                 'Content': html_body,
