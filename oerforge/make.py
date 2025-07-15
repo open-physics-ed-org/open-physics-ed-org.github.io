@@ -61,11 +61,12 @@ def get_available_downloads_for_page(rel_path, page_dir=None):
     """
     # Determine the directory containing downloadable files
     if page_dir is None:
-        # rel_path like 'about/index.html' -> docs/about/
+        # rel_path like 'about/index.html' -> build/files/about/
         if rel_path == 'index.html':
-            page_dir = os.path.join(PROJECT_ROOT, 'docs')
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
         else:
-            page_dir = os.path.join(PROJECT_ROOT, 'docs', os.path.dirname(rel_path))
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+    logging.debug(f"[DOWNLOAD][DEBUG] get_available_downloads_for_page called with rel_path={rel_path}, page_dir={page_dir}")
     # List of supported formats and labels
     formats = [
         ('.pdf', 'PDF', 'download-pdf'),
@@ -74,22 +75,55 @@ def get_available_downloads_for_page(rel_path, page_dir=None):
         ('.md', 'Markdown', 'download-md'),
         ('.txt', 'Plain Text', 'download-txt'),
     ]
-    # Always look for index.* in the directory
+    # Look for files matching the page's base name (e.g., db_utils.pdf for db_utils.html)
     downloads = []
     try:
         files = os.listdir(page_dir)
+        logging.debug(f"[DOWNLOAD][DEBUG] Listing files in {page_dir}: {files}")
     except Exception as e:
         logging.warning(f"[DOWNLOAD] Could not list files in {page_dir}: {e}")
         files = []
-    for ext, label, theme in formats:
-        fname = 'index' + ext
-        if fname in files:
-            downloads.append({
-                'label': label,
-                'filename': fname,
-                'theme': theme,
-                'aria_label': f"Download as {label}",
-            })
+    logging.debug(f"[DOWNLOAD][DEBUG] Supported formats: {[f[0] for f in formats]}")
+    # Determine base name for this page (e.g., db_utils for db_utils.html)
+    base_name = os.path.splitext(os.path.basename(rel_path))[0]
+    section = os.path.dirname(rel_path)
+    # If rel_path is a section index page (endswith index.html and not at root), skip buttons
+    is_section_index = rel_path.endswith('index.html') and section and rel_path != 'index.html'
+    if is_section_index:
+        logging.debug(f"[DOWNLOAD][DEBUG] Skipping download buttons for section index page: {rel_path}")
+        return []
+    # Get relative_link from DB for this rel_path
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    # Find the DB row for this HTML file
+    cursor.execute("SELECT relative_link FROM content WHERE output_path LIKE ?", (f"%{rel_path}",))
+    row = cursor.fetchone()
+    conn.close()
+    if row and row[0]:
+        rel_link_base = row[0]
+        if rel_link_base.endswith('.html'):
+            rel_link_base = rel_link_base[:-5]
+        # Compute download links for children and grandchildren
+        rel_link_base_with_files = f"files/{rel_link_base}"
+        for ext, label, theme in formats:
+            fname = base_name + ext
+            logging.debug(f"[DOWNLOAD][DEBUG] Checking for file: {fname} in files: {files}")
+            if fname in files:
+                href = f"{rel_link_base_with_files}{ext}"
+                logging.debug(f"[DOWNLOAD][DEBUG] Found downloadable file for button: {fname} in {page_dir}, href={href}")
+                downloads.append({
+                    'label': label,
+                    'filename': fname,
+                    'href': href,
+                    'theme': theme,
+                    'aria_label': f"Download as {label}",
+                })
+    else:
+        # No DB mapping, do not show download buttons
+        logging.debug(f"[DOWNLOAD][DEBUG] No DB mapping for rel_path={rel_path}, skipping download buttons.")
+        downloads = []
+    logging.debug(f"[DOWNLOAD][DEBUG] Final downloads list for rel_path={rel_path}, page_dir={page_dir}: {downloads}")
     return downloads
 
 def build_download_buttons_context(rel_path, page_dir=None):
@@ -99,19 +133,20 @@ def build_download_buttons_context(rel_path, page_dir=None):
     - page_dir: directory containing downloadable files (default: docs/about/)
     Returns: list of button dicts for the template.
     """
+    logging.debug(f"[BUTTONS][DEBUG] build_download_buttons_context called for rel_path={rel_path}, page_dir={page_dir}")
     downloads = get_available_downloads_for_page(rel_path, page_dir)
-    # Build full path for href (relative to HTML file)
-    # rel_path: 'about/index.html' -> buttons should link to 'index.pdf', etc.
-    # If page is in subdir, links are just 'index.pdf', etc.
-    # If at root, links are 'index.pdf', etc.
+    logging.debug(f"[BUTTONS][DEBUG] Downloads found for rel_path={rel_path}: {downloads}")
     buttons = []
     for d in downloads:
-        buttons.append({
+        button = {
             'label': d['label'],
-            'href': d['filename'],
+            'href': d['href'],
             'theme': d['theme'],
             'aria_label': d['aria_label'],
-        })
+        }
+        logging.debug(f"[BUTTONS][DEBUG] Adding button for rel_path={rel_path}: {button}")
+        buttons.append(button)
+    logging.debug(f"[BUTTONS][DEBUG] Final buttons list for rel_path={rel_path}: {buttons}")
     return buttons
 
 def slugify(title: str) -> str:
@@ -457,7 +492,11 @@ def build_all_markdown_files():
             }
             context = add_asset_paths(context, rel_path)
             # Add download_buttons context for template
-            context['download_buttons'] = build_download_buttons_context(rel_path)
+            if rel_path == 'index.html':
+                page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
+            else:
+                page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+            context['download_buttons'] = build_download_buttons_context(rel_path, page_dir)
             try:
                 html_output = render_page(context, 'single.html')
             except Exception as render_err:
@@ -520,6 +559,12 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             'site': site,
             'footer_text': footer_text,
         }
+        # Add download_buttons context for section index page
+        if rel_path == 'index.html':
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files')
+        else:
+            page_dir = os.path.join(PROJECT_ROOT, 'build', 'files', os.path.dirname(rel_path))
+        page_context['download_buttons'] = build_download_buttons_context(rel_path, page_dir)
         page_context = add_asset_paths(page_context, rel_path)
         try:
             env = setup_template_env()

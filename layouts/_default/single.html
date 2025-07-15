@@ -4,7 +4,7 @@
     {% if download_buttons %}
     <nav class="download-nav" role="navigation" aria-label="Download options">
       {% for btn in download_buttons %}
-        <a href="{{ btn.output_path }}"
+        <a href="{{ btn.href }}"
            class="download-btn theme-{{ btn.theme }}"
            role="button"
            aria-label="Download as {{ btn.label }}">
