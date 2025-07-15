@@ -1,6 +1,9 @@
 # Don't add the database
 db/
 
+#find where this is made
+debug_sections.txt
+
 # OS-specific
 .DS_Store
 Thumbs.db
