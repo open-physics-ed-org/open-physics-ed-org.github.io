@@ -472,5 +472,39 @@ def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
         log_event(f"[DEBUG][{os.getpid()}][{threading.get_ident()}] Closing DB connection in link_files_to_pages at {time.time()}", level="DEBUG")
         conn.close()
 
+def get_available_conversions_for_page(output_path, db_path=None):
+    """
+    Given a page output_path, return all successful conversions for that page.
+    Returns a list of dicts: {target_format, output_path, status}
+    """
+    conn = get_db_connection(db_path)
+    cursor = conn.cursor()
+    # Find content.id for this output_path
+    cursor.execute("SELECT id FROM content WHERE output_path=?", (output_path,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return []
+    content_id = row[0]
+    cursor.execute("SELECT target_format, output_path, status FROM conversion_results WHERE content_id=? AND status='success'", (content_id,))
+    results = [
+        {
+            'target_format': r[0],
+            'output_path': r[1],
+            'status': r[2]
+        }
+        for r in cursor.fetchall()
+    ]
+    conn.close()
+    return results
+
 if __name__ == "__main__":
-    pass
+    # Example test: print available conversions for a given output_path
+    test_output_path = None
+    import sys
+    if len(sys.argv) > 1:
+        test_output_path = sys.argv[1]
+    if test_output_path:
+        print(f"Available conversions for {test_output_path}:")
+        for conv in get_available_conversions_for_page(test_output_path):
+            print(conv)

@@ -2,7 +2,7 @@ import os
 import logging
 from oerforge.logging_utils import setup_logging
 from oerforge.db_utils import initialize_database
-from oerforge.copyfile import copy_build_to_docs_safe, copy_project_files
+from oerforge.copyfile import copy_build_to_docs_safe
 from oerforge.scan import scan_toc_and_populate_db
 
 from oerforge.convert import batch_convert_all_content
@@ -26,9 +26,9 @@ def run_full_workflow() -> None:
     logging.info("Step 1: Initializing database...")
     initialize_database()
 
-    logging.info("Step 2: Copying project files and static assets...")
-    copy_project_files()
-    log_directory_contents(BUILD_FILES_DIR)
+    # logging.info("Step 2: Copying project files and static assets...")
+    # copy_project_files()
+    # log_directory_contents(BUILD_FILES_DIR)
 
     logging.info("Step 3: Scanning TOC and populating database...")
     scan_toc_and_populate_db('_content.yml')

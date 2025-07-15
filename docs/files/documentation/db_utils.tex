@@ -1,0 +1,276 @@
+\section{\texorpdfstring{\texttt{db\_utils.py} --- OERForge Database
+Utilities}{db\_utils.py --- OERForge Database Utilities}}\label{db_utils.py-oerforge-database-utilities}
+
+\subsection{Overview}\label{overview}
+
+\texttt{db\_utils.py} provides utility functions for initializing,
+managing, and interacting with the SQLite database used in the OERForge
+project. It supports asset tracking, page-file relationships, site
+metadata, and general-purpose queries and inserts. This module is
+designed to be approachable for new programmers and extensible for
+contributors.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Module Docstring}\label{module-docstring}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{"""}
+\CommentTok{OERForge Database Utilities}
+\CommentTok{==========================}
+
+\CommentTok{This module provides utility functions for initializing, managing, and interacting with the SQLite database used in the OERForge project. It supports asset tracking, page{-}file relationships, site metadata, and general{-}purpose queries and inserts.}
+
+\CommentTok{Features:}
+\CommentTok{    {-} Database initialization and schema setup}
+\CommentTok{    {-} General{-}purpose record fetching and insertion}
+\CommentTok{    {-} Logging of database events}
+\CommentTok{    {-} Utility functions for linking files to pages}
+\CommentTok{    {-} Pretty{-}printing tables for debugging and inspection}
+
+\CommentTok{Intended Audience:}
+\CommentTok{    {-} Contributors to OERForge}
+\CommentTok{    {-} Anyone needing to interact with or extend the database layer}
+
+\CommentTok{Usage:}
+\CommentTok{    Import this module and use the provided functions to initialize the database, insert or fetch records, and link files to pages. All functions are documented with clear arguments and return values.}
+\CommentTok{"""}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Functions}\label{functions}
+
+\subsubsection{\texorpdfstring{\texttt{initialize\_database()}}{initialize\_database()}}\label{initialize_database}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ initialize\_database():}
+    \CommentTok{"""}
+\CommentTok{    Initializes the SQLite database for asset tracking in the OERForge project.}
+
+\CommentTok{    This function creates the following tables:}
+\CommentTok{        {-} files: Stores metadata about tracked files/assets.}
+\CommentTok{        {-} pages\_files: Maps files to pages where they are referenced.}
+\CommentTok{        {-} content: Tracks source and output paths for content.}
+\CommentTok{        {-} site\_info: Stores site{-}wide metadata and configuration.}
+
+\CommentTok{    Existing tables are dropped before creation to ensure a clean state.}
+\CommentTok{    The database file is located at \textless{}project\_root\textgreater{}/db/sqlite.db.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Sets up the database schema, ensuring all necessary
+tables exist and are clean for a new build.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{get\_db\_connection(db\_path=None)}}{get\_db\_connection(db\_path=None)}}\label{get_db_connectiondb_pathnone}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ get\_db\_connection(db\_path}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    Returns a sqlite3 connection to the database.}
+
+\CommentTok{    Args:}
+\CommentTok{        db\_path (str, optional): Path to the SQLite database file.}
+\CommentTok{            If None, defaults to \textless{}project\_root\textgreater{}/db/sqlite.db.}
+
+\CommentTok{    Returns:}
+\CommentTok{        sqlite3.Connection: A connection object to the SQLite database.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Provides a reusable way to obtain a database
+connection, using the default project path if none is specified.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{get\_records(table\_name,\ where\_clause=None,\ params=None,\ db\_path=None,\ conn=None,\ cursor=None)}}{get\_records(table\_name, where\_clause=None, params=None, db\_path=None, conn=None, cursor=None)}}\label{get_recordstable_name-where_clausenone-paramsnone-db_pathnone-connnone-cursornone}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ get\_records(table\_name, where\_clause}\OperatorTok{=}\VariableTok{None}\NormalTok{, params}\OperatorTok{=}\VariableTok{None}\NormalTok{, db\_path}\OperatorTok{=}\VariableTok{None}\NormalTok{, conn}\OperatorTok{=}\VariableTok{None}\NormalTok{, cursor}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    Fetch records from a table with optional WHERE clause and parameters.}
+\CommentTok{    Args:}
+\CommentTok{        table\_name (str): Name of the table to query.}
+\CommentTok{        where\_clause (str, optional): SQL WHERE clause (without \textquotesingle{}WHERE\textquotesingle{}).}
+\CommentTok{        params (tuple or list, optional): Parameters for the WHERE clause.}
+\CommentTok{        db\_path (str, optional): Path to the SQLite database file.}
+\CommentTok{        conn, cursor: Optional existing connection/cursor.}
+\CommentTok{    Returns:}
+\CommentTok{        list of dict: List of records as dictionaries.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Allows flexible querying of any table, returning
+results as a list of dictionaries for easy use in Python code.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{insert\_records(table\_name,\ records,\ db\_path=None,\ conn=None,\ cursor=None)}}{insert\_records(table\_name, records, db\_path=None, conn=None, cursor=None)}}\label{insert_recordstable_name-records-db_pathnone-connnone-cursornone}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ insert\_records(table\_name, records, db\_path}\OperatorTok{=}\VariableTok{None}\NormalTok{, conn}\OperatorTok{=}\VariableTok{None}\NormalTok{, cursor}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    General{-}purpose batch insert for any table.}
+\CommentTok{    Checks if table exists, inserts records, returns list of inserted row ids.}
+\CommentTok{    Args:}
+\CommentTok{        table\_name (str): Name of the table to insert into.}
+\CommentTok{        records (list of dict): Each dict contains column{-}value pairs.}
+\CommentTok{        db\_path (str, optional): Path to the SQLite database file.}
+\CommentTok{        conn, cursor: Optional existing connection/cursor.}
+\CommentTok{    Returns:}
+\CommentTok{        list of int: List of inserted row ids.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Efficiently inserts multiple records into any table,
+handling connection management and error logging.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{pretty\_print\_table(table\_name,\ db\_path=None,\ conn=None,\ cursor=None)}}{pretty\_print\_table(table\_name, db\_path=None, conn=None, cursor=None)}}\label{pretty_print_tabletable_name-db_pathnone-connnone-cursornone}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ pretty\_print\_table(table\_name, db\_path}\OperatorTok{=}\VariableTok{None}\NormalTok{, conn}\OperatorTok{=}\VariableTok{None}\NormalTok{, cursor}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    Pretty{-}print all rows of a table to the log for inspection/debugging.}
+
+\CommentTok{    Args:}
+\CommentTok{        table\_name (str): Name of the table to print.}
+\CommentTok{        db\_path (str, optional): Path to the SQLite database file.}
+\CommentTok{        conn, cursor: Optional existing connection/cursor.}
+
+\CommentTok{    Returns:}
+\CommentTok{        None}
+
+\CommentTok{    Output:}
+\CommentTok{        Logs a formatted table to the scan.log file and stdout.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Helps developers inspect the contents of any table in
+a readable format, useful for debugging and development.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{log\_event(message,\ level="INFO")}}{log\_event(message, level="INFO")}}\label{log_eventmessage-levelinfo}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ log\_event(message, level}\OperatorTok{=}\StringTok{"INFO"}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    Logs an event to both stdout and a log file in the project root.}
+
+\CommentTok{    Args:}
+\CommentTok{        message (str): The log message to record.}
+\CommentTok{        level (str): The severity level (e.g., "INFO", "ERROR", "WARNING").}
+
+\CommentTok{    The log file is named \textquotesingle{}scan.log\textquotesingle{} and is located at \textless{}project\_root\textgreater{}/scan.log.}
+\CommentTok{    Each log entry is timestamped.}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Centralizes logging for all database operations,
+making it easier to track and debug issues.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsubsection{\texorpdfstring{\texttt{link\_files\_to\_pages(file\_page\_pairs,\ db\_path=None,\ conn=None,\ cursor=None)}}{link\_files\_to\_pages(file\_page\_pairs, db\_path=None, conn=None, cursor=None)}}\label{link_files_to_pagesfile_page_pairs-db_pathnone-connnone-cursornone}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{def}\NormalTok{ link\_files\_to\_pages(file\_page\_pairs, db\_path}\OperatorTok{=}\VariableTok{None}\NormalTok{, conn}\OperatorTok{=}\VariableTok{None}\NormalTok{, cursor}\OperatorTok{=}\VariableTok{None}\NormalTok{):}
+    \CommentTok{"""}
+\CommentTok{    Link files to pages in the pages\_files table.}
+
+\CommentTok{    Args:}
+\CommentTok{        file\_page\_pairs (list of tuple): Each tuple is (file\_id, page\_path).}
+\CommentTok{        db\_path (str, optional): Path to the SQLite database file.}
+\CommentTok{        conn, cursor: Optional existing connection/cursor.}
+
+\CommentTok{    Returns:}
+\CommentTok{        None}
+
+\CommentTok{    Example:}
+\CommentTok{        link\_files\_to\_pages([(1, \textquotesingle{}index.html\textquotesingle{}), (2, \textquotesingle{}about.html\textquotesingle{})])}
+\CommentTok{    """}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Purpose:} Specifically designed to create links between files
+and pages in the \texttt{pages\_files} table, supporting asset tracking
+and page relationships.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Best Practices}\label{best-practices}
+
+\begin{itemize}
+\tightlist
+\item
+  Always close database connections when done to avoid resource leaks.
+\item
+  Use the provided logging functions to track database operations and
+  errors.
+\item
+  When adding new tables or relationships, update
+  \texttt{initialize\_database()} and consider creating new utility
+  functions for those tables.
+\item
+  Read function docstrings for argument details and usage examples.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Example Usage}\label{example-usage}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{from}\NormalTok{ oerforge }\ImportTok{import}\NormalTok{ db\_utils}
+
+\NormalTok{db\_utils.initialize\_database()}
+\NormalTok{conn }\OperatorTok{=}\NormalTok{ db\_utils.get\_db\_connection()}
+\NormalTok{files }\OperatorTok{=}\NormalTok{ db\_utils.get\_records(}\StringTok{\textquotesingle{}files\textquotesingle{}}\NormalTok{, where\_clause}\OperatorTok{=}\StringTok{\textquotesingle{}is\_image=1\textquotesingle{}}\NormalTok{)}
+\NormalTok{db\_utils.pretty\_print\_table(}\StringTok{\textquotesingle{}files\textquotesingle{}}\NormalTok{)}
+\NormalTok{db\_utils.link\_files\_to\_pages([(}\DecValTok{1}\NormalTok{, }\StringTok{\textquotesingle{}index.html\textquotesingle{}}\NormalTok{), (}\DecValTok{2}\NormalTok{, }\StringTok{\textquotesingle{}about.html\textquotesingle{}}\NormalTok{)])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{For New Programmers}\label{for-new-programmers}
+
+\begin{itemize}
+\tightlist
+\item
+  Read the module and function docstrings for guidance.
+\item
+  If you are unsure about database operations, start with
+  \texttt{get\_records} and \texttt{pretty\_print\_table} to explore the
+  data.
+\item
+  Use logging to help debug and understand what your code is doing.
+\item
+  Ask questions and refer to Python's official documentation for
+  \texttt{sqlite3} if you want to learn more about database programming.
+\end{itemize}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\emph{This documentation is intended to be verbose and
+beginner-friendly. For further help, see the code comments and
+docstrings in \texttt{db\_utils.py} itself.}
