@@ -1,2 +1,3 @@
-get_top_level_sections() returned: [('News', 'build/news')]
+get_top_level_sections() returned: [('News', 'build/news'), ('Docs', 'build/docs')]
 Processing section: News at build/news
+Processing section: Docs at build/docs
