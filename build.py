@@ -46,6 +46,40 @@ def run_full_workflow() -> None:
     logging.info("Step 5: Building HTML and section indexes...")
     log_markdown_files(BUILD_FILES_DIR)
     build_all_markdown_files()
+
+    # Enforce output paths from the database
+    import sqlite3
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT output_path FROM content WHERE output_path IS NOT NULL AND output_path != ''")
+    db_output_paths = set(row[0] for row in cursor.fetchall())
+    conn.close()
+
+    # Check for missing files and log them
+    missing_files = []
+    for out_path in db_output_paths:
+        abs_path = os.path.join(PROJECT_ROOT, out_path) if not os.path.isabs(out_path) else out_path
+        if not os.path.exists(abs_path):
+            missing_files.append(abs_path)
+    if missing_files:
+        logging.warning(f"[DB ENFORCE] Missing files (should be generated/copied):\n" + '\n'.join(missing_files))
+    else:
+        logging.info("[DB ENFORCE] All database output paths exist.")
+
+    # Optionally, log extra files in output directories not listed in the DB
+    output_dirs = [os.path.join(PROJECT_ROOT, 'build'), os.path.join(PROJECT_ROOT, 'docs')]
+    extra_files = []
+    for out_dir in output_dirs:
+        for root, _, files in os.walk(out_dir):
+            for name in files:
+                rel_path = os.path.relpath(os.path.join(root, name), PROJECT_ROOT)
+                if rel_path not in db_output_paths:
+                    extra_files.append(rel_path)
+    if extra_files:
+        logging.warning(f"[DB ENFORCE] Extra files not in DB output paths:\n" + '\n'.join(extra_files))
+    else:
+        logging.info("[DB ENFORCE] No extra files found in output directories.")
     
     # Autogenerate index.html for top-level sections from the database
     def get_top_level_sections(db_path=None):

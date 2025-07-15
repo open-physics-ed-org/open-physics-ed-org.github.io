@@ -209,6 +209,9 @@ def batch_convert_all_content(config_path=None):
     print("[DEBUG] Starting batch conversion for all content records.")
     log_event("Starting batch conversion for all content records.", level="INFO")
     import yaml
+    # Open build log for appending
+    build_log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'log', 'build.log')
+    build_log = open(build_log_path, 'a', encoding='utf-8')
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if config_path is None:
         config_path = os.path.join(project_root, "_content.yml")
@@ -223,38 +226,43 @@ def batch_convert_all_content(config_path=None):
     # Get all enabled conversions
     cursor.execute("SELECT source_format, target_format FROM conversion_capabilities WHERE is_enabled=1")
     conversions = cursor.fetchall()
-    # Get all content files
-    cursor.execute("SELECT id, source_path FROM content")
+    # Get all content files with output_path
+    cursor.execute("SELECT id, source_path, output_path FROM content")
     content_files = cursor.fetchall()
-    for record_id, source_path in content_files:
-        if not source_path:
-            log_event(f"Skipping content record id={record_id} with None source_path", level="WARNING")
+    for record_id, source_path, output_path in content_files:
+        if not source_path or not output_path:
+            log_event(f"Skipping content record id={record_id} with None source_path or output_path", level="WARNING")
+            build_log.write(f"SKIP: id={record_id} source_path={source_path} output_path={output_path}\n")
             continue
         src_ext = os.path.splitext(source_path)[1]
         rel_path = os.path.relpath(source_path, CONTENT_ROOT)
         src_path = os.path.join(CONTENT_ROOT, rel_path)
+        out_dir = os.path.dirname(output_path)
+        os.makedirs(out_dir, exist_ok=True)
         for conv_src, conv_target in conversions:
             if src_ext == conv_src:
-                # Compute output path
-                out_dir = os.path.join(BUILD_FILES_ROOT, os.path.dirname(rel_path))
-                os.makedirs(out_dir, exist_ok=True)
-                out_name = os.path.splitext(os.path.basename(rel_path))[0] + conv_target
+                # Use output_path from DB, but adjust extension for conversion
+                out_name = os.path.splitext(os.path.basename(output_path))[0] + conv_target
                 out_path = os.path.join(out_dir, out_name)
                 # Dispatch conversion
                 if conv_src == ".md" and conv_target == ".md":
-                    # Copy markdown as-is
                     try:
                         shutil.copy2(src_path, out_path)
                         log_event(f"Copied .md to {out_path}", level="INFO")
+                        build_log.write(f"COPY: {src_path} -> {out_path}\n")
                     except Exception as e:
                         log_event(f"Failed to copy .md: {e}", level="ERROR")
+                        build_log.write(f"ERROR: Failed to copy {src_path} -> {out_path}: {e}\n")
                 elif conv_src == ".md" and conv_target == ".docx":
                     convert_md_to_docx(src_path, out_path, record_id, conn)
+                    build_log.write(f"CONVERT: {src_path} -> {out_path} (docx)\n")
                 elif conv_src == ".ipynb" and conv_target == ".jupyter":
-                    # Stub: convert notebook to JupyterBook (implement as needed)
                     log_event(f"[JUPYTER] Would convert {src_path} to JupyterBook at {out_path}", level="INFO")
+                    build_log.write(f"JUPYTER: {src_path} -> {out_path}\n")
                 # Add more elifs for other conversions as needed
     conn.close()
+    build_log.write("Batch conversion complete.\n")
+    build_log.close()
 
 # --- Main Entry Point ---
 if __name__ == "__main__":
