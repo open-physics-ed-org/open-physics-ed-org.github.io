@@ -237,6 +237,64 @@ def add_asset_paths(context, rel_path):
     return context
 
 def build_all_markdown_files():
+    logging.info("[DEBUG][build_all_markdown_files] Starting markdown to HTML build loop.")
+    # Load config and site-wide variables for index build
+    config_path = os.path.join(PROJECT_ROOT, '_content.yml')
+    config = load_yaml_config(config_path)
+    site = config.get('site', {})
+    toc = config.get('toc', [])
+    footer_text = config.get('footer', {}).get('text', '')
+
+    # Always build the site root index.html from index.md if present
+    index_md_path = os.path.join(BUILD_FILES_DIR, 'index.md')
+    index_html_path = os.path.join(BUILD_HTML_DIR, 'index.html')
+    if os.path.exists(index_md_path):
+        try:
+            with open(index_md_path, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            logging.info(f"[TRACE][build_all_markdown_files] Successfully read site root markdown: {index_md_path}")
+            # Extract first # header as title
+            title = "Untitled"
+            lines = md_text.splitlines()
+            body_lines = []
+            found_title = False
+            for line in lines:
+                if not found_title and line.strip().startswith('# '):
+                    title = line.strip()[2:].strip()
+                    found_title = True
+                    continue
+                body_lines.append(line)
+            body_text = '\n'.join(body_lines)
+            html_body = convert_markdown_to_html(index_md_path) if not found_title else convert_markdown_to_html_text(body_text)
+            nav_html = generate_nav_menu({'toc': toc})
+            context = {
+                'Title': title,
+                'Content': html_body,
+                'toc': toc,
+                'nav': nav_html,
+                'site': site,
+                'footer_text': footer_text,
+                'output_file': 'index.html',
+            }
+            context = add_asset_paths(context, 'index.md')
+            db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+            top_menu = get_top_level_menu(db_path, 'index.md')
+            context['top_menu'] = top_menu
+            html_output = render_page(context, 'single.html')
+            with open(index_html_path, 'w', encoding='utf-8') as f:
+                f.write(html_output)
+            logging.info(f"[TRACE][build_all_markdown_files] Site root HTML file written: {index_html_path}")
+        except Exception as err:
+            logging.error(f"[ERROR][build_all_markdown_files] Failed to build site root index.html: {err}")
+    else:
+        # Optionally, create a default index.html if index.md is missing
+        try:
+            default_html = '<!DOCTYPE html><html><head><title>Open Physics Ed</title></head><body><h1>Welcome to Open Physics Ed</h1><p>No index.md found.</p></body></html>'
+            with open(index_html_path, 'w', encoding='utf-8') as f:
+                f.write(default_html)
+            logging.info(f"[TRACE][build_all_markdown_files] Default site root HTML file written: {index_html_path}")
+        except Exception as err:
+            logging.error(f"[ERROR][build_all_markdown_files] Failed to write default site root index.html: {err}")
     """Build all markdown files using Hugo-style rendering, using first # header as title."""
     config_path = os.path.join(PROJECT_ROOT, '_content.yml')
     config = load_yaml_config(config_path)
@@ -244,33 +302,38 @@ def build_all_markdown_files():
     toc = config.get('toc', [])
     footer_text = config.get('footer', {}).get('text', '')
     md_files = find_markdown_files(BUILD_FILES_DIR)
-    # Build a mapping from markdown file path to parent section slug (from TOC)
+    # Build a mapping from markdown file path (relative to build/files) to parent section slug (from TOC)
     toc_section_map = {}
     for section in toc:
         section_slug = section.get('slug', slugify(section.get('title', '')))
         children = section.get('children', [])
         for child in children:
             if 'file' in child:
-                child_file = child['file']
-                toc_section_map[os.path.normpath(child_file)] = section_slug
+                # Normalize child file path to match rel_path
+                child_file = os.path.normpath(child['file'])
+                # If child file is in a subdirectory, map both with and without subdir
+                toc_section_map[child_file] = section_slug
+                toc_section_map[os.path.basename(child_file)] = section_slug
     logging.info(f"[TRACE][TOC] toc_section_map={toc_section_map}")
 
     for md_path in md_files:
         logging.info(f"[TRACE][build_all_markdown_files] Processing markdown file: {md_path}")
         rel_path = os.path.relpath(md_path, BUILD_FILES_DIR)
-        # Determine parent section slug override if present
-        parent_section_slug = toc_section_map.get(rel_path)
+        rel_path_norm = os.path.normpath(rel_path)
+        parent_section_slug = toc_section_map.get(rel_path_norm) or toc_section_map.get(os.path.basename(rel_path_norm))
+        logging.info(f"[DEBUG][build_all_markdown_files] rel_path={rel_path} rel_path_norm={rel_path_norm} parent_section_slug={parent_section_slug}")
         if parent_section_slug:
-            # Place child HTML under parent section slug directory
             output_dir = os.path.join(BUILD_HTML_DIR, parent_section_slug)
+            logging.info(f"[DEBUG][build_all_markdown_files] Creating output_dir={output_dir} for parent_section_slug={parent_section_slug}")
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir, exist_ok=True)
-            html_path = os.path.join(output_dir, os.path.splitext(os.path.basename(rel_path))[0] + '.html')
-            logging.info(f"[TRACE][build_all_markdown_files] Using parent section slug override: {parent_section_slug} for {rel_path} -> html_path={html_path}")
+            html_path = os.path.join(output_dir, os.path.splitext(os.path.basename(rel_path_norm))[0] + '.html')
+            logging.info(f"[TRACE][build_all_markdown_files] Using parent section slug override: {parent_section_slug} for {rel_path_norm} -> html_path={html_path}")
         else:
             ensure_output_dir(md_path)
-            html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path)[0] + '.html')
-            logging.info(f"[TRACE][build_all_markdown_files] No parent section slug override for {rel_path} -> html_path={html_path}")
+            html_path = os.path.join(BUILD_HTML_DIR, os.path.splitext(rel_path_norm)[0] + '.html')
+            logging.info(f"[TRACE][build_all_markdown_files] No parent section slug override for {rel_path_norm} -> html_path={html_path}")
+        logging.info(f"[DEBUG][build_all_markdown_files] Final html_path for write: {html_path}")
         try:
             with open(md_path, 'r', encoding='utf-8') as f:
                 md_text = f.read()
@@ -316,6 +379,7 @@ def build_all_markdown_files():
             logging.error(f"[ERROR][build_all_markdown_files] Failed to render HTML for: {html_path} | {render_err}")
             continue
         try:
+            logging.info(f"[DEBUG][build_all_markdown_files] Attempting to write HTML to: {html_path}")
             with open(html_path, 'w', encoding='utf-8') as f:
                 f.write(html_output)
             logging.info(f"[TRACE][build_all_markdown_files] HTML file written: {html_path}")
@@ -327,22 +391,34 @@ def build_all_markdown_files():
             logging.warning(f"[WARN][build_all_markdown_files] HTML file NOT found after write: {html_path}")
 
 def create_section_index_html(section_title: str, output_dir: str, context: dict):
+    logging.info(f"[DEBUG][create_section_index_html] Called for section_title={section_title} output_dir={output_dir}")
     """Generate section index.html using section.html template."""
-    import logging
-    logging.info(f"[DEBUG] create_section_index_html called for: {section_title} -> {output_dir}")
+    logging.info(f"[DEBUG][create_section_index_html] Called for section_title={section_title} output_dir={output_dir}")
     try:
         section = next((entry for entry in context.get('toc', []) if entry.get('title') == section_title), None)
         children = []
+        logging.info(f"[DEBUG][create_section_index_html] section={section}")
         if section and 'children' in section:
             logging.info(f"[DEBUG] Section found in TOC: {section_title}")
+            parent_slug = section.get('slug', slugify(section.get('title', '')))
+            logging.info(f"[DEBUG][create_section_index_html] children={section['children']}")
             for entry in section['children']:
                 if entry.get('file'):
                     file_path = entry.get('file')
                     base_name = os.path.splitext(os.path.basename(file_path))[0] + '.html'
-                    link = base_name
+                    # Avoid redundant parent_slug/base_name if base_name == parent_slug.html
+                    if base_name == parent_slug + '.html':
+                        link = parent_slug + '.html'
+                    else:
+                        link = parent_slug + '/' + base_name
                 else:
                     child_slug = entry.get('slug', slugify(entry.get('title', '')))
-                    link = child_slug + '/index.html'
+                    # Avoid redundant parent_slug/child_slug/index.html if child_slug == parent_slug
+                    if child_slug == parent_slug:
+                        link = parent_slug + '/index.html'
+                    else:
+                        link = parent_slug + '/' + child_slug + '/index.html'
+                logging.info(f"[DEBUG][create_section_index_html] child_entry={entry} link={link}")
                 children.append({
                     'title': entry.get('title', ''),
                     'slug': entry.get('slug', slugify(entry.get('title', ''))),
@@ -357,6 +433,7 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
             output_dir = os.path.join(BUILD_HTML_DIR, section.get('slug', slugify(section['title'])))
         else:
             output_dir = os.path.join(BUILD_HTML_DIR, slugify(section_title))
+        logging.info(f"[DEBUG][create_section_index_html] Final output_dir for section index: {output_dir}")
         rel_path = os.path.relpath(os.path.join(output_dir, 'index.html'), BUILD_HTML_DIR)
         # Ensure site.title and site.subtitle are always present
         config_path = os.path.join(PROJECT_ROOT, '_content.yml')
@@ -389,14 +466,21 @@ def create_section_index_html(section_title: str, output_dir: str, context: dict
         except Exception as dir_err:
             logging.error(f"[ERROR] Failed to create output directory {output_dir}: {dir_err}")
         # Write index.html with error logging
+        final_index_path = os.path.join(output_dir, 'index.html')
         if html_output:
             try:
-                with open(os.path.join(output_dir, 'index.html'), 'w', encoding='utf-8') as f:
+                logging.info(f"[DEBUG][create_section_index_html] Attempting to write section index HTML to: {final_index_path}")
+                with open(final_index_path, 'w', encoding='utf-8') as f:
                     f.write(html_output)
+                logging.info(f"[TRACE][create_section_index_html] Section index HTML file written: {final_index_path}")
             except Exception as file_err:
                 logging.error(f"[ERROR] Failed to write index.html for {section_title} in {output_dir}: {file_err}")
                 import traceback
                 logging.error(traceback.format_exc())
+        if os.path.exists(final_index_path):
+            logging.info(f"[TRACE][create_section_index_html] Section index HTML file exists after write: {final_index_path}")
+        else:
+            logging.warning(f"[WARN][create_section_index_html] Section index HTML file NOT found after write: {final_index_path}")
     except Exception as e:
         logging.error(f"[ERROR] Failed to create section index for {section_title}: {e}")
         import traceback

@@ -33,7 +33,7 @@ toc:
     slug: sample-resources
     children:
       - title: "Introduction"
-        file: sample/index.md
+        file: sample/welcome.md
         menu: false
       - title: "Activities"
         file: sample/activities.md
