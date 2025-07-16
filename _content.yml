@@ -42,12 +42,24 @@ toc:
     menu: true
     slug: documentation
     children:
-      - title: "db_utils.py — OERForge Database Utilities"
-        file: documentation/db_utils.md
-      - title: "scan.py - OERForge Content Scanner"
-        file: documentation/scan.md
-      - title: "WCAG checking with pa11y integration"
-        file: documentation/pa11y_config.md
+      - title: "build.py - OER-Forge Orchestrator"
+        file: documentation/build.md
+      - title: "pa11y.py - OER-Forge WCAG checker"
+        file: documentation/pa11y.md
+      - title: "db_utils.py — OER-Forge Database Utilities"
+        file: documentation/oerforge.db_utils.md
+      - title: "scan.py - OER-Forge Content Scanner"
+        file: documentation/oerforge.scan.md
+      - title: "convert.py - OER-Forge Content Converter"
+        file: documentation/oerforge.convert.md
+      - title: "make.py - OER-Forge Static Site Generator"
+        file: documentation/oerforge.make.md
+      - title: "copyfile.py - OER-Forge File Copier"
+        file: documentation/oerforge.copyfile.md
+      - title: "export_all.py - OER-Forge Content Exporter"
+        file: documentation/oerforge.export_all.md
+      - title: "verify.py - OER-Forge Accessibility Verifier"
+        file: documentation/oerforge.verify.md
   - title: "About"
     menu: true
     file: about.md
