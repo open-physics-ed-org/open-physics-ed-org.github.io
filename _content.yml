@@ -52,7 +52,7 @@ toc:
 
 pa11y:
   wcag_level: AAA
-  config: pa11y.wcag.aa.json
+  config: pa11y.wcag.aaa.json
 
 static:
   images:
