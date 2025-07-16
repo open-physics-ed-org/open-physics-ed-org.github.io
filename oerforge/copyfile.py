@@ -62,3 +62,15 @@ def create_nojekyll(path):
     with open(path, 'w') as f:
         f.write('')
     logging.info(f"Created .nojekyll at {path}")
+    
+def copy_build_to_docs():
+    """
+    Copy everything from build/ to docs/, including .nojekyll
+    """
+    DOCS_DIR = os.path.join(PROJECT_ROOT, 'docs')
+    logging.info(f"Copying all build/ contents to docs/: {BUILD_DIR} -> {DOCS_DIR}")
+    if os.path.exists(DOCS_DIR):
+        logging.debug(f"Removing existing docs directory: {DOCS_DIR}")
+        shutil.rmtree(DOCS_DIR)
+    shutil.copytree(BUILD_DIR, DOCS_DIR)
+    logging.info(f"Copied build/ to docs/")

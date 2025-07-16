@@ -5,7 +5,7 @@ from oerforge.scan import scan_toc_and_populate_db
 from oerforge.convert import batch_convert_all_content
 from oerforge.make import build_all_markdown_files, build_section_indexes
 from oerforge.export_all import export_all
-from oerforge.copyfile import copy_build_to_docs_safe
+from oerforge.copyfile import copy_build_to_docs
 
 #================================================================
 # Directories for builds and file storage
@@ -43,7 +43,7 @@ def run() -> None:
     build_section_indexes()
 
     print("Step 6: Copying build/ to docs/ for publishing...")
-    copy_build_to_docs_safe()
+    copy_build_to_docs()
 
     logging.info("Workflow complete. Please check the build/, docs/, and logs directories for results.")
 

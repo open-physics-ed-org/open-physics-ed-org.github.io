@@ -1,8 +1,9 @@
+
 # oerforge.copyfile — Project File and Asset Copy Utilities
 
 ## Overview
 
-`oerforge.copyfile` provides utilities for copying project content, static assets, and build outputs into deployment directories. It is designed to help new users and programmers automate the process of preparing files for deployment, especially for static site hosting (e.g., GitHub Pages).
+`oerforge.copyfile` provides utilities for copying project content, static assets, and build outputs into deployment directories. It is designed for new users and programmers to automate file preparation for static site hosting (e.g., GitHub Pages).
 
 - **Copies all content and assets to build/ and docs/**
 - **Ensures target directories exist**
@@ -14,7 +15,7 @@
 
 ## Functions
 
-### copy_build_to_docs_safe()
+### copy_build_to_docs()
 
 Non-destructively copy everything from `build/` to `docs/`.
 
@@ -76,7 +77,7 @@ Create an empty `.nojekyll` file at the given path.
 
 ## Logging
 
-All major operations and errors are logged for debugging and auditing.
+All major operations and errors are logged for debugging and auditing. Log files are written to `log/build.log`.
 
 ## Error Handling
 
@@ -85,8 +86,8 @@ Robust error handling is implemented for file and directory operations. All fail
 ## Example Usage
 
 ```python
-from oerforge.copyfile import copy_build_to_docs_safe, ensure_dir, create_nojekyll
-copy_build_to_docs_safe()
+from oerforge.copyfile import copy_build_to_docs, ensure_dir, create_nojekyll
+copy_build_to_docs()
 ensure_dir('build/files')
 create_nojekyll('build/.nojekyll')
 ```
