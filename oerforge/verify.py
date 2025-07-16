@@ -130,41 +130,34 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     if badge_html:
         button_html += f'\n{badge_html}\n'
 
-    # Regex to find previous button+badge block (button with class download-btn and optional badge after)
+    # Regex to find ALL previous button+badge blocks (button with class download-btn and any following badge)
     import re
-    # This regex matches the button and any following badge (img or span with badge-missing)
-    button_pattern = re.compile(r'(\n?<a [^>]*class=["\"][^>]*download-btn[^>]*>.*?</a>\n?(?:\n?.*?(?:<img [^>]*>|<span class=\"badge-missing\">.*?</span>\n?))?)', re.DOTALL)
-    if button_pattern.search(html):
-        # Replace the first occurrence
-        html, n = button_pattern.subn(button_html, html, count=1)
-        if n > 0:
-            logging.info(f"[inject_badge_into_html] Replaced existing accessibility report button/badge in {html_path}")
-    else:
-        # Try to insert after <main> tag (preferred)
-        insert_pos = html.find('<main')
-        if insert_pos != -1:
-            # Find the closing '>' of the <main ...> tag
-            close_tag = html.find('>', insert_pos)
-            if close_tag != -1:
-                html = html[:close_tag+1] + button_html + html[close_tag+1:]
-            else:
-                # Fallback: insert after <body>
-                insert_pos = html.find('<body')
-                close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
-                if close_tag != -1:
-                    html = html[:close_tag+1] + button_html + html[close_tag+1:]
-                else:
-                    # Fallback: prepend to file
-                    html = button_html + html
+    # This regex matches any <a ...download-btn...>...</a> and any following <span> or <img> badge (greedy, multiline)
+    button_pattern = re.compile(r'(\n?<a [^>]*class=["\"][^>]*download-btn[^>]*>.*?</a>\n?(?:\n?.*?(?:<img [^>]*>|<span[^>]*>.*?</span>\n?))?)', re.DOTALL)
+    html, n = button_pattern.subn('', html)
+    if n > 0:
+        logging.info(f"[inject_badge_into_html] Removed {n} existing accessibility report button/badge blocks in {html_path}")
+
+    # Insert the new button/badge block after <main> (preferred), or fallback as before
+    insert_pos = html.find('<main')
+    if insert_pos != -1:
+        close_tag = html.find('>', insert_pos)
+        if close_tag != -1:
+            html = html[:close_tag+1] + button_html + html[close_tag+1:]
         else:
-            # Fallback: insert after <body>
             insert_pos = html.find('<body')
             close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
             if close_tag != -1:
                 html = html[:close_tag+1] + button_html + html[close_tag+1:]
             else:
-                # Fallback: prepend to file
                 html = button_html + html
+    else:
+        insert_pos = html.find('<body')
+        close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
+        if close_tag != -1:
+            html = html[:close_tag+1] + button_html + html[close_tag+1:]
+        else:
+            html = button_html + html
 
     # Write back the modified HTML
     try:
