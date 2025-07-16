@@ -1,0 +1,112 @@
+— OERForge Static Site Asset and Content Scanner
+
+Overview
+
+ provides the core logic for scanning site content, extracting assets, and populating the SQLite database for the OERForge project. It supports hierarchical TOC parsing, asset extraction from Markdown, Jupyter Notebooks, and DOCX files, and maintains relationships between pages, sections, and files. The module is designed for clarity, extensibility, and ease of debugging, with standardized logging and comprehensive docstrings.
+
+Module Docstring
+
+Functions
+
+
+
+Purpose:Standardizes logging for all scan operations, ensuring traceability in both the console and log files.
+
+
+
+Purpose:Efficiently loads content from a list of files, supporting multiple formats for downstream asset extraction.
+
+
+
+Purpose:Loads Markdown content for asset extraction and database population.
+
+
+
+Purpose:Loads Jupyter notebook content for asset extraction and database population.
+
+
+
+Purpose:Loads DOCX content for asset extraction and database population.
+
+
+
+Purpose:Extracts and records all linked assets (images, files, etc.) from a batch of content files, updating the database and linking files to pages.
+
+
+
+Purpose:Finds and returns all asset links in Markdown content for database tracking.
+
+
+
+Purpose:Finds and returns all asset links in notebook cells, including embedded images and code-generated outputs.
+
+
+
+Purpose:Finds and returns all asset links and embedded images in DOCX files for database tracking.
+
+
+
+Purpose:Reads site metadata from the config YAML and updates the site_info table in the database.
+
+
+
+Purpose:Determines which conversion operations are supported for a given file type.
+
+
+
+Purpose:The main entry point for scanning the TOC, reading files, extracting assets, and populating the database with hierarchical content and file records.
+
+
+
+Purpose:Efficiently queries the database for all descendants of a section, supporting hierarchical navigation and index generation.
+
+Typical Workflow
+
+Scan and Populate Database
+
+Call  to walk the TOC, read files, extract assets, and populate the database.
+
+
+
+Asset Extraction
+
+Use  and related helpers to extract and link assets from Markdown, Notebooks, and DOCX files.
+
+
+
+Site Metadata
+
+Use  to update site-wide metadata in the database.
+
+
+
+Section Hierarchy Queries
+
+Use  to retrieve all children and grandchildren for a given section, supporting navigation and index pages.
+
+
+
+Logging and Debugging
+
+All major operations are logged using , with output to both stdout and . This ensures traceability for debugging and auditing. Errors, warnings, and key events are clearly marked.
+
+Extensibility
+
+New asset types and file formats can be added by extending the asset extraction helpers.
+
+
+The TOC walking logic supports arbitrary nesting and slug overrides.
+
+
+All functions are documented and organized for easy onboarding and contribution.
+
+
+Intended Audience
+
+Contributors to OERForge
+
+
+Developers building or extending static site generators
+
+
+Anyone needing robust asset and content scanning for static sites

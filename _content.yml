@@ -7,7 +7,7 @@ site:
   logo: "static/images/logo.png"
   favicon: "static/images/favicon.ico"
   theme:
-    default: dark
+    default: light
     light: light
     dark: dark
   language: "en"
@@ -49,6 +49,10 @@ toc:
   - title: "About"
     menu: true
     file: about.md
+
+pa11y:
+  wcag_level: AA
+  config: pa11y.wcag.aa.json
 
 static:
   images:

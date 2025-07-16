@@ -188,8 +188,9 @@ def setup_template_env():
     """Set up Jinja2 template environment."""
     from jinja2 import Environment, FileSystemLoader, select_autoescape
     layouts_default = os.path.join(LAYOUTS_DIR, '_default')
+    layouts_partials = os.path.join(LAYOUTS_DIR, 'partials')
     env = Environment(
-        loader=FileSystemLoader([LAYOUTS_DIR, layouts_default]),
+        loader=FileSystemLoader([LAYOUTS_DIR, layouts_default, layouts_partials]),
         autoescape=select_autoescape(['html', 'xml'])
     )
     return env
