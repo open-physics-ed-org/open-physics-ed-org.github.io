@@ -104,6 +104,48 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     """Inject the badge/button into the HTML file after <main>."""
     pass
 
+
+# --- Navigation Menu Generation (ported from make.py) ---
+def generate_nav_menu(context: dict) -> list:
+    import os
+    PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(PROJECT_ROOT, 'db', 'sqlite.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    menu_items = []
+    rel_path = context.get('rel_path', '')
+    # Query for top-level menu items (menu_context='main', parent_output_path is NULL or empty)
+    sql = "SELECT title, relative_link FROM content WHERE menu_context='main' AND (parent_output_path IS NULL OR parent_output_path = '') ORDER BY \"order\";"
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    for title, relative_link in rows:
+        # For Home, always use 'index.html'
+        if title and title.lower() == 'home':
+            target = 'index.html'
+        else:
+            target = relative_link
+        # Compute menu links relative to the current page's directory
+        if rel_path:
+            current_dir = os.path.dirname(rel_path)
+            is_section_index = (
+                rel_path.endswith('index.html') and
+                current_dir and
+                rel_path != 'index.html'
+            )
+            if is_section_index:
+                # If this menu item is the current section, use "index.html"
+                if target == rel_path or os.path.normpath(target) == os.path.normpath(rel_path):
+                    link = "index.html"
+                else:
+                    link = "../" + target
+            else:
+                link = os.path.relpath(target, current_dir) if not os.path.isabs(target) else target
+        else:
+            link = target
+        menu_items.append({'title': title, 'link': link})
+    conn.close()
+    return menu_items
+
 def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_html: str, config: dict):
     """Generate a detailed HTML report for the file using a Jinja2 template that extends baseof.html."""
     from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -159,6 +201,11 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     build_root = os.path.abspath(os.path.join(html_dir, '..'))
     relative_url = os.path.relpath(html_path, build_root)
 
+    # Compute rel_path for the report (relative to build/)
+    rel_path = os.path.relpath(report_path, build_root)
+    # Generate the top menu using the same logic as make.py
+    top_menu = generate_nav_menu({'rel_path': rel_path})
+
     context = {
         'Title': page_title,  # For {% block title %} in baseof.html
         'page_title': page_title,
@@ -175,6 +222,8 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
         'badge_html': badge_html,
         'issues': issues,
         'footer_text': footer_text,
+        'top_menu': top_menu,
+        'rel_path': rel_path,
     }
 
     # Render and write
