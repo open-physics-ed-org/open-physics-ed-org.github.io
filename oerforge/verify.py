@@ -133,11 +133,19 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     site = site_config.get('site', {})
     footer_text = site_config.get('footer', {}).get('text', '')
 
+    # Compute relative asset paths from report location
+    build_dir = os.path.abspath(os.path.join(html_dir, '..'))
+    css_path = os.path.relpath(os.path.join(build_dir, 'css/theme-light.css'), html_dir)
+    js_path = os.path.relpath(os.path.join(build_dir, 'js/main.js'), html_dir)
+    favicon = os.path.relpath(os.path.join(build_dir, 'images/favicon.ico'), html_dir)
+    theme_toggle_js_path = os.path.relpath(os.path.join(build_dir, 'js/theme-toggle.js'), html_dir)
+
     context = {
         'title': config.get('title', html_filename),
-        'favicon': site.get('favicon', config.get('favicon', '/images/favion.ico')),
-        'css_path': config.get('css_path', '/css/theme-light.css'),
-        'js_path': config.get('js_path', '/js/main.js'),
+        'favicon': favicon,
+        'css_path': css_path,
+        'js_path': js_path,
+        'theme_toggle_js_path': theme_toggle_js_path,
         'wcag_level': config.get('wcag_level', 'AA'),
         'error_count': sum(1 for i in issues if i.get('type') == 'error'),
         'warning_count': sum(1 for i in issues if i.get('type') == 'warning'),
