@@ -26,12 +26,18 @@ def load_pa11y_config(yml_path: str = "_content.yml") -> dict:
 
 
 # --- Pa11y Integration ---
-def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None, wcag_level: str = "AA") -> Optional[List[Dict[str, Any]]]:
     """
     Run Pa11y on a single HTML file. Returns parsed JSON result, or None on error.
+    Accepts config_path and wcag_level ("AA" or "AAA").
     """
     html_abs = os.path.abspath(html_path)
     pa11y_cmd = ["pa11y", f"file://{html_abs}", "--reporter", "json"]
+    # Add WCAG level as --standard
+    if wcag_level.upper() == "AAA":
+        pa11y_cmd.extend(["--standard", "WCAG2AAA"])
+    else:
+        pa11y_cmd.extend(["--standard", "WCAG2AA"])
     if config_path:
         pa11y_cmd.extend(["--config", os.path.abspath(config_path)])
     try:
@@ -366,14 +372,14 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
             if fnmatch.fnmatch(filename, "*.html") and not filename.startswith("wcag_report_"):
                 html_path = os.path.join(root, filename)
                 print(f"Processing: {html_path}")
-                # Run Pa11y
-                result = run_pa11y_on_file(html_path, config_file)
+                # Determine WCAG level (allow per-page override in config if desired)
+                wcag_level = default_wcag_level
+                # Optionally, you could add logic here to check for per-page config in the future
+                # Run Pa11y with config and level
+                result = run_pa11y_on_file(html_path, config_file, wcag_level)
                 # Open DB connection
                 conn = sqlite3.connect(db_path)
                 content_id = get_content_id_for_file(html_path, conn)
-                # Determine WCAG level (allow per-page override in config if desired)
-                wcag_level = default_wcag_level
-                # Optionally, you could add logic here to check for per-page config
                 error_count = sum(1 for i in result if i.get("type") == "error") if result else 0
                 warning_count = sum(1 for i in result if i.get("type") == "warning") if result else 0
                 notice_count = sum(1 for i in result if i.get("type") == "notice") if result else 0
