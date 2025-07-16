@@ -1,0 +1,8 @@
+{
+  "standard": "WCAG2AA",
+  "timeout": 30000,
+  "screenCapture": false,
+  "ignore": [
+    "notice"
+  ]
+}
