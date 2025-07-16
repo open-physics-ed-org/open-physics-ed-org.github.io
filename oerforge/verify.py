@@ -49,11 +49,41 @@ def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None) -> Opti
 # --- DB Operations ---
 def get_content_id_for_file(html_path: str, conn) -> Optional[int]:
     """Get the content_id for a given HTML file from the DB."""
-    pass
+    # Normalize path for DB comparison
+    html_path = os.path.abspath(html_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, output_path FROM content")
+    for row in cursor.fetchall():
+        db_id, db_path = row
+        if os.path.abspath(db_path) == html_path:
+            return db_id
+    logging.warning(f"No content_id found for {html_path}")
+    return None
 
 def store_accessibility_result(content_id: int, pa11y_json: List[Dict[str, Any]], badge_html: str, wcag_level: str, error_count: int, warning_count: int, notice_count: int, conn=None):
     """Store the latest accessibility result for a page in the database."""
-    pass
+    if conn is None:
+        raise ValueError("A valid database connection is required.")
+    cursor = conn.cursor()
+    # Remove old result for this content_id and wcag_level
+    cursor.execute("""
+        DELETE FROM accessibility_results WHERE content_id = ? AND wcag_level = ?
+    """, (content_id, wcag_level))
+    # Insert new result
+    cursor.execute("""
+        INSERT INTO accessibility_results (
+            content_id, pa11y_json, badge_html, wcag_level, error_count, warning_count, notice_count, checked_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    """, (
+        content_id,
+        json.dumps(pa11y_json),
+        badge_html,
+        wcag_level,
+        error_count,
+        warning_count,
+        notice_count
+    ))
+    conn.commit()
 
 def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     """Return a list of pages (from content table) to check for accessibility."""
