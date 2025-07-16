@@ -102,7 +102,54 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict) -> s
 
 def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     """Inject the badge/button into the HTML file after <main>."""
-    pass
+    # Read the HTML file
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            html = f.read()
+    except Exception as e:
+        logging.error(f"[inject_badge_into_html] Failed to read {html_path}: {e}")
+        return
+
+    # Prepare the button HTML (use .download-btn for styling)
+    button_html = f'\n<a href="{report_link}" class="download-btn" aria-label="View accessibility report">Accessibility Report</a>\n'
+    # If badge_html is provided, append it after the button
+    if badge_html:
+        button_html += f'\n{badge_html}\n'
+
+    # Try to insert after <main> tag (preferred)
+    insert_pos = html.find('<main')
+    if insert_pos != -1:
+        # Find the closing '>' of the <main ...> tag
+        close_tag = html.find('>', insert_pos)
+        if close_tag != -1:
+            # Insert after the opening <main> tag
+            html = html[:close_tag+1] + button_html + html[close_tag+1:]
+        else:
+            # Fallback: insert after <body>
+            insert_pos = html.find('<body')
+            close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
+            if close_tag != -1:
+                html = html[:close_tag+1] + button_html + html[close_tag+1:]
+            else:
+                # Fallback: prepend to file
+                html = button_html + html
+    else:
+        # Fallback: insert after <body>
+        insert_pos = html.find('<body')
+        close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
+        if close_tag != -1:
+            html = html[:close_tag+1] + button_html + html[close_tag+1:]
+        else:
+            # Fallback: prepend to file
+            html = button_html + html
+
+    # Write back the modified HTML
+    try:
+        with open(html_path, 'w', encoding='utf-8') as f:
+            f.write(html)
+        logging.info(f"[inject_badge_into_html] Injected accessibility report button into {html_path}")
+    except Exception as e:
+        logging.error(f"[inject_badge_into_html] Failed to write {html_path}: {e}")
 
 
 # --- Navigation Menu Generation (ported from make.py) ---
@@ -232,6 +279,42 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
         f.write(rendered)
     logging.info(f"Generated WCAG report: {report_path}")
     return report_path
+
+def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqlite.db"):
+    import fnmatch
+    asset_dirs = {"css", "js", "images", "files"}
+    from oerforge.verify import run_pa11y_on_file, get_content_id_for_file, store_accessibility_result, generate_wcag_report, inject_badge_into_html
+    import sqlite3
+
+    for root, dirs, files in os.walk(build_dir):
+        # Skip asset directories
+        dirs[:] = [d for d in dirs if d not in asset_dirs]
+        for filename in files:
+            if fnmatch.fnmatch(filename, "*.html") and not filename.startswith("wcag_report_"):
+                html_path = os.path.join(root, filename)
+                print(f"Processing: {html_path}")
+                # Run Pa11y
+                result = run_pa11y_on_file(html_path, config_file)
+                # Open DB connection
+                conn = sqlite3.connect(db_path)
+                content_id = get_content_id_for_file(html_path, conn)
+                badge_html = "<span>Badge</span>"
+                wcag_level = "AAA"
+                error_count = sum(1 for i in result if i.get("type") == "error") if result else 0
+                warning_count = sum(1 for i in result if i.get("type") == "warning") if result else 0
+                notice_count = sum(1 for i in result if i.get("type") == "notice") if result else 0
+                if content_id is not None:
+                    store_accessibility_result(content_id, result, badge_html, wcag_level, error_count, warning_count, notice_count, conn)
+                    config = {
+                        'title': os.path.splitext(filename)[0].capitalize(),
+                        'wcag_level': wcag_level
+                    }
+                    issues = result if result is not None else []
+                    report_path = generate_wcag_report(html_path, issues, badge_html, config)
+                    # Compute relative link from html file to report
+                    report_link = os.path.basename(report_path)
+                    inject_badge_into_html(html_path, badge_html, report_link)
+                conn.close()
 
 # --- Utility ---
 def copy_to_docs():
