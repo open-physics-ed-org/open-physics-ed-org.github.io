@@ -136,20 +136,21 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     # Remove all previous accessibility report buttons and badges
     removed = 0
     for a in soup.find_all('a', class_='download-btn'):
-        # Remove the badge (img or span) immediately after the button, if present
-        next_sib = a.find_next_sibling()
-        # Only check .name if next_sib is a Tag
-        if isinstance(next_sib, Tag):
-            sib_class = next_sib.get('class')
-            if next_sib.name == 'img' or (next_sib.name == 'span' and sib_class is not None and 'badge-missing' in sib_class):
-                next_sib.decompose()
-        a.decompose()
-        removed += 1
+        if a.has_attr('data-accessibility-report-btn'):
+            # Remove the badge (img or span) immediately after the button, if present
+            next_sib = a.find_next_sibling()
+            # Only check .name if next_sib is a Tag
+            if isinstance(next_sib, Tag):
+                sib_class = next_sib.get('class')
+                if next_sib.name == 'img' or (next_sib.name == 'span' and sib_class is not None and 'badge-missing' in sib_class):
+                    next_sib.decompose()
+            a.decompose()
+            removed += 1
     if removed > 0:
         logging.info(f"[inject_badge_into_html] Removed {removed} existing accessibility report button/badge blocks in {html_path}")
 
     # Build the new button and badge block
-    button_tag = soup.new_tag('a', href=report_link, attrs={'class': 'download-btn', 'aria-label': 'View accessibility report'})
+    button_tag = soup.new_tag('a', href=report_link, attrs={'class': 'download-btn', 'aria-label': 'View accessibility report', 'data-accessibility-report-btn': '1'})
     button_tag.string = 'Accessibility Report'
     badge_frag = BeautifulSoup(badge_html, 'html.parser') if badge_html else None
 

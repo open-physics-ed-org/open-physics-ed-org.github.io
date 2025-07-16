@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accessibility Report: </title>
+  
+  <link rel="icon" href="static/images/favicon.ico">
+  <link rel="stylesheet" href="../css/theme-light.css" id="theme-css">
+  <script src="../js/main.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+  <div class="header-flex">
+    <img src="../images/logo.png" alt="Site Logo" class="site-logo" />
+    <div class="header-titles">
+      <h1 class="site-title">Open Physics Education</h1>
+      <h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
+    </div>
+    <!-- Theme toggle button moved to main content container in baseof.html -->
+  </div>
+  <nav class="site-nav" role="navigation" aria-label="Main menu">
+    <ul class="nav-menu">
+      
+        <li><a href="../index.html">Home</a></li>
+      
+        <li><a href="../news-roll/index.html">News</a></li>
+      
+        <li><a href="../sample-resources/index.html">Example</a></li>
+      
+        <li><a href="../documentation/index.html">Docs</a></li>
+      
+        <li><a href="../about/index.html">About</a></li>
+      
+    </ul>
+  </nav>
+</header>
+  <main id="main-content" tabindex="-1">
+    <div class="container">
+      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙
+        <span class="visually-hidden">Toggle dark/light theme</span>
+      </button>
+      
+  <h1>Accessibility Report: Example</h1>
+  <div>
+    <strong>Page URL:</strong> <code>sample-resources/index.html</code><br>
+    <strong>WCAG Level:</strong> AAA<br>
+    <strong>Errors:</strong> 4 |
+    <strong>Warnings:</strong> 0 |
+    <strong>Notices:</strong> 0
+    <div><span class="badge-missing">WCAG AAA badge not found</span></div>
+  </div>
+  <h2>Issues</h2>
+  <div class="table-wrapper">
+    <table>
+      <tr><th>#</th><th>Type</th><th>Message</th><th>Selector</th></tr>
+      
+      <tr>
+        <td>1</td>
+        <td>error</td>
+        <td>This element has insufficient contrast at this conformance level. Expected a contrast ratio of at least 4.5:1, but text in this element has a contrast ratio of 4.23:1. Recommendation:  change text colour to #1c1c1c.</td>
+        <td><code>#main-content &gt; a</code></td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td>error</td>
+        <td>This element has insufficient contrast at this conformance level. Expected a contrast ratio of at least 7:1, but text in this element has a contrast ratio of 5.2:1. Recommendation:  change text colour to #f8fbff.</td>
+        <td><code>#main-content &gt; div &gt; section &gt; ul &gt; li:nth-child(1) &gt; a</code></td>
+      </tr>
+      
+      <tr>
+        <td>3</td>
+        <td>error</td>
+        <td>This element has insufficient contrast at this conformance level. Expected a contrast ratio of at least 7:1, but text in this element has a contrast ratio of 5.2:1. Recommendation:  change text colour to #f8fbff.</td>
+        <td><code>#main-content &gt; div &gt; section &gt; ul &gt; li:nth-child(2) &gt; a</code></td>
+      </tr>
+      
+      <tr>
+        <td>4</td>
+        <td>error</td>
+        <td>This element has insufficient contrast at this conformance level. Expected a contrast ratio of at least 7:1, but text in this element has a contrast ratio of 4.62:1. Recommendation:  change text colour to #fcfdff.</td>
+        <td><code>html &gt; body &gt; footer &gt; a</code></td>
+      </tr>
+      
+    </table>
+  </div>
+
+    </div>
+  </main>
+  <footer>
+  Made with tons of ☕️  and lots of ❤️ for students and educators everywhere. | Built with <a href="https://github.com/OER-Forge/">OER Forge</a>
+
+</footer>
+</body>
+</html>
