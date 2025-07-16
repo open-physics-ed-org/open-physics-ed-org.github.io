@@ -117,7 +117,13 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict) -> s
 
 def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     """Inject the badge/button into the HTML file after <main>."""
-    # Read the HTML file
+    # Use BeautifulSoup for robust HTML manipulation
+    try:
+        from bs4 import BeautifulSoup
+        from bs4.element import NavigableString, Tag
+    except ImportError:
+        raise ImportError("BeautifulSoup4 is required. Install with 'pip install beautifulsoup4'.")
+
     try:
         with open(html_path, 'r', encoding='utf-8') as f:
             html = f.read()
@@ -125,44 +131,69 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
         logging.error(f"[inject_badge_into_html] Failed to read {html_path}: {e}")
         return
 
-    # Prepare the button HTML (use .download-btn for styling)
-    button_html = f'\n<a href="{report_link}" class="download-btn" aria-label="View accessibility report">Accessibility Report</a>\n'
-    if badge_html:
-        button_html += f'\n{badge_html}\n'
+    soup = BeautifulSoup(html, 'html.parser')
 
-    # Regex to find ALL previous button+badge blocks (button with class download-btn and any following badge)
-    import re
-    # This regex matches any <a ...download-btn...>...</a> and any following <span> or <img> badge (greedy, multiline)
-    button_pattern = re.compile(r'(\n?<a [^>]*class=["\"][^>]*download-btn[^>]*>.*?</a>\n?(?:\n?.*?(?:<img [^>]*>|<span[^>]*>.*?</span>\n?))?)', re.DOTALL)
-    html, n = button_pattern.subn('', html)
-    if n > 0:
-        logging.info(f"[inject_badge_into_html] Removed {n} existing accessibility report button/badge blocks in {html_path}")
+    # Remove all previous accessibility report buttons and badges
+    removed = 0
+    for a in soup.find_all('a', class_='download-btn'):
+        # Remove the badge (img or span) immediately after the button, if present
+        next_sib = a.find_next_sibling()
+        # Only check .name if next_sib is a Tag
+        if isinstance(next_sib, Tag):
+            sib_class = next_sib.get('class')
+            if next_sib.name == 'img' or (next_sib.name == 'span' and sib_class is not None and 'badge-missing' in sib_class):
+                next_sib.decompose()
+        a.decompose()
+        removed += 1
+    if removed > 0:
+        logging.info(f"[inject_badge_into_html] Removed {removed} existing accessibility report button/badge blocks in {html_path}")
 
-    # Insert the new button/badge block after <main> (preferred), or fallback as before
-    insert_pos = html.find('<main')
-    if insert_pos != -1:
-        close_tag = html.find('>', insert_pos)
-        if close_tag != -1:
-            html = html[:close_tag+1] + button_html + html[close_tag+1:]
-        else:
-            insert_pos = html.find('<body')
-            close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
-            if close_tag != -1:
-                html = html[:close_tag+1] + button_html + html[close_tag+1:]
-            else:
-                html = button_html + html
+    # Build the new button and badge block
+    button_tag = soup.new_tag('a', href=report_link, attrs={'class': 'download-btn', 'aria-label': 'View accessibility report'})
+    button_tag.string = 'Accessibility Report'
+    badge_frag = BeautifulSoup(badge_html, 'html.parser') if badge_html else None
+
+    # Insert after <main> if present, else after <body>, else at top
+    inserted = False
+    main_tag = soup.find('main')
+    if main_tag and isinstance(main_tag, Tag):
+        # Insert button and badge as the first elements inside <main>
+        main_tag.insert(0, NavigableString('\n'))
+        main_tag.insert(1, button_tag)
+        if badge_frag:
+            # Insert badge(s) after the button
+            idx = 2
+            for el in badge_frag.contents:
+                if isinstance(el, Tag) or isinstance(el, NavigableString):
+                    main_tag.insert(idx, el)
+                    idx += 1
+        inserted = True
     else:
-        insert_pos = html.find('<body')
-        close_tag = html.find('>', insert_pos) if insert_pos != -1 else -1
-        if close_tag != -1:
-            html = html[:close_tag+1] + button_html + html[close_tag+1:]
-        else:
-            html = button_html + html
+        body_tag = soup.find('body')
+        if body_tag and isinstance(body_tag, Tag):
+            body_tag.insert(0, NavigableString('\n'))
+            body_tag.insert(1, button_tag)
+            if badge_frag:
+                idx = 2
+                for el in badge_frag.contents:
+                    if isinstance(el, Tag) or isinstance(el, NavigableString):
+                        body_tag.insert(idx, el)
+                        idx += 1
+            inserted = True
+    if not inserted:
+        # Fallback: prepend to the document
+        soup.insert(0, button_tag)
+        if badge_frag:
+            idx = 1
+            for el in badge_frag.contents:
+                if isinstance(el, Tag) or isinstance(el, NavigableString):
+                    soup.insert(idx, el)
+                    idx += 1
 
     # Write back the modified HTML
     try:
         with open(html_path, 'w', encoding='utf-8') as f:
-            f.write(html)
+            f.write(str(soup))
         logging.info(f"[inject_badge_into_html] Injected/replaced accessibility report button into {html_path}")
     except Exception as e:
         logging.error(f"[inject_badge_into_html] Failed to write {html_path}: {e}")
