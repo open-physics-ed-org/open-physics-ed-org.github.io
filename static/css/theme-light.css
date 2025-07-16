@@ -19,6 +19,10 @@ Description: Bright, accessible palette for daylight viewing.
   --color-btn: #005a9e;
   --color-btn-hover: #003366;
   --color-btn-text: #ffffff;
+}
+
+body.dark {
+  --color-btn-text: #000;
   --jp-cell-editor-background: var(--color-card) !important;
   --jp-cell-editor-active-background: var(--color-card) !important;
   --jp-layout-color0: var(--color-card) !important;
@@ -500,6 +504,12 @@ body.dark .wip-banner {
   outline: none;
   line-height: 1.2;
   letter-spacing: 0.01em;
+  color: var(--color-btn-text) !important;
+}
+/* Download button text color in dark mode: always dark for contrast */
+body.dark .download-btn,
+html.dark .download-btn {
+  color: #181a20 !important;
 }
 .download-btn:focus {
   outline: 3px solid var(--color-btn-hover);
@@ -509,7 +519,7 @@ body.dark .wip-banner {
 .download-btn:hover, .download-btn:focus {
   background: var(--color-btn-hover) !important;
   border-color: var(--color-btn-hover) !important;
-  color: var(--color-btn-text) !important;
+  color: #fff !important;
   text-decoration: none;
   box-shadow: 0 4px 16px rgba(0,0,0,0.16);
 }

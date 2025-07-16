@@ -153,6 +153,16 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str, lo
 
     # Remove all previous accessibility report buttons and badges (robust)
     removed = 0
+    # Remove all <a> with class containing 'wcag-badge' and data-accessibility-report-btn
+    for a in soup.find_all('a'):
+        if (
+            isinstance(a, Tag)
+            and a.has_attr('class')
+            and any('wcag-badge' in c for c in a['class'])
+            and a.has_attr('data-accessibility-report-btn')
+        ):
+            a.decompose()
+            removed += 1
     # Remove all <a class="download-btn" data-accessibility-report-btn>
     for a in soup.find_all('a', class_='download-btn'):
         if isinstance(a, Tag) and a.has_attr('data-accessibility-report-btn'):

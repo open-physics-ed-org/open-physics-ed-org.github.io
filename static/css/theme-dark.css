@@ -19,6 +19,10 @@ Description: Accessible palette for low-light viewing.
   --color-btn: #2a7fff;             /* Button: vivid blue, AAA contrast */
   --color-btn-hover: #ffea00;       /* Button hover: bright yellow, AAA contrast */
   --color-btn-text: #ffffff;        /* Button text: pure white */
+}
+
+body.dark {
+  --color-btn-text: #000;
   --color-btn-hover-text: #181a20;  /* Button hover text: dark for yellow bg */
   --font-size: 1.1em;
   --letter-spacing: 0.03em;
@@ -254,7 +258,7 @@ body.dark .site-header {
   min-height: 2.5em;
   max-width: 2.5em;
   max-height: 2.5em;
-  font-size: 1.3em;
+  font-size: 2.5em;
   cursor: pointer;
   display: flex;
   align-items: center;

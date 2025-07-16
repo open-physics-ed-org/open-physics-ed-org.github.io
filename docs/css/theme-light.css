@@ -19,6 +19,10 @@ Description: Bright, accessible palette for daylight viewing.
   --color-btn: #005a9e;
   --color-btn-hover: #003366;
   --color-btn-text: #ffffff;
+}
+
+body.dark {
+  --color-btn-text: #000;
   --jp-cell-editor-background: var(--color-card) !important;
   --jp-cell-editor-active-background: var(--color-card) !important;
   --jp-layout-color0: var(--color-card) !important;
