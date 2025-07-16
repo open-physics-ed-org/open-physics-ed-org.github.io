@@ -4,13 +4,15 @@
 
 {% block main %}
   <h1>Accessibility Report: {{ page_title }}</h1>
+  <div style="margin-bottom:1.5em;">
+    {{ badge_html|safe }}
+  </div>
   <div>
     <strong>Page URL:</strong> <code>{{ relative_url }}</code><br>
     <strong>WCAG Level:</strong> {{ wcag_level }}<br>
     <strong>Errors:</strong> {{ error_count }} |
     <strong>Warnings:</strong> {{ warning_count }} |
     <strong>Notices:</strong> {{ notice_count }}
-    <div>{{ badge_html|safe }}</div>
   </div>
   <h2>Issues</h2>
   <div class="table-wrapper">

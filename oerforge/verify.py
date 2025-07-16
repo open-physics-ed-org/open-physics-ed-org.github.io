@@ -383,10 +383,12 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                 error_count = sum(1 for i in result if i.get("type") == "error") if result else 0
                 warning_count = sum(1 for i in result if i.get("type") == "warning") if result else 0
                 notice_count = sum(1 for i in result if i.get("type") == "notice") if result else 0
-                # HTML dynamically
-                report_link = None  # Will be set after report is generated
-                badge_html = ''
                 safe_result = result if result is not None else []
+                # Compute report link before generating badge
+                report_filename = f"wcag_report_{filename}" if filename.endswith('.html') else "wcag_report.html"
+                report_path = os.path.join(root, report_filename)
+                report_link = os.path.basename(report_path)
+                badge_html = generate_badge_html(wcag_level, error_count, logo_info, report_link)
                 if content_id is not None:
                     store_accessibility_result(content_id, safe_result, badge_html, wcag_level, error_count, warning_count, notice_count, conn)
                     config = {
@@ -394,10 +396,8 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                         'wcag_level': wcag_level
                     }
                     issues = safe_result
-                    report_path = generate_wcag_report(html_path, issues, badge_html, config)
-                    # Compute relative link from html file to report
-                    report_link = os.path.basename(report_path)  # Compute relative link from html file to report
-                    badge_html = generate_badge_html(wcag_level, error_count, logo_info, report_link)
+                    # Now generate the report with badge_html
+                    generate_wcag_report(html_path, issues, badge_html, config)
                     inject_badge_into_html(html_path, badge_html, report_link, logo_info)
                 conn.close()
 
