@@ -59,19 +59,42 @@ def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None) -> Opti
         logging.error(f"Failed to parse Pa11y JSON output for {html_path}.")
         return None
 
-def store_accessibility_result(content_id: int, pa11y_json: Dict[str, Any], badge_html: str, wcag_level: str, error_count: int, warning_count: int, notice_count: int, conn=None):
+def store_accessibility_result(content_id: int, pa11y_json: Any, badge_html: str, wcag_level: str, error_count: int, warning_count: int, notice_count: int, conn=None):
     """
     Store the latest accessibility result for a page in the database.
     """
-    # TODO: Implement DB insert/update
-    pass
+    if conn is None:
+        raise ValueError("A valid database connection is required.")
+    cursor = conn.cursor()
+    # Remove any previous result for this content_id and wcag_level
+    cursor.execute("""
+        DELETE FROM accessibility_results WHERE content_id = ? AND wcag_html_level = ?
+    """, (content_id, wcag_level))
+    # Insert new result
+    cursor.execute("""
+        INSERT INTO accessibility_results (
+            content_id, pa11y_json, badge_html, wcag_html_level, error_count, warning_count, notice_count, checked_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    """, (
+        content_id,
+        json.dumps(pa11y_json),
+        badge_html,
+        wcag_level,
+        error_count,
+        warning_count,
+        notice_count
+    ))
+    conn.commit()
 
 def generate_badge_html(wcag_level: str, error_count: int) -> str:
     """
     Generate badge HTML for a given WCAG level and error count.
     """
-    # TODO: Implement badge generation
-    pass
+    # Simple badge HTML placeholder
+    color = "#4caf50" if error_count == 0 else "#f44336"
+    label = f"WCAG {wcag_level.upper()}"
+    status = "PASS" if error_count == 0 else f"{error_count} ERRORS"
+    return f'<span style="background:{color};color:#fff;padding:2px 6px;border-radius:4px;font-size:90%">{label}: {status}</span>'
 
 def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     """
@@ -88,6 +111,26 @@ def generate_compliance_table_page(conn, output_path: str):
     # TODO: Implement compliance table generation
     pass
 
+def ensure_accessibility_results_table(conn, drop_and_recreate=False):
+    cursor = conn.cursor()
+    if drop_and_recreate:
+        cursor.execute("DROP TABLE IF EXISTS accessibility_results")
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS accessibility_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_id INTEGER NOT NULL,
+            pa11y_json TEXT,
+            badge_html TEXT,
+            wcag_html_level TEXT,
+            error_count INTEGER,
+            warning_count INTEGER,
+            notice_count INTEGER,
+            checked_at TEXT,
+            FOREIGN KEY(content_id) REFERENCES content(id)
+        )
+    """)
+    conn.commit()
+
 def main():
     """
     CLI entry point. Parse args, run checks, store results, and generate reports as needed.
@@ -96,6 +139,7 @@ def main():
     parser = argparse.ArgumentParser(description="Accessibility verification with Pa11y")
     parser.add_argument("--config", "-c", type=str, help="Path to Pa11y config file (default: pa11y.config.json in project root if present)")
     parser.add_argument("--all", action="store_true", help="Check all HTML files in the database (batch mode)")
+    parser.add_argument("--reset-results", action="store_true", help="Drop and recreate the accessibility_results table before running")
     args = parser.parse_args()
 
     config_path = args.config
@@ -104,10 +148,12 @@ def main():
         if os.path.exists(default_config):
             config_path = default_config
 
+    db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "sqlite.db")
+    conn = sqlite3.connect(db_path)
+    ensure_accessibility_results_table(conn, drop_and_recreate=args.reset_results)
+
     if args.all:
         # Batch mode: check all HTML files in the database
-        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "sqlite.db")
-        conn = sqlite3.connect(db_path)
         pages = get_pages_to_check(conn)
         print(f"Checking {len(pages)} HTML files from database...")
         for page in pages:
@@ -119,6 +165,33 @@ def main():
             print(f"\n=== Checking: {html_path} ===")
             result = run_pa11y_on_file(html_path, config_path)
             print("Raw Pa11y result:", result)
+            # Count errors, warnings, notices
+            error_count = 0
+            warning_count = 0
+            notice_count = 0
+            if isinstance(result, list):
+                for issue in result:
+                    if isinstance(issue, dict):
+                        t = issue.get("type")
+                        if t == "error":
+                            error_count += 1
+                        elif t == "warning":
+                            warning_count += 1
+                        elif t == "notice":
+                            notice_count += 1
+            wcag_level = "strict" if config_path and "strict" in os.path.basename(config_path).lower() else "basic"
+            badge_html = generate_badge_html(wcag_level, error_count)
+            # Store result in DB
+            store_accessibility_result(
+                content_id=page["id"],
+                pa11y_json=result if result is not None else [],
+                badge_html=badge_html,
+                wcag_level=wcag_level,
+                error_count=error_count,
+                warning_count=warning_count,
+                notice_count=notice_count,
+                conn=conn
+            )
             if result is not None and result != []:
                 try:
                     print(json.dumps(result, indent=2))
