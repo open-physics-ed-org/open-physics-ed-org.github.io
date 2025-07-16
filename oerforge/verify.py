@@ -117,13 +117,13 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, repo
     alt_text = f"WCAG {wcag_level} Conformance Logo"
     # Determine badge class and error count display
     if error_count == 0:
-        badge_class = "badge-success"
+        badge_class = "wcag-badge wcag-badge-success"
         error_html = ""
     else:
-        badge_class = "badge-error"
+        badge_class = "wcag-badge wcag-badge-error"
         error_html = f'<span class="error-count">Errors: {error_count}</span>'
     badge_html = (
-        f'<a href="{report_link}" aria-label="View Accessibility Report" class="download-btn {badge_class}" data-accessibility-report-btn="1">'
+        f'<a href="{report_link}" aria-label="View Accessibility Report" class="{badge_class}" data-accessibility-report-btn="1">'
         f'<img src="{img_url}" alt="{alt_text}" style="height:2em;vertical-align:middle;">'
         f'{error_html}'
         f'</a>'
@@ -400,11 +400,29 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                     generate_wcag_report(html_path, issues, badge_html, config)
                     inject_badge_into_html(html_path, badge_html, report_link, logo_info)
                 conn.close()
+    # After processing, copy changed files to docs/
+    copy_to_docs()
 
 # --- Utility ---
 def copy_to_docs():
     """Copy all changed files from build/ to docs/."""
-    pass
+    import filecmp
+    import shutil
+    build_dir = os.path.abspath("build")
+    docs_dir = os.path.abspath("docs")
+    for root, dirs, files in os.walk(build_dir):
+        rel_root = os.path.relpath(root, build_dir)
+        target_root = os.path.join(docs_dir, rel_root) if rel_root != "." else docs_dir
+        if not os.path.exists(target_root):
+            os.makedirs(target_root, exist_ok=True)
+        for filename in files:
+            src_file = os.path.join(root, filename)
+            dst_file = os.path.join(target_root, filename)
+            # Only copy if file does not exist or is different
+            if not os.path.exists(dst_file) or not filecmp.cmp(src_file, dst_file, shallow=False):
+                shutil.copy2(src_file, dst_file)
+                logging.info(f"Copied {src_file} to {dst_file}")
+    logging.info("All changed files copied from build/ to docs/.")
 
 # --- CLI Entry Point ---
 def main():

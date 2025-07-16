@@ -1,94 +1,63 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>db_utils.py — OERForge Database Utilities</title>
-  
-  <link rel="icon" href="static/images/favicon.ico">
-  <link rel="stylesheet" href="../css/theme-dark.css" id="theme-css">
-  <script src="../js/main.js" defer></script>
+<meta charset="utf-8"/>
+<title>db_utils.py — OERForge Database Utilities</title>
+<link href="static/images/favicon.ico" rel="icon"/>
+<link href="../css/theme-dark.css" id="theme-css" rel="stylesheet"/>
+<script defer="" src="../js/main.js"></script>
 </head>
 <body>
-  <header class="site-header">
-  <div class="header-flex">
-    <img src="../images/logo.png" alt="Site Logo" class="site-logo" />
-    <div class="header-titles">
-      <h1 class="site-title">Open Physics Education</h1>
-      <h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
-    </div>
-    <!-- Theme toggle button moved to main content container in baseof.html -->
-  </div>
-  <nav class="site-nav" role="navigation" aria-label="Main menu">
-    <ul class="nav-menu">
-      
-        <li><a href="../index.html">Home</a></li>
-      
-        <li><a href="../news-roll/index.html">News</a></li>
-      
-        <li><a href="../sample-resources/index.html">Example</a></li>
-      
-        <li><a href="index.html">Docs</a></li>
-      
-        <li><a href="../about/index.html">About</a></li>
-      
-    </ul>
-  </nav>
+<header class="site-header">
+<div class="header-flex">
+<img alt="Site Logo" class="site-logo" src="../images/logo.png"/>
+<div class="header-titles">
+<h1 class="site-title">Open Physics Education</h1>
+<h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
+</div>
+<!-- Theme toggle button moved to main content container in baseof.html -->
+</div>
+<nav aria-label="Main menu" class="site-nav" role="navigation">
+<ul class="nav-menu">
+<li><a href="../index.html">Home</a></li>
+<li><a href="../news-roll/index.html">News</a></li>
+<li><a href="../sample-resources/index.html">Example</a></li>
+<li><a href="index.html">Docs</a></li>
+<li><a href="../about/index.html">About</a></li>
+</ul>
+</nav>
 </header>
-  <main id="main-content" tabindex="-1">
-    <div class="container">
-      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙
+<main id="main-content" tabindex="-1">
+<div class="container">
+<button aria-label="Switch theme" class="theme-toggle" id="theme-toggle">🌙
         <span class="visually-hidden">Toggle dark/light theme</span>
-      </button>
-      <span id="accessibility-report-placeholder"></span>
-      
-  <article>
-    
-    <nav class="download-nav" role="navigation" aria-label="Download options">
-      
-        <a href="../files/documentation/db_utils.pdf"
-           class="download-btn theme-download-pdf"
-           role="button"
-           aria-label="Download as PDF">
+</button>
+<span id="accessibility-report-placeholder"></span><a aria-label="View Accessibility Report" class="wcag-badge wcag-badge-error" data-accessibility-report-btn="1" href="wcag_report_db_utils.html"><img alt="WCAG AA Conformance Logo" src="https://www.w3.org/WAI/wcag2AA" style="height:2em;vertical-align:middle;"/><span class="error-count">Errors: 5</span></a>
+<article>
+<nav aria-label="Download options" class="download-nav" role="navigation">
+<a aria-label="Download as PDF" class="download-btn theme-download-pdf" href="../files/documentation/db_utils.pdf" role="button">
           PDF
         </a>
-      
-        <a href="../files/documentation/db_utils.docx"
-           class="download-btn theme-download-docx"
-           role="button"
-           aria-label="Download as Word">
+<a aria-label="Download as Word" class="download-btn theme-download-docx" href="../files/documentation/db_utils.docx" role="button">
           Word
         </a>
-      
-        <a href="../files/documentation/db_utils.tex"
-           class="download-btn theme-download-tex"
-           role="button"
-           aria-label="Download as LaTeX">
+<a aria-label="Download as LaTeX" class="download-btn theme-download-tex" href="../files/documentation/db_utils.tex" role="button">
           LaTeX
         </a>
-      
-        <a href="../files/documentation/db_utils.md"
-           class="download-btn theme-download-md"
-           role="button"
-           aria-label="Download as Markdown">
+<a aria-label="Download as Markdown" class="download-btn theme-download-md" href="../files/documentation/db_utils.md" role="button">
           Markdown
         </a>
-      
-        <a href="../files/documentation/db_utils.txt"
-           class="download-btn theme-download-txt"
-           role="button"
-           aria-label="Download as Plain Text">
+<a aria-label="Download as Plain Text" class="download-btn theme-download-txt" href="../files/documentation/db_utils.txt" role="button">
           Plain Text
         </a>
-      
-    </nav>
-    
-    <h1>db_utils.py — OERForge Database Utilities</h1>
-    
-    <h2>Overview</h2>
+</nav>
+<h1>db_utils.py — OERForge Database Utilities</h1>
+<h2>Overview</h2>
 <p><code>db_utils.py</code> provides utility functions for initializing, managing, and interacting with the SQLite database used in the OERForge project. It supports asset tracking, page-file relationships, site metadata, and general-purpose queries and inserts. This module is designed to be approachable for new programmers and extensible for contributors.</p>
-<hr />
+<hr/>
 <h2>Module Docstring</h2>
-<pre><code class="language-python">&quot;&quot;&quot;
+<pre><code class="language-python">"""
 OERForge Database Utilities
 ==========================
 
@@ -107,13 +76,13 @@ Intended Audience:
 
 Usage:
     Import this module and use the provided functions to initialize the database, insert or fetch records, and link files to pages. All functions are documented with clear arguments and return values.
-&quot;&quot;&quot;
+"""
 </code></pre>
-<hr />
+<hr/>
 <h2>Functions</h2>
 <h3><code>initialize_database()</code></h3>
 <pre><code class="language-python">def initialize_database():
-    &quot;&quot;&quot;
+    """
     Initializes the SQLite database for asset tracking in the OERForge project.
 
     This function creates the following tables:
@@ -124,13 +93,13 @@ Usage:
 
     Existing tables are dropped before creation to ensure a clean state.
     The database file is located at &lt;project_root&gt;/db/sqlite.db.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Sets up the database schema, ensuring all necessary tables exist and are clean for a new build.</p>
-<hr />
+<hr/>
 <h3><code>get_db_connection(db_path=None)</code></h3>
 <pre><code class="language-python">def get_db_connection(db_path=None):
-    &quot;&quot;&quot;
+    """
     Returns a sqlite3 connection to the database.
 
     Args:
@@ -139,13 +108,13 @@ Usage:
 
     Returns:
         sqlite3.Connection: A connection object to the SQLite database.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Provides a reusable way to obtain a database connection, using the default project path if none is specified.</p>
-<hr />
+<hr/>
 <h3><code>get_records(table_name, where_clause=None, params=None, db_path=None, conn=None, cursor=None)</code></h3>
 <pre><code class="language-python">def get_records(table_name, where_clause=None, params=None, db_path=None, conn=None, cursor=None):
-    &quot;&quot;&quot;
+    """
     Fetch records from a table with optional WHERE clause and parameters.
     Args:
         table_name (str): Name of the table to query.
@@ -155,13 +124,13 @@ Usage:
         conn, cursor: Optional existing connection/cursor.
     Returns:
         list of dict: List of records as dictionaries.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Allows flexible querying of any table, returning results as a list of dictionaries for easy use in Python code.</p>
-<hr />
+<hr/>
 <h3><code>insert_records(table_name, records, db_path=None, conn=None, cursor=None)</code></h3>
 <pre><code class="language-python">def insert_records(table_name, records, db_path=None, conn=None, cursor=None):
-    &quot;&quot;&quot;
+    """
     General-purpose batch insert for any table.
     Checks if table exists, inserts records, returns list of inserted row ids.
     Args:
@@ -171,13 +140,13 @@ Usage:
         conn, cursor: Optional existing connection/cursor.
     Returns:
         list of int: List of inserted row ids.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Efficiently inserts multiple records into any table, handling connection management and error logging.</p>
-<hr />
+<hr/>
 <h3><code>pretty_print_table(table_name, db_path=None, conn=None, cursor=None)</code></h3>
 <pre><code class="language-python">def pretty_print_table(table_name, db_path=None, conn=None, cursor=None):
-    &quot;&quot;&quot;
+    """
     Pretty-print all rows of a table to the log for inspection/debugging.
 
     Args:
@@ -190,28 +159,28 @@ Usage:
 
     Output:
         Logs a formatted table to the scan.log file and stdout.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Helps developers inspect the contents of any table in a readable format, useful for debugging and development.</p>
-<hr />
-<h3><code>log_event(message, level=&quot;INFO&quot;)</code></h3>
-<pre><code class="language-python">def log_event(message, level=&quot;INFO&quot;):
-    &quot;&quot;&quot;
+<hr/>
+<h3><code>log_event(message, level="INFO")</code></h3>
+<pre><code class="language-python">def log_event(message, level="INFO"):
+    """
     Logs an event to both stdout and a log file in the project root.
 
     Args:
         message (str): The log message to record.
-        level (str): The severity level (e.g., &quot;INFO&quot;, &quot;ERROR&quot;, &quot;WARNING&quot;).
+        level (str): The severity level (e.g., "INFO", "ERROR", "WARNING").
 
     The log file is named 'scan.log' and is located at &lt;project_root&gt;/scan.log.
     Each log entry is timestamped.
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Centralizes logging for all database operations, making it easier to track and debug issues.</p>
-<hr />
+<hr/>
 <h3><code>link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None)</code></h3>
 <pre><code class="language-python">def link_files_to_pages(file_page_pairs, db_path=None, conn=None, cursor=None):
-    &quot;&quot;&quot;
+    """
     Link files to pages in the pages_files table.
 
     Args:
@@ -224,10 +193,10 @@ Usage:
 
     Example:
         link_files_to_pages([(1, 'index.html'), (2, 'about.html')])
-    &quot;&quot;&quot;
+    """
 </code></pre>
 <p><strong>Purpose:</strong> Specifically designed to create links between files and pages in the <code>pages_files</code> table, supporting asset tracking and page relationships.</p>
-<hr />
+<hr/>
 <h2>Best Practices</h2>
 <ul role="list">
 <li role="listitem">Always close database connections when done to avoid resource leaks.</li>
@@ -235,7 +204,7 @@ Usage:
 <li role="listitem">When adding new tables or relationships, update <code>initialize_database()</code> and consider creating new utility functions for those tables.</li>
 <li role="listitem">Read function docstrings for argument details and usage examples.</li>
 </ul>
-<hr />
+<hr/>
 <h2>Example Usage</h2>
 <pre><code class="language-python">from oerforge import db_utils
 
@@ -245,7 +214,7 @@ files = db_utils.get_records('files', where_clause='is_image=1')
 db_utils.pretty_print_table('files')
 db_utils.link_files_to_pages([(1, 'index.html'), (2, 'about.html')])
 </code></pre>
-<hr />
+<hr/>
 <h2>For New Programmers</h2>
 <ul role="list">
 <li role="listitem">Read the module and function docstrings for guidance.</li>
@@ -253,16 +222,14 @@ db_utils.link_files_to_pages([(1, 'index.html'), (2, 'about.html')])
 <li role="listitem">Use logging to help debug and understand what your code is doing.</li>
 <li role="listitem">Ask questions and refer to Python's official documentation for <code>sqlite3</code> if you want to learn more about database programming.</li>
 </ul>
-<hr />
+<hr/>
 <p><em>This documentation is intended to be verbose and beginner-friendly. For further help, see the code comments and docstrings in <code>db_utils.py</code> itself.</em></p>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  </article>
-
-    </div>
-  </main>
-  <footer>
+</article>
+</div>
+</main>
+<footer>
   Made with tons of ☕️  and lots of ❤️ for students and educators everywhere. | Built with <a href="https://github.com/OER-Forge/">OER Forge</a>
-
 </footer>
 </body>
 </html>

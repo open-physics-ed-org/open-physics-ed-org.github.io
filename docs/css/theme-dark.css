@@ -469,10 +469,13 @@ body.dark .wip-banner {
   Download Buttons
 ========================= */
 
-.download-btn,
-.theme-btn {
-  color: #222 !important; /* dark text for light backgrounds */
+/* Accessibility badge colors: fixed for all themes */
+.badge-error {
+  background: #c00 !important;
+  color: #fff !important;
+  border: 2px solid #c00 !important;
 }
+
 .chapter-downloads {
   margin-bottom: 2em;
   padding: 1em 0 0.5em 0;
