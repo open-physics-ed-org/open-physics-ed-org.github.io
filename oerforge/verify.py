@@ -98,10 +98,6 @@ def store_accessibility_result(content_id: int, pa11y_json: List[Dict[str, Any]]
     ))
     conn.commit()
 
-def get_pages_to_check(conn) -> List[Dict[str, Any]]:
-    """Return a list of pages (from content table) to check for accessibility."""
-    pass
-
 # --- Badge and Report Generation ---
 def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, report_link: str) -> str:
     """Generate badge HTML for a given WCAG level and error count, using logo info. Badge links to the local accessibility report."""
