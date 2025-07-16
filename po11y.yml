@@ -1,0 +1,8 @@
+# polly.yml
+# List the desired order of accessibility configs for compliance summary columns.
+# Example:
+order:
+  - basic
+  - wcag.aa
+  - wcag.aaa
+# Add or reorder config names as needed. These should match the config names used in your pa11y-configs directory/results.

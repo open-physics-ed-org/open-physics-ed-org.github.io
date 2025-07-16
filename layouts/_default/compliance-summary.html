@@ -1,0 +1,51 @@
+{% extends "baseof.html" %}
+{% block main %}
+<h1>Accessibility Compliance Summary</h1>
+<table class="compliance-table" role="table" aria-describedby="compliance-summary-caption">
+  <caption id="compliance-summary-caption" class="visually-hidden">
+    Accessibility compliance results for all pages and configs.
+  </caption>
+  <thead>
+    <tr role="row">
+      <th role="columnheader" scope="col">Page</th>
+      {% for cfg in configs %}
+        <th role="columnheader" scope="col">{{ cfg|capitalize }}</th>
+      {% endfor %}
+      <th role="columnheader" scope="col">Last Checked</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr role="row">
+      <td role="cell"><a href="{{ row.output_path }}">{{ row.title }}</a></td>
+      {% for cfg_result in row.configs %}
+        <td role="cell" style="text-align:center">
+          {% if cfg_result.error_count is not none %}
+            {% if cfg_result.checked %}
+              <span role="img" aria-label="Pass">✅</span>
+            {% else %}
+              <span role="img" aria-label="Fail">❌ {{ cfg_result.error_count }}</span>
+            {% endif %}
+          {% else %}
+            <span style="color:#aaa">N/A</span>
+          {% endif %}
+        </td>
+      {% endfor %}
+      <td role="cell">{{ row.last_checked }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<style>
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}
+</style>
+{% endblock %}

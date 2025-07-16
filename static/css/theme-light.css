@@ -818,3 +818,29 @@ nav[role="navigation"] button:focus {
   clip: rect(0,0,0,0);
   border: 0;
 }
+
+/* ===========================
+  Table Accessibility Striping
+  =========================== */
+table, .compliance-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+table tr:nth-child(even), .compliance-table tr:nth-child(even) {
+  background-color: #f5f7fa; /* light gray, high contrast on white */
+}
+table tr:nth-child(odd), .compliance-table tr:nth-child(odd) {
+  background-color: #ffffff; /* white */
+}
+table th, table td, .compliance-table th, .compliance-table td {
+  padding: 0.6em 1em;
+  border-bottom: 1px solid #bfc7d5;
+}
+table th, .compliance-table th {
+  background-color: #e6eef7; /* very light blue for header */
+  color: #1a1a1a; /* dark text for contrast */
+}
+table td, .compliance-table td {
+  color: #1a1a1a; /* dark text for contrast */
+}
+}

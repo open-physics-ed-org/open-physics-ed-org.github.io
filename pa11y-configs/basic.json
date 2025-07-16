@@ -1,5 +1,5 @@
 {
-  "standard": "WCAG2AA",
+  "standard": "WCAG2A",
   "ignore": ["notice"],
   "timeout": 30000
 }
