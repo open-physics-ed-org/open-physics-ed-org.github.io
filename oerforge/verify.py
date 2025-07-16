@@ -138,14 +138,14 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     css_path = os.path.relpath(os.path.join(build_dir, 'css/theme-light.css'), html_dir)
     js_path = os.path.relpath(os.path.join(build_dir, 'js/main.js'), html_dir)
     favicon = os.path.relpath(os.path.join(build_dir, 'images/favicon.ico'), html_dir)
-    theme_toggle_js_path = os.path.relpath(os.path.join(build_dir, 'js/theme-toggle.js'), html_dir)
+    logo_path = os.path.relpath(os.path.join(build_dir, 'images/logo.png'), html_dir)
 
     context = {
         'title': config.get('title', html_filename),
         'favicon': favicon,
         'css_path': css_path,
         'js_path': js_path,
-        'theme_toggle_js_path': theme_toggle_js_path,
+        'logo_path': logo_path,
         'wcag_level': config.get('wcag_level', 'AA'),
         'error_count': sum(1 for i in issues if i.get('type') == 'error'),
         'warning_count': sum(1 for i in issues if i.get('type') == 'warning'),
