@@ -109,9 +109,17 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, repo
         return f'<span class="badge-missing">WCAG {wcag_level} badge not found</span>'
     img_url = f"{badge_url}"
     alt_text = f"WCAG {wcag_level} Conformance Logo"
+    # Determine badge class and error count display
+    if error_count == 0:
+        badge_class = "badge-success"
+        error_html = ""
+    else:
+        badge_class = "badge-error"
+        error_html = f'<span class="error-count">{error_count}</span>'
     badge_html = (
-        f'<a href="{report_link}" aria-label="View Accessibility Report">'  # Local report link
+        f'<a href="{report_link}" aria-label="View Accessibility Report" class="download-btn {badge_class}" data-accessibility-report-btn="1">'
         f'<img src="{img_url}" alt="{alt_text}" style="height:2em;vertical-align:middle;">'
+        f'{error_html}'
         f'</a>'
     )
     logging.info(f"[generate_badge_html] Generated badge HTML for WCAG {wcag_level}: {badge_html}")
@@ -167,53 +175,29 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str, lo
     if removed > 0:
         logging.info(f"[inject_badge_into_html] Removed {removed} existing accessibility report button/badge blocks in {html_path}")
 
-    # Build the new button and badge block
-    button_tag = soup.new_tag('a', href=report_link, attrs={'class': 'download-btn', 'aria-label': 'View accessibility report', 'data-accessibility-report-btn': '1'})
-    button_tag.string = 'WCAG'
-    badge_frag = BeautifulSoup(badge_html, 'html.parser') if badge_html else None
 
-    # Try to insert at the placeholder next to the theme toggle
+    # The badge_html now includes the button and error count, so just insert badge_frag
+    badge_frag = BeautifulSoup(badge_html, 'html.parser') if badge_html else None
     inserted = False
     placeholder = soup.find(id="accessibility-report-placeholder")
-    if placeholder is not None:
-        placeholder.insert_after(button_tag)
-        if badge_frag:
-            for el in badge_frag.contents:
-                if isinstance(el, Tag) or isinstance(el, NavigableString):
-                    button_tag.insert_after(el)
+    if placeholder is not None and badge_frag:
+        placeholder.insert_after(badge_frag)
         inserted = True
     else:
         main_tag = soup.find('main')
-        if main_tag and isinstance(main_tag, Tag):
-            main_tag.insert(0, NavigableString('\n'))
-            main_tag.insert(1, button_tag)
-            if badge_frag:
-                idx = 2
-                for el in badge_frag.contents:
-                    if isinstance(el, Tag) or isinstance(el, NavigableString):
-                        main_tag.insert(idx, el)
-                        idx += 1
+        if main_tag and badge_frag:
+            main_tag.insert_after(badge_frag)
             inserted = True
         else:
             body_tag = soup.find('body')
-            if body_tag and isinstance(body_tag, Tag):
-                body_tag.insert(0, NavigableString('\n'))
-                body_tag.insert(1, button_tag)
-                if badge_frag:
-                    idx = 2
-                    for el in badge_frag.contents:
-                        if isinstance(el, Tag) or isinstance(el, NavigableString):
-                            body_tag.insert(idx, el)
-                            idx += 1
+            if body_tag and badge_frag:
+                body_tag.insert_after(badge_frag)
                 inserted = True
-    if not inserted:
-        soup.insert(0, button_tag)
-        if badge_frag:
-            idx = 1
-            for el in badge_frag.contents:
-                if isinstance(el, Tag) or isinstance(el, NavigableString):
-                    soup.insert(idx, el)
-                    idx += 1
+    if not inserted and badge_frag:
+        soup.insert(0, badge_frag)
+    if not inserted and badge_frag:
+        # Fallback: insert at the start of the soup
+        soup.insert(0, badge_frag)
 
     # Write back the modified HTML
     try:
@@ -393,7 +377,6 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                 error_count = sum(1 for i in result if i.get("type") == "error") if result else 0
                 warning_count = sum(1 for i in result if i.get("type") == "warning") if result else 0
                 notice_count = sum(1 for i in result if i.get("type") == "notice") if result else 0
-                # Generate 
                 # HTML dynamically
                 report_link = None  # Will be set after report is generated
                 badge_html = ''
