@@ -1,217 +1,179 @@
-# oerforge.verify
-
-Comprehensive accessibility verification and reporting for static HTML sites using Pa11y and WCAG standards.
-
----
+# oerforge.verify — Accessibility Verification and Reporting
 
 ## Overview
 
-`oerforge.verify` provides tools to automate accessibility checks, badge generation, and reporting for HTML files. It integrates with Pa11y, stores results in a SQLite database, and injects badges and links to accessibility reports directly into your site. This module is designed for static site generators and educational content platforms.
+`oerforge.verify` provides tools for automated accessibility checking, badge generation, and reporting for static HTML sites. It integrates with [Pa11y](https://pa11y.org/) for WCAG compliance checks, manages results in a SQLite database, and generates visual badges and detailed reports for each page. This module is designed for new users, educators, and developers seeking robust accessibility workflows in open educational resources.
+
+- **Automated accessibility checks (WCAG AA/AAA) using Pa11y**
+- **Badge and report generation for each HTML page**
+- **Database integration for tracking results**
+- **Jinja2-based report rendering**
+- **Robust logging and error handling**
 
 ---
 
 ## Functions
 
-### load_pa11y_config
+### load_pa11y_config(yml_path='_content.yml')
 
-```python
-def load_pa11y_config(yml_path: str = "_content.yml") -> dict
-```
-
-Load Pa11y configuration and logo info from a YAML file. Returns a dictionary of configuration values.
+Load Pa11y configuration and logo info from YAML and JSON files.
 
 **Parameters**
-- `yml_path` (str): Path to the YAML config file. Defaults to `_content.yml`.
+- `yml_path` (str): Path to the YAML config file.
 
 **Returns**
-- `dict`: Parsed configuration data.
+- `dict`: Parsed configuration dictionary.
 
 ---
 
-### run_pa11y_on_file
+### run_pa11y_on_file(html_path, config_path=None, wcag_level='AA')
 
-```python
-def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None, wcag_level: str = "AA") -> Optional[List[Dict[str, Any]]]
-```
-
-Run Pa11y accessibility checks on a single HTML file. Returns parsed JSON results or `None` on error.
+Run Pa11y accessibility checks on a single HTML file.
 
 **Parameters**
 - `html_path` (str): Path to the HTML file.
-- `config_path` (Optional[str]): Optional path to Pa11y config.
-- `wcag_level` (str): WCAG level to check ("AA" or "AAA").
+- `config_path` (str, optional): Path to Pa11y config file.
+- `wcag_level` (str): WCAG level ('AA' or 'AAA').
 
 **Returns**
-- `Optional[List[Dict[str, Any]]]`: List of issue dictionaries, or `None` if Pa11y fails.
+- `list[dict]` or `None`: Parsed Pa11y JSON results, or None on error.
+
+**Notes**
+- Handles errors robustly, logs issues, and attempts to parse output even on failure.
 
 ---
 
-### get_content_id_for_file
+### get_content_id_for_file(html_path, conn)
 
-```python
-def get_content_id_for_file(html_path: str, conn) -> Optional[int]
-```
-
-Get the database content ID for a given HTML file.
+Get the content ID for a given HTML file from the database.
 
 **Parameters**
 - `html_path` (str): Path to the HTML file.
-- `conn`: SQLite connection object.
+- `conn` (sqlite3.Connection): Database connection.
 
 **Returns**
-- `Optional[int]`: Content ID, or `None` if not found.
+- `int` or `None`: Content ID if found, else None.
 
 ---
 
-### store_accessibility_result
-
-```python
-def store_accessibility_result(content_id: int, pa11y_json: List[Dict[str, Any]], badge_html: str, wcag_level: str, error_count: int, warning_count: int, notice_count: int, conn=None)
-```
+### store_accessibility_result(content_id, pa11y_json, badge_html, wcag_level, error_count, warning_count, notice_count, conn=None)
 
 Store the latest accessibility result for a page in the database.
 
 **Parameters**
-- `content_id` (int): Content ID from the database.
-- `pa11y_json` (List[Dict[str, Any]]): Pa11y result data.
-- `badge_html` (str): HTML for the accessibility badge.
-- `wcag_level` (str): WCAG level checked.
-- `error_count` (int): Number of errors.
-- `warning_count` (int): Number of warnings.
-- `notice_count` (int): Number of notices.
-- `conn`: SQLite connection object.
+- `content_id` (int): Content ID for the page.
+- `pa11y_json` (list[dict]): Pa11y results.
+- `badge_html` (str): Badge HTML markup.
+- `wcag_level` (str): WCAG level.
+- `error_count`, `warning_count`, `notice_count` (int): Issue counts.
+- `conn` (sqlite3.Connection): Database connection.
 
 ---
 
-### generate_badge_html
+### generate_badge_html(wcag_level, error_count, logo_info, report_link)
 
-```python
-def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, report_link: str) -> str
-```
-
-Generate HTML for a WCAG badge, linking to the accessibility report.
+Generate badge HTML for a given WCAG level and error count.
 
 **Parameters**
-- `wcag_level` (str): WCAG level ("AA", "AAA", etc.).
+- `wcag_level` (str): WCAG level.
 - `error_count` (int): Number of errors.
 - `logo_info` (dict): Mapping of WCAG levels to badge/logo URLs.
 - `report_link` (str): Link to the accessibility report.
 
 **Returns**
-- `str`: HTML for the badge.
+- `str`: Badge HTML markup.
 
 ---
 
-### inject_badge_into_html
+### inject_badge_into_html(html_path, badge_html, report_link, logo_info)
 
-```python
-def inject_badge_into_html(html_path: str, badge_html: str, report_link: str, logo_info: dict)
-```
-
-Inject the accessibility badge/button into the HTML file after the `<main>` tag.
+Inject the badge/button into the HTML file after `<main>`.
 
 **Parameters**
 - `html_path` (str): Path to the HTML file.
-- `badge_html` (str): Badge HTML to inject.
+- `badge_html` (str): Badge HTML markup.
 - `report_link` (str): Link to the accessibility report.
 - `logo_info` (dict): Badge/logo info.
 
 ---
 
-### generate_nav_menu
+### generate_nav_menu(context)
 
-```python
-def generate_nav_menu(context: dict) -> list
-```
-
-Generate the navigation menu for the site, based on database content and current page context.
+Generate top-level navigation menu items from the content database.
 
 **Parameters**
-- `context` (dict): Context dictionary, typically with `rel_path`.
+- `context` (dict): Context dict, should include 'rel_path'.
 
 **Returns**
-- `list`: List of menu item dictionaries.
+- `list[dict]`: List of menu item dicts: {'title': str, 'link': str}
 
 ---
 
-### generate_wcag_report
-
-```python
-def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_html: str, config: dict)
-```
+### generate_wcag_report(html_path, issues, badge_html, config)
 
 Generate a detailed HTML accessibility report for a file using Jinja2 templates.
 
 **Parameters**
 - `html_path` (str): Path to the HTML file.
-- `issues` (List[Dict[str, Any]]): List of Pa11y issues.
-- `badge_html` (str): Badge HTML.
-- `config` (dict): Page and WCAG config.
+- `issues` (list[dict]): Pa11y issues.
+- `badge_html` (str): Badge HTML markup.
+- `config` (dict): Page and site config.
 
 **Returns**
-- `str`: Path to the generated report.
+- `str`: Path to the generated report file.
 
 ---
 
-### process_all_html_files
+### process_all_html_files(build_dir='build', config_file=None, db_path='db/sqlite.db')
 
-```python
-def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqlite.db")
-```
-
-Process all HTML files in the build directory: run accessibility checks, store results, generate badges and reports, and copy changed files to the docs directory.
+Process all HTML files in the build directory:
+- Run Pa11y checks
+- Store results in DB
+- Generate badges and reports
+- Inject badges into HTML
+- Copy changed files to docs/
 
 **Parameters**
-- `build_dir` (str): Directory containing HTML files.
-- `config_file` (Optional[str]): Optional Pa11y config file.
-- `db_path` (str): Path to the SQLite database.
+- `build_dir` (str): Build directory.
+- `config_file` (str, optional): Pa11y config file.
+- `db_path` (str): Path to SQLite database.
 
 ---
 
-### copy_to_docs
+### copy_to_docs()
 
-```python
-def copy_to_docs()
-```
-
-Copy all changed files from the build directory to the docs directory.
+Copy all changed files from build/ to docs/.
 
 ---
 
-### main
-
-```python
-def main()
-```
+### main()
 
 CLI entry point. Parses arguments, runs checks, stores results, and generates reports as needed.
 
 ---
 
-## Usage Example
+## Logging
+
+All major operations and errors are logged to `log/pa11y.log` for debugging and auditing.
+
+## Error Handling
+
+Robust error handling is implemented for subprocess calls, file I/O, database operations, and template rendering. All failures are logged with context.
+
+## Example Usage
 
 ```python
 from oerforge import verify
 verify.process_all_html_files()
 ```
 
----
-
-## Requirements
-- Python 3.7+
-- Pa11y (Node.js CLI tool)
-- SQLite3
-- Jinja2
-- PyYAML
-- BeautifulSoup4
-
----
-
 ## See Also
 - [Pa11y Documentation](https://pa11y.org/)
-- [WCAG Standards](https://www.w3.org/WAI/standards-guidelines/wcag/)
+- [WCAG Guidelines](https://www.w3.org/WAI/standards-guidelines/wcag/)
+- [Jinja2 Templates](https://jinja.palletsprojects.com/)
 
 ---
 
 ## License
-See `LICENSE` in the project root.
+
+See LICENSE in the project root.

@@ -1,11 +1,11 @@
 import os
 import logging
 from oerforge.db_utils import initialize_database
-from oerforge.copyfile import copy_build_to_docs_safe
 from oerforge.scan import scan_toc_and_populate_db
 from oerforge.convert import batch_convert_all_content
 from oerforge.make import build_all_markdown_files, build_section_indexes
 from oerforge.export_all import export_all
+from oerforge.copyfile import copy_build_to_docs_safe
 
 #================================================================
 # Directories for builds and file storage
