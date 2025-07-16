@@ -42,13 +42,6 @@ def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     # TODO: Query DB for all pages
     pass
 
-def generate_compliance_table_page(conn, output_path: str):
-    """
-    Generate a static HTML page summarizing accessibility compliance for all pages.
-    """
-    # TODO: Implement compliance table generation
-    pass
-
 def main():
     """
     CLI entry point. Parse args, run checks, store results, and generate reports as needed.
