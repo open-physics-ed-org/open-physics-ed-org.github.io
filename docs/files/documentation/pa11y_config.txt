@@ -1,0 +1,193 @@
+Pa11y Configuration Guide: JSON Options and Testing Scenarios
+
+Pa11y is a powerful accessibility testing tool that offers extensive JSON configuration capabilities for diverse testing scenarios. This guide provides comprehensive coverage of configuration options, real-world examples, and implementation patterns for various use cases.
+
+JSON Configuration Structure
+
+Pa11y supports two primary configuration formats: pa11y.json for command-line usage and .pa11yci for CI/CD environments. Both use identical JSON schema with flexible option inheritance.
+
+Basic Configuration Format
+
+Complete Configuration Options Reference
+
+Core Testing Options
+
+ (String): Accessibility standard to test against
+
+Values: , , , 
+
+
+Default: 
+
+
+Note: Section 508 is deprecated; use WCAG2AA instead
+
+
+ (Array): Testing engines to use
+
+Values: , , 
+
+
+Default: 
+
+
+Multiple runners provide comprehensive coverage
+
+
+ (Array): Pre-test interactive actions
+
+Format: Array of action strings
+
+
+Available commands: , , , 
+
+
+Essential for testing authenticated or dynamic content
+
+
+Browser and Performance Controls
+
+ (Number): Maximum test duration in milliseconds
+
+Default:  (30 seconds)
+
+
+Range:  to  for complex applications
+
+
+ (Object): Browser window configuration
+
+Properties: , , , 
+
+
+Default: 
+
+
+ (Object): Chrome browser launch options
+
+Critical for Docker/CI environments
+
+
+Common args: 
+
+
+Issue Management
+
+ (Array): Rules or issue types to exclude
+
+Format: Specific rule codes or general types
+
+
+Examples: 
+
+
+ (Number): Maximum allowed issues before failure
+
+Default:  (strict mode)
+
+
+Useful for gradual accessibility improvements
+
+
+ (String): Minimum issue severity to report
+
+Values: , , 
+
+
+Default: 
+
+
+Authentication and Headers
+
+ (Object): HTTP headers for requests
+
+Format: Key-value pairs
+
+
+Common use: 
+
+
+ (String): Custom User-Agent string
+
+Default: 
+
+
+Accessibility Standards Configuration
+
+WCAG Compliance Levels
+
+Custom WCAG 2.1 Rules
+
+Government/Enterprise Compliance
+
+Authentication Scenarios
+
+Basic Authentication
+
+Form-Based Login
+
+Multi-Step Authentication
+
+Viewport and Device Testing
+
+Mobile-First Testing
+
+Multi-Device Testing
+
+Output Formats and Reporting
+
+Multiple Reporter Configuration
+
+Custom Output Paths
+
+CI/CD Integration Patterns
+
+Jenkins Configuration
+
+GitHub Actions Optimized
+
+Docker Environment
+
+Performance and Timing Configurations
+
+High-Performance Setup
+
+Resource-Constrained Environment
+
+Multi-Page Testing Configurations
+
+Site-Wide Testing
+
+Sitemap-Based Testing
+
+Custom Rules and Advanced Filtering
+
+Comprehensive Issue Management
+
+Per-URL Custom Rules
+
+Environment-Specific Configurations
+
+Development Environment
+
+Production Monitoring
+
+Advanced Action Sequences
+
+Complex User Flows
+
+Dynamic Content Testing
+
+Integration with Testing Frameworks
+
+Jest Integration
+
+Best Practices for Configuration
+
+Configuration organization ensures maintainability and clarity across different testing scenarios. Environment separation uses different configuration files for development, staging, and production environments. Modular configuration breaks complex setups into reusable components with consistent naming conventions.
+
+Security considerations require protecting authentication credentials through environment variables and avoiding hardcoded sensitive data in configuration files. Performance optimization balances thoroughness with execution time by using appropriate concurrency levels and timeout values.
+
+Maintenance strategies include regular review of ignore rules to ensure they remain relevant, documentation of custom configurations for team knowledge sharing, and version control of configuration files alongside application code.
+
+This comprehensive configuration guide demonstrates pa11y's extensive flexibility for accessibility testing across diverse scenarios, from basic compliance checking to complex enterprise deployments with authentication, custom rules, and CI/CD integration.

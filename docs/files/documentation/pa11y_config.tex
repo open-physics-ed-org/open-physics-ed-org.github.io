@@ -1,0 +1,634 @@
+\section{Pa11y Configuration Guide: JSON Options and Testing
+Scenarios}\label{pa11y-configuration-guide-json-options-and-testing-scenarios}
+
+Pa11y is a powerful accessibility testing tool that offers extensive
+JSON configuration capabilities for diverse testing scenarios. This
+guide provides comprehensive coverage of configuration options,
+real-world examples, and implementation patterns for various use cases.
+
+\subsection{JSON Configuration
+Structure}\label{json-configuration-structure}
+
+Pa11y supports two primary configuration formats: \textbf{pa11y.json}
+for command-line usage and \textbf{.pa11yci} for CI/CD environments.
+Both use identical JSON schema with flexible option inheritance.
+
+\subsubsection{Basic Configuration
+Format}\label{basic-configuration-format}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{30000}\FunctionTok{,}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2AA"}\FunctionTok{,}
+    \DataTypeTok{"viewport"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"width"}\FunctionTok{:} \DecValTok{1280}\FunctionTok{,}
+      \DataTypeTok{"height"}\FunctionTok{:} \DecValTok{1024}
+    \FunctionTok{\},}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}\StringTok{"notice"}\OtherTok{,} \StringTok{"warning"}\OtherTok{]}
+  \FunctionTok{\},}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \StringTok{"https://example.com"}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/special"}\FunctionTok{,}
+      \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{60000}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}\StringTok{"click element \#menu{-}toggle"}\OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Complete Configuration Options
+Reference}\label{complete-configuration-options-reference}
+
+\subsubsection{Core Testing Options}\label{core-testing-options}
+
+\textbf{\texttt{standard}} (String): Accessibility standard to test
+against - Values: \texttt{"WCAG2A"}, \texttt{"WCAG2AA"},
+\texttt{"WCAG2AAA"}, \texttt{"Section508"} - Default: \texttt{"WCAG2AA"}
+- Note: Section 508 is deprecated; use WCAG2AA instead
+
+\textbf{\texttt{runners}} (Array): Testing engines to use - Values:
+\texttt{{[}"htmlcs"{]}}, \texttt{{[}"axe"{]}},
+\texttt{{[}"htmlcs",\ "axe"{]}} - Default: \texttt{{[}"htmlcs"{]}} -
+Multiple runners provide comprehensive coverage
+
+\textbf{\texttt{actions}} (Array): Pre-test interactive actions -
+Format: Array of action strings - Available commands:
+\texttt{click\ element}, \texttt{set\ field},
+\texttt{wait\ for\ element}, \texttt{navigate\ to} - Essential for
+testing authenticated or dynamic content
+
+\subsubsection{Browser and Performance
+Controls}\label{browser-and-performance-controls}
+
+\textbf{\texttt{timeout}} (Number): Maximum test duration in
+milliseconds - Default: \texttt{30000} (30 seconds) - Range:
+\texttt{1000} to \texttt{500000} for complex applications
+
+\textbf{\texttt{viewport}} (Object): Browser window configuration -
+Properties: \texttt{width}, \texttt{height}, \texttt{deviceScaleFactor},
+\texttt{isMobile} - Default:
+\texttt{\{"width":\ 1280,\ "height":\ 1024\}}
+
+\textbf{\texttt{chromeLaunchConfig}} (Object): Chrome browser launch
+options - Critical for Docker/CI environments - Common args:
+\texttt{{[}"-\/-no-sandbox",\ "-\/-disable-dev-shm-usage"{]}}
+
+\subsubsection{Issue Management}\label{issue-management}
+
+\textbf{\texttt{ignore}} (Array): Rules or issue types to exclude -
+Format: Specific rule codes or general types - Examples:
+\texttt{{[}"WCAG2AA.Principle1.Guideline1\_1.1\_1\_1.H30.2",\ "warning"{]}}
+
+\textbf{\texttt{threshold}} (Number): Maximum allowed issues before
+failure - Default: \texttt{0} (strict mode) - Useful for gradual
+accessibility improvements
+
+\textbf{\texttt{level}} (String): Minimum issue severity to report -
+Values: \texttt{"error"}, \texttt{"warning"}, \texttt{"notice"} -
+Default: \texttt{"error"}
+
+\subsubsection{Authentication and
+Headers}\label{authentication-and-headers}
+
+\textbf{\texttt{headers}} (Object): HTTP headers for requests - Format:
+Key-value pairs - Common use:
+\texttt{\{"Authorization":\ "Bearer\ token",\ "Cookie":\ "session=abc123"\}}
+
+\textbf{\texttt{userAgent}} (String): Custom User-Agent string -
+Default: \texttt{"pa11y/\textless{}version\textgreater{}"}
+
+\subsection{Accessibility Standards
+Configuration}\label{accessibility-standards-configuration}
+
+\subsubsection{WCAG Compliance Levels}\label{wcag-compliance-levels}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2AA"}\FunctionTok{,}
+    \DataTypeTok{"runners"}\FunctionTok{:} \OtherTok{[}\StringTok{"htmlcs"}\OtherTok{,} \StringTok{"axe"}\OtherTok{]}\FunctionTok{,}
+    \DataTypeTok{"level"}\FunctionTok{:} \StringTok{"error"}\FunctionTok{,}
+    \DataTypeTok{"includeWarnings"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+    \DataTypeTok{"includeNotices"}\FunctionTok{:} \KeywordTok{true}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Custom WCAG 2.1 Rules}\label{custom-wcag-2.1-rules}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2A"}\FunctionTok{,}
+    \DataTypeTok{"rules"}\FunctionTok{:} \OtherTok{[}
+      \StringTok{"Principle1.Guideline1\_4.1\_4\_6\_AAA"}\OtherTok{,}
+      \StringTok{"Principle1.Guideline1\_3.1\_3\_1\_AAA"}
+    \OtherTok{]}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Government/Enterprise
+Compliance}\label{governmententerprise-compliance}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2AA"}\FunctionTok{,}
+    \DataTypeTok{"runners"}\FunctionTok{:} \OtherTok{[}\StringTok{"htmlcs"}\OtherTok{,} \StringTok{"axe"}\OtherTok{]}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{0}\FunctionTok{,}
+    \DataTypeTok{"level"}\FunctionTok{:} \StringTok{"warning"}\FunctionTok{,}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}
+      \StringTok{"WCAG2AA.Principle1.Guideline1\_4.1\_4\_3.G18.Fail"}
+    \OtherTok{]}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Authentication Scenarios}\label{authentication-scenarios}
+
+\subsubsection{Basic Authentication}\label{basic-authentication}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"headers"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"Authorization"}\FunctionTok{:} \StringTok{"Basic dXNlcm5hbWU6cGFzc3dvcmQ="}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Form-Based Login}\label{form-based-login}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{60000}\FunctionTok{,}
+    \DataTypeTok{"useIncognitoBrowserContext"}\FunctionTok{:} \KeywordTok{false}
+  \FunctionTok{\},}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/dashboard"}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"navigate to https://example.com/login"}\OtherTok{,}
+        \StringTok{"set field \#username to testuser"}\OtherTok{,}
+        \StringTok{"set field \#password to testpass"}\OtherTok{,}
+        \StringTok{"click element \#login{-}button"}\OtherTok{,}
+        \StringTok{"wait for path to be /dashboard"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Multi-Step
+Authentication}\label{multi-step-authentication}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/secure{-}area"}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"navigate to https://example.com/login"}\OtherTok{,}
+        \StringTok{"set field \#username to admin"}\OtherTok{,}
+        \StringTok{"set field \#password to password123"}\OtherTok{,}
+        \StringTok{"click element \#login{-}btn"}\OtherTok{,}
+        \StringTok{"wait for element \#two{-}factor{-}input to be visible"}\OtherTok{,}
+        \StringTok{"set field \#two{-}factor{-}input to 123456"}\OtherTok{,}
+        \StringTok{"click element \#verify{-}btn"}\OtherTok{,}
+        \StringTok{"wait for path to be /dashboard"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Viewport and Device
+Testing}\label{viewport-and-device-testing}
+
+\subsubsection{Mobile-First Testing}\label{mobile-first-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"viewport"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"width"}\FunctionTok{:} \DecValTok{375}\FunctionTok{,}
+      \DataTypeTok{"height"}\FunctionTok{:} \DecValTok{667}\FunctionTok{,}
+      \DataTypeTok{"deviceScaleFactor"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,}
+      \DataTypeTok{"isMobile"}\FunctionTok{:} \KeywordTok{true}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Multi-Device Testing}\label{multi-device-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com"}\FunctionTok{,}
+      \DataTypeTok{"viewport"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"width"}\FunctionTok{:} \DecValTok{1920}\FunctionTok{,} \DataTypeTok{"height"}\FunctionTok{:} \DecValTok{1080}\FunctionTok{\}}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com"}\FunctionTok{,}
+      \DataTypeTok{"viewport"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"width"}\FunctionTok{:} \DecValTok{768}\FunctionTok{,} \DataTypeTok{"height"}\FunctionTok{:} \DecValTok{1024}\FunctionTok{\}}
+    \FunctionTok{\}}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com"}\FunctionTok{,}
+      \DataTypeTok{"viewport"}\FunctionTok{:} \FunctionTok{\{}\DataTypeTok{"width"}\FunctionTok{:} \DecValTok{375}\FunctionTok{,} \DataTypeTok{"height"}\FunctionTok{:} \DecValTok{667}\FunctionTok{\}}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Output Formats and
+Reporting}\label{output-formats-and-reporting}
+
+\subsubsection{Multiple Reporter
+Configuration}\label{multiple-reporter-configuration}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"reporters"}\FunctionTok{:} \OtherTok{[}
+      \StringTok{"cli"}\OtherTok{,}
+      \StringTok{"json"}\OtherTok{,}
+      \OtherTok{[}\StringTok{"pa11y{-}ci{-}reporter{-}html"}\OtherTok{,} \FunctionTok{\{}\DataTypeTok{"fileName"}\FunctionTok{:} \StringTok{"./report.html"}\FunctionTok{\}}\OtherTok{]}
+    \OtherTok{]}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Custom Output Paths}\label{custom-output-paths}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"screenCapture"}\FunctionTok{:} \StringTok{"screenshots/accessibility{-}test.png"}\FunctionTok{,}
+    \DataTypeTok{"reporter"}\FunctionTok{:} \StringTok{"json"}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{CI/CD Integration Patterns}\label{cicd-integration-patterns}
+
+\subsubsection{Jenkins Configuration}\label{jenkins-configuration}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"chromeLaunchConfig"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"args"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"{-}{-}no{-}sandbox"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}setuid{-}sandbox"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}dev{-}shm{-}usage"}
+      \OtherTok{]}
+    \FunctionTok{\},}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{30000}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{0}\FunctionTok{,}
+    \DataTypeTok{"level"}\FunctionTok{:} \StringTok{"error"}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{GitHub Actions Optimized}\label{github-actions-optimized}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{30000}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{0}\FunctionTok{,}
+    \DataTypeTok{"level"}\FunctionTok{:} \StringTok{"error"}\FunctionTok{,}
+    \DataTypeTok{"concurrency"}\FunctionTok{:} \DecValTok{2}\FunctionTok{,}
+    \DataTypeTok{"chromeLaunchConfig"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"args"}\FunctionTok{:} \OtherTok{[}\StringTok{"{-}{-}no{-}sandbox"}\OtherTok{,} \StringTok{"{-}{-}disable{-}setuid{-}sandbox"}\OtherTok{]}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Docker Environment}\label{docker-environment}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"chromeLaunchConfig"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"executablePath"}\FunctionTok{:} \StringTok{"/usr/bin/google{-}chrome{-}stable"}\FunctionTok{,}
+      \DataTypeTok{"args"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"{-}{-}no{-}sandbox"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}dev{-}shm{-}usage"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}gpu"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}extensions"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Performance and Timing
+Configurations}\label{performance-and-timing-configurations}
+
+\subsubsection{High-Performance Setup}\label{high-performance-setup}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{500000}\FunctionTok{,}
+    \DataTypeTok{"wait"}\FunctionTok{:} \DecValTok{2000}\FunctionTok{,}
+    \DataTypeTok{"concurrency"}\FunctionTok{:} \DecValTok{4}\FunctionTok{,}
+    \DataTypeTok{"useIncognitoBrowserContext"}\FunctionTok{:} \KeywordTok{true}\FunctionTok{,}
+    \DataTypeTok{"chromeLaunchConfig"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"args"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"{-}{-}disable{-}background{-}timer{-}throttling"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}backgrounding{-}occluded{-}windows"}\OtherTok{,}
+        \StringTok{"{-}{-}disable{-}renderer{-}backgrounding"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Resource-Constrained
+Environment}\label{resource-constrained-environment}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{15000}\FunctionTok{,}
+    \DataTypeTok{"concurrency"}\FunctionTok{:} \DecValTok{1}\FunctionTok{,}
+    \DataTypeTok{"chromeLaunchConfig"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"args"}\FunctionTok{:} \OtherTok{[}\StringTok{"{-}{-}disable{-}gpu"}\OtherTok{,} \StringTok{"{-}{-}disable{-}extensions"}\OtherTok{]}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Multi-Page Testing
+Configurations}\label{multi-page-testing-configurations}
+
+\subsubsection{Site-Wide Testing}\label{site-wide-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{30000}\FunctionTok{,}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2AA"}\FunctionTok{,}
+    \DataTypeTok{"hideElements"}\FunctionTok{:} \StringTok{"\#cookie{-}banner, .ad{-}container"}\FunctionTok{,}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}\StringTok{"notice"}\OtherTok{,} \StringTok{"warning"}\OtherTok{]}
+  \FunctionTok{\},}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \StringTok{"https://example.com/"}\OtherTok{,}
+    \StringTok{"https://example.com/about"}\OtherTok{,}
+    \StringTok{"https://example.com/contact"}\OtherTok{,}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/checkout"}\FunctionTok{,}
+      \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{60000}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"navigate to https://example.com/login"}\OtherTok{,}
+        \StringTok{"set field \#email to test@example.com"}\OtherTok{,}
+        \StringTok{"set field \#password to testpass"}\OtherTok{,}
+        \StringTok{"click element \#login{-}btn"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Sitemap-Based Testing}\label{sitemap-based-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Command usage with configuration}
+\ExtensionTok{pa11y{-}ci} \AttributeTok{{-}{-}sitemap}\NormalTok{ https://example.com/sitemap.xml }\AttributeTok{{-}{-}config}\NormalTok{ .pa11yci}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{30000}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{5}\FunctionTok{,}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}\StringTok{"notice"}\OtherTok{,} \StringTok{"warning"}\OtherTok{]}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Custom Rules and Advanced
+Filtering}\label{custom-rules-and-advanced-filtering}
+
+\subsubsection{Comprehensive Issue
+Management}\label{comprehensive-issue-management}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"standard"}\FunctionTok{:} \StringTok{"WCAG2AA"}\FunctionTok{,}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}
+      \StringTok{"WCAG2AA.Principle1.Guideline1\_4.1\_4\_3.G18.Fail"}\OtherTok{,}
+      \StringTok{"WCAG2AA.Principle1.Guideline1\_4.1\_4\_3.G145.Fail"}\OtherTok{,}
+      \StringTok{"WCAG2AA.Principle3.Guideline3\_2.3\_2\_2.H32.2"}
+    \OtherTok{]}\FunctionTok{,}
+    \DataTypeTok{"hideElements"}\FunctionTok{:} \StringTok{"\#lc\_chat\_layout, .third{-}party{-}widget"}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{5}\FunctionTok{,}
+    \DataTypeTok{"includeWarnings"}\FunctionTok{:} \KeywordTok{true}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Per-URL Custom Rules}\label{per-url-custom-rules}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/article"}\FunctionTok{,}
+      \DataTypeTok{"hideElements"}\FunctionTok{:} \StringTok{"\#carbonads, \#disqus\_thread"}\FunctionTok{,}
+      \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}\StringTok{"WCAG2AA.Principle1.Guideline1\_4.1\_4\_3.G18.Fail"}\OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Environment-Specific
+Configurations}\label{environment-specific-configurations}
+
+\subsubsection{Development Environment}\label{development-environment}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// .pa11yci.js for dynamic configuration}
+\NormalTok{module}\OperatorTok{.}\AttributeTok{exports} \OperatorTok{=}\NormalTok{ \{}
+  \DataTypeTok{defaults}\OperatorTok{:}\NormalTok{ \{}
+    \DataTypeTok{timeout}\OperatorTok{:} \BuiltInTok{process}\OperatorTok{.}\AttributeTok{env}\OperatorTok{.}\AttributeTok{PA11Y\_TIMEOUT} \OperatorTok{||} \DecValTok{30000}\OperatorTok{,}
+    \DataTypeTok{headers}\OperatorTok{:}\NormalTok{ \{}
+      \StringTok{\textquotesingle{}Authorization\textquotesingle{}}\OperatorTok{:} \VerbatimStringTok{\textasciigrave{}Bearer }\SpecialCharTok{$\{}\BuiltInTok{process}\OperatorTok{.}\AttributeTok{env}\OperatorTok{.}\AttributeTok{AUTH\_TOKEN}\SpecialCharTok{\}}\VerbatimStringTok{\textasciigrave{}}
+\NormalTok{    \}}\OperatorTok{,}
+    \DataTypeTok{chromeLaunchConfig}\OperatorTok{:}\NormalTok{ \{}
+      \DataTypeTok{args}\OperatorTok{:} \BuiltInTok{process}\OperatorTok{.}\AttributeTok{env}\OperatorTok{.}\AttributeTok{CI} \OperatorTok{?}\NormalTok{ [}\StringTok{\textquotesingle{}{-}{-}no{-}sandbox\textquotesingle{}}\NormalTok{] }\OperatorTok{:}\NormalTok{ []}
+\NormalTok{    \}}
+\NormalTok{  \}}\OperatorTok{,}
+  \DataTypeTok{urls}\OperatorTok{:}\NormalTok{ [}
+    \VerbatimStringTok{\textasciigrave{}}\SpecialCharTok{$\{}\BuiltInTok{process}\OperatorTok{.}\AttributeTok{env}\OperatorTok{.}\AttributeTok{BASE\_URL} \OperatorTok{||} \StringTok{\textquotesingle{}https://localhost:3000\textquotesingle{}}\SpecialCharTok{\}}\VerbatimStringTok{/\textasciigrave{}}
+\NormalTok{  ]}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Production Monitoring}\label{production-monitoring}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"defaults"}\FunctionTok{:} \FunctionTok{\{}
+    \DataTypeTok{"timeout"}\FunctionTok{:} \DecValTok{45000}\FunctionTok{,}
+    \DataTypeTok{"threshold"}\FunctionTok{:} \DecValTok{0}\FunctionTok{,}
+    \DataTypeTok{"ignore"}\FunctionTok{:} \OtherTok{[}\StringTok{"notice"}\OtherTok{]}\FunctionTok{,}
+    \DataTypeTok{"screenCapture"}\FunctionTok{:} \StringTok{"screenshots/prod{-}test.png"}\FunctionTok{,}
+    \DataTypeTok{"headers"}\FunctionTok{:} \FunctionTok{\{}
+      \DataTypeTok{"User{-}Agent"}\FunctionTok{:} \StringTok{"Pa11y{-}Monitor/1.0"}
+    \FunctionTok{\}}
+  \FunctionTok{\}}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Advanced Action Sequences}\label{advanced-action-sequences}
+
+\subsubsection{Complex User Flows}\label{complex-user-flows}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/multi{-}step{-}form"}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"set field \#step1{-}name to John Doe"}\OtherTok{,}
+        \StringTok{"click element \#next{-}step"}\OtherTok{,}
+        \StringTok{"wait for element \#step2{-}form to be visible"}\OtherTok{,}
+        \StringTok{"set field \#step2{-}email to john@example.com"}\OtherTok{,}
+        \StringTok{"click element \#submit{-}form"}\OtherTok{,}
+        \StringTok{"wait for path to be /confirmation"}\OtherTok{,}
+        \StringTok{"screen capture form{-}completion.png"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Dynamic Content Testing}\label{dynamic-content-testing}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{\{}
+  \DataTypeTok{"urls"}\FunctionTok{:} \OtherTok{[}
+    \FunctionTok{\{}
+      \DataTypeTok{"url"}\FunctionTok{:} \StringTok{"https://example.com/dynamic{-}content"}\FunctionTok{,}
+      \DataTypeTok{"actions"}\FunctionTok{:} \OtherTok{[}
+        \StringTok{"click element \#load{-}more{-}button"}\OtherTok{,}
+        \StringTok{"wait for element .dynamic{-}content to be visible"}\OtherTok{,}
+        \StringTok{"click element \#filter{-}toggle"}\OtherTok{,}
+        \StringTok{"wait for element \#filter{-}options to be visible"}
+      \OtherTok{]}
+    \FunctionTok{\}}
+  \OtherTok{]}
+\FunctionTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Integration with Testing
+Frameworks}\label{integration-with-testing-frameworks}
+
+\subsubsection{Jest Integration}\label{jest-integration}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// jest.config.js}
+\NormalTok{module}\OperatorTok{.}\AttributeTok{exports} \OperatorTok{=}\NormalTok{ \{}
+  \DataTypeTok{testEnvironment}\OperatorTok{:} \StringTok{\textquotesingle{}node\textquotesingle{}}\OperatorTok{,}
+  \DataTypeTok{setupFilesAfterEnv}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}\textless{}rootDir\textgreater{}/test/pa11y.setup.js\textquotesingle{}}\NormalTok{]}
+\NormalTok{\}}\OperatorTok{;}
+
+\CommentTok{// pa11y.setup.js}
+\KeywordTok{const}\NormalTok{ pa11y }\OperatorTok{=} \PreprocessorTok{require}\NormalTok{(}\StringTok{\textquotesingle{}pa11y\textquotesingle{}}\NormalTok{)}\OperatorTok{;}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \PreprocessorTok{require}\NormalTok{(}\StringTok{\textquotesingle{}./pa11y.json\textquotesingle{}}\NormalTok{)}\OperatorTok{;}
+
+\BuiltInTok{global}\OperatorTok{.}\AttributeTok{pa11yTest} \OperatorTok{=} \KeywordTok{async}\NormalTok{ (url}\OperatorTok{,}\NormalTok{ options }\OperatorTok{=}\NormalTok{ \{\}) }\KeywordTok{=\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{const}\NormalTok{ results }\OperatorTok{=} \ControlFlowTok{await} \FunctionTok{pa11y}\NormalTok{(url}\OperatorTok{,}\NormalTok{ \{ }\OperatorTok{...}\NormalTok{config}\OperatorTok{.}\AttributeTok{defaults}\OperatorTok{,} \OperatorTok{...}\NormalTok{options \})}\OperatorTok{;}
+  \ControlFlowTok{return}\NormalTok{ results}\OperatorTok{;}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Best Practices for
+Configuration}\label{best-practices-for-configuration}
+
+\subsubsection{\texorpdfstring{Configuration organization ensures
+maintainability and clarity across different testing scenarios.
+\textbf{Environment separation} uses different configuration files for
+development, staging, and production environments. \textbf{Modular
+configuration} breaks complex setups into reusable components with
+consistent naming
+conventions.}{Configuration organization ensures maintainability and clarity across different testing scenarios. Environment separation uses different configuration files for development, staging, and production environments. Modular configuration breaks complex setups into reusable components with consistent naming conventions.}}\label{configuration-organization-ensures-maintainability-and-clarity-across-different-testing-scenarios.-environment-separation-uses-different-configuration-files-for-development-staging-and-production-environments.-modular-configuration-breaks-complex-setups-into-reusable-components-with-consistent-naming-conventions.}
+
+\textbf{Security considerations} require protecting authentication
+credentials through environment variables and avoiding hardcoded
+sensitive data in configuration files. \textbf{Performance optimization}
+balances thoroughness with execution time by using appropriate
+concurrency levels and timeout values.
+
+\textbf{Maintenance strategies} include regular review of ignore rules
+to ensure they remain relevant, documentation of custom configurations
+for team knowledge sharing, and version control of configuration files
+alongside application code.
+
+This comprehensive configuration guide demonstrates pa11y's extensive
+flexibility for accessibility testing across diverse scenarios, from
+basic compliance checking to complex enterprise deployments with
+authentication, custom rules, and CI/CD integration.

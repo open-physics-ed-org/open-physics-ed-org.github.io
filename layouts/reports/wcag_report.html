@@ -4,13 +4,10 @@
 
 {% block main %}
   {# The accessibility badge below uses the new wcag-badge, wcag-badge-error, and wcag-badge-success classes. #}
-  <div style="margin-bottom:1.5em; display: flex; align-items: center; gap: 1em;">
-    {{ badge_html|safe }}
-    <span style="font-weight: bold; font-size: 1.1em;">
-      Errors: {{ error_count }}
-    </span>
+  <div>
+    {{ badge_html|safe }} Errors: {{ error_count }}
   </div>
-
+  
   <h1 class="report-title">Accessibility Report: {{ page_title }}</h1>
   <div>
     <strong>Page URL:</strong> <code>{{ relative_url }}</code><br>
