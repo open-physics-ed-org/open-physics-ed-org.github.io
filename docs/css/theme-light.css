@@ -598,15 +598,34 @@ body.dark .markdown-body * {
 /* ===========================
   13. Images
   =========================== */
-/*
-body.dark .markdown-body img,
-body.dark .card img,
-body.dark img.content-img {
-  background: #fff !important;
-  border: 1px solid #333;
-  border-radius: 4px;
+/* WCAG Accessibility Badge Button */
+.wcag-badge {
+  display: inline-block;
+  margin: 0.25em 0.5em 0.25em 0;
+  padding: 0.6em 1.5em;
+  font-size: 1.1em;
+  font-weight: 700;
+  border-radius: 0.6em;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border 0.2s;
+  cursor: pointer;
+  outline: none;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  border: 2px solid transparent;
 }
-*/
+.wcag-badge-error {
+  background: #c00 !important;
+  color: #fff !important;
+  border-color: #c00 !important;
+}
+.wcag-badge-success {
+  background: #090 !important;
+  color: #fff !important;
+  border-color: #090 !important;
+}
+
 .markdown-body img,
 .card img,
 img.content-img {

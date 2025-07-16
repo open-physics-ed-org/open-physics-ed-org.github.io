@@ -108,6 +108,8 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, repo
     # logo_info should be a dict mapping WCAG levels to badge/logo URLs
     logging.debug(f"[generate_badge_html] logo_info keys: {list(logo_info.keys())}")
     logging.debug(f"[generate_badge_html] Requested wcag_level: {wcag_level}")
+    logging.debug(f"[generate_badge_html] Called with wcag_level={wcag_level}, error_count={error_count}, report_link={report_link}")
+    logging.debug(f"[generate_badge_html] logo_info: {logo_info}")
     badge_url = logo_info.get(wcag_level, "")
     logging.debug(f"[generate_badge_html] badge_url resolved: {badge_url}")
     if not badge_url:
@@ -115,17 +117,17 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, repo
         return f'<span class="badge-missing">WCAG {wcag_level} badge not found</span>'
     img_url = f"{badge_url}"
     alt_text = f"WCAG {wcag_level} Conformance Logo"
-    # Determine badge class and error count display
+    # Determine badge class only (no error count in badge)
+    logging.debug(f"[generate_badge_html] error_count: {error_count}")
     if error_count == 0:
         badge_class = "wcag-badge wcag-badge-success"
-        error_html = ""
+        logging.debug(f"[generate_badge_html] No errors. badge_class={badge_class}")
     else:
         badge_class = "wcag-badge wcag-badge-error"
-        error_html = f'<span class="error-count">Errors: {error_count}</span>'
+        logging.debug(f"[generate_badge_html] Errors present. badge_class={badge_class}")
     badge_html = (
         f'<a href="{report_link}" aria-label="View Accessibility Report" class="{badge_class}" data-accessibility-report-btn="1">'
         f'<img src="{img_url}" alt="{alt_text}" style="height:2em;vertical-align:middle;">'
-        f'{error_html}'
         f'</a>'
     )
     logging.info(f"[generate_badge_html] Generated badge HTML for WCAG {wcag_level}: {badge_html}")

@@ -598,8 +598,6 @@ body.dark .markdown-body * {
 /* ===========================
   13. Images
   =========================== */
-/*
-body.dark .markdown-body img,
 /* WCAG Accessibility Badge Button */
 .wcag-badge {
   display: inline-block;
@@ -627,8 +625,7 @@ body.dark .markdown-body img,
   color: #fff !important;
   border-color: #090 !important;
 }
-}
-*/
+
 .markdown-body img,
 .card img,
 img.content-img {
