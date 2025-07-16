@@ -77,8 +77,9 @@ def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     """
     Return a list of pages (from content table) to check for accessibility.
     """
-    # TODO: Query DB for all pages
-    pass
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, output_path FROM content WHERE output_path LIKE '%.html'")
+    return [{"id": row[0], "output_path": row[1]} for row in cursor.fetchall()]
 
 def generate_compliance_table_page(conn, output_path: str):
     """
@@ -94,6 +95,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Accessibility verification with Pa11y")
     parser.add_argument("--config", "-c", type=str, help="Path to Pa11y config file (default: pa11y.config.json in project root if present)")
+    parser.add_argument("--all", action="store_true", help="Check all HTML files in the database (batch mode)")
     args = parser.parse_args()
 
     config_path = args.config
@@ -102,22 +104,47 @@ def main():
         if os.path.exists(default_config):
             config_path = default_config
 
-    html_path = os.path.join("build", "index.html")
-    if not os.path.exists(html_path):
-        print(f"File not found: {html_path}")
-        return
-    result = run_pa11y_on_file(html_path, config_path)
-    print("Raw Pa11y result:", result)
-    if result is not None and result != []:
-        # Print as pretty JSON if possible
-        try:
-            print(json.dumps(result, indent=2))
-        except Exception:
-            print(result)
-    elif result == []:
-        print("No accessibility issues found (empty list).")
+    if args.all:
+        # Batch mode: check all HTML files in the database
+        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "sqlite.db")
+        conn = sqlite3.connect(db_path)
+        pages = get_pages_to_check(conn)
+        print(f"Checking {len(pages)} HTML files from database...")
+        for page in pages:
+            html_path = page["output_path"]
+            if not os.path.exists(html_path):
+                print(f"File not found: {html_path}")
+                logging.warning(f"File not found: {html_path}")
+                continue
+            print(f"\n=== Checking: {html_path} ===")
+            result = run_pa11y_on_file(html_path, config_path)
+            print("Raw Pa11y result:", result)
+            if result is not None and result != []:
+                try:
+                    print(json.dumps(result, indent=2))
+                except Exception:
+                    print(result)
+            elif result == []:
+                print("No accessibility issues found (empty list).")
+            else:
+                print("No Pa11y result or error occurred.")
+        conn.close()
     else:
-        print("No Pa11y result or error occurred.")
+        html_path = os.path.join("build", "index.html")
+        if not os.path.exists(html_path):
+            print(f"File not found: {html_path}")
+            return
+        result = run_pa11y_on_file(html_path, config_path)
+        print("Raw Pa11y result:", result)
+        if result is not None and result != []:
+            try:
+                print(json.dumps(result, indent=2))
+            except Exception:
+                print(result)
+        elif result == []:
+            print("No accessibility issues found (empty list).")
+        else:
+            print("No Pa11y result or error occurred.")
 
 if __name__ == "__main__":
     main()

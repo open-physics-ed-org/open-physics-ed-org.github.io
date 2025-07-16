@@ -1,0 +1,20 @@
+{
+  "A": {
+    "url": "https://www.w3.org/WAI/wcag2A",
+    "img": "https://www.w3.org/WAI/wcag2A-blue-v.svg",
+    "alt": "WCAG 2.0 Level A Conformance Logo",
+    "usage": "See https://www.w3.org/WAI/standards-guidelines/wcag/conformance-logos/#logos"
+  },
+  "AA": {
+    "url": "https://www.w3.org/WAI/wcag2AA",
+    "img": "https://www.w3.org/WAI/wcag2AA-blue-v.svg",
+    "alt": "WCAG 2.0 Level AA Conformance Logo",
+    "usage": "See https://www.w3.org/WAI/standards-guidelines/wcag/conformance-logos/#logos"
+  },
+  "AAA": {
+    "url": "https://www.w3.org/WAI/wcag2AAA",
+    "img": "https://www.w3.org/WAI/wcag2AAA-blue-v.svg",
+    "alt": "WCAG 2.0 Level AAA Conformance Logo",
+    "usage": "See https://www.w3.org/WAI/standards-guidelines/wcag/conformance-logos/#logos"
+  }
+}
