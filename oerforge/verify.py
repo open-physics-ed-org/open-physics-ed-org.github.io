@@ -17,12 +17,14 @@ logging.basicConfig(
 def load_pa11y_config(yml_path: str = "_content.yml") -> dict:
     """Load pa11y config and logo info from _content.yml and/or pa11y-configs/wcag.badges.json."""
     import yaml
+    
     yml_path = os.path.abspath(yml_path)
     if not os.path.exists(yml_path):
         return {}
     with open(yml_path, 'r', encoding='utf-8') as f:
         data = yaml.safe_load(f)
-    return data or {}
+    # Only return the 'pa11y' block if it exists
+    return data.get('pa11y', {}) if data else {}
 
 
 # --- Pa11y Integration ---
@@ -97,10 +99,6 @@ def store_accessibility_result(content_id: int, pa11y_json: List[Dict[str, Any]]
         notice_count
     ))
     conn.commit()
-
-def get_pages_to_check(conn) -> List[Dict[str, Any]]:
-    """Return a list of pages (from content table) to check for accessibility."""
-    pass
 
 # --- Badge and Report Generation ---
 def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, report_link: str) -> str:
@@ -354,7 +352,7 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     logging.info(f"Generated WCAG report: {report_path}")
     return report_path
 
-def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqlite.db"):
+def process_all_html_files(build_dir="build", wcag="WCAG2AA", config_file=None, db_path="db/sqlite.db"):
     import fnmatch
     asset_dirs = {"css", "js", "images", "files"}
     from oerforge.verify import run_pa11y_on_file, get_content_id_for_file, store_accessibility_result, generate_wcag_report, inject_badge_into_html, generate_badge_html, load_pa11y_config
@@ -375,7 +373,7 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
     if not logo_info:
         logo_info = config_data.get("wcag_logos", {})
     # Get default WCAG level from config
-    default_wcag_level = config_data.get("pa11y", {}).get("wcag_level", "AA")
+    default_wcag_level = wcag
 
     for root, dirs, files in os.walk(build_dir):
         # Skip asset directories

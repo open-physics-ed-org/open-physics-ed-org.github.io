@@ -1,6 +1,6 @@
 # Site-wide content and organization
 site:
-  title: "Open Physics Education"
+  title: "Open Physics Education Network"
   author: "Danny Caballero"
   subtitle: "Open, accessible, and community-driven physics education."
   description: "Open Physics Education - News, resources, and community."
@@ -42,45 +42,32 @@ toc:
     menu: true
     slug: documentation
     children:
-      - title: "db_utils.py — OERForge Database Utilities"
-        file: documentation/db_utils.md
-      - title: "scan.py - OERForge Content Scanner"
-        file: documentation/scan.md
+      - title: "build.py - OER-Forge Orchestrator"
+        file: documentation/build.md
+      - title: "pa11y.py - OER-Forge WCAG checker"
+        file: documentation/pa11y.md
+      - title: "db_utils.py — OER-Forge Database Utilities"
+        file: documentation/oerforge.db_utils.md
+      - title: "scan.py - OER-Forge Content Scanner"
+        file: documentation/oerforge.scan.md
+      - title: "convert.py - OER-Forge Content Converter"
+        file: documentation/oerforge.convert.md
+      - title: "make.py - OER-Forge Static Site Generator"
+        file: documentation/oerforge.make.md
+      - title: "copyfile.py - OER-Forge File Copier"
+        file: documentation/oerforge.copyfile.md
+      - title: "export_all.py - OER-Forge Content Exporter"
+        file: documentation/oerforge.export_all.md
+      - title: "verify.py - OER-Forge Accessibility Verifier"
+        file: documentation/oerforge.verify.md
   - title: "About"
     menu: true
     file: about.md
 
+# Optional (needs pa11y installed)
+# Defaults:
+# - wcag_level: WCAG2AA
+# - config: pa11y.wcag.aa.json
 pa11y:
-  wcag_level: AA
-  config: pa11y.wcag.aa.json
-
-static:
-  images:
-    - path: static/images/
-      description: "Site-wide images and figures"
-  css:
-    - path: static/css/
-      description: "Custom CSS files"
-  js:
-    - path: static/js/
-      description: "Custom JavaScript files"
-  templates:
-    - path: static/templates/
-      description: "HTML templates"
-  themes:
-    - path: static/themes/
-      description: "Theme files"
-
-# Metadata for automated build and export
-build:
-  outputs:
-    - html
-    - pdf
-    - docx
-    - md
-    - tex
-    - jupyter
-    - ppt
-    - ipynb
-  output_dir: _build/
-  docs_dir: docs/
+  wcag_level: WCAG22AAA
+  config: pa11y.wcag22.aaa.json
