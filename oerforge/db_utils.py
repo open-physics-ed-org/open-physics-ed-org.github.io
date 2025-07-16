@@ -171,13 +171,14 @@ def initialize_database():
 
     # Default conversion rules: source_format -> [target_formats]
     default_conversion_matrix = {
-        '.md':     ['.md', '.marp', '.tex', '.pdf', '.docx', '.ppt', '.jupyter'],
-        '.marp':   ['.md', '.marp', '.pdf', '.docx', '.ppt'],
-        '.tex':    ['.md', '.tex', '.pdf', '.docx'],
-        '.ipynb':  ['.md', '.tex', '.pdf', '.docx', '.jupyter', '.ipynb'],
+        '.md':     ['.txt','.md', '.marp', '.tex', '.pdf', '.docx', '.ppt', '.jupyter'],
+        '.marp':   ['.txt','.md', '.marp', '.pdf', '.docx', '.ppt'],
+        '.tex':    ['.txt','.md', '.tex', '.pdf', '.docx'],
+        '.ipynb':  ['.txt','.md', '.tex', '.pdf', '.docx', '.jupyter', '.ipynb'],
         '.jupyter':['.md', '.tex', '.pdf', '.docx', '.jupyter', '.ipynb'],
-        '.docx':   ['.md', '.tex', '.pdf', '.docx'],
-        '.ppt':    ['.ppt'],
+        '.docx':   ['.txt','.md', '.tex', '.pdf', '.docx'],
+        '.ppt':    ['.txt','.ppt'],
+        '.txt':    ['.txt','.md','.tex','.docx','.pdf']
     }
     # Check if conversion_capabilities is empty, then insert defaults
     cursor.execute("SELECT COUNT(*) FROM conversion_capabilities")

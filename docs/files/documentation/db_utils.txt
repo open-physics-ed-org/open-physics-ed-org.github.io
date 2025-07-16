@@ -1,0 +1,69 @@
+— OERForge Database Utilities
+
+Overview
+
+ provides utility functions for initializing, managing, and interacting with the SQLite database used in the OERForge project. It supports asset tracking, page-file relationships, site metadata, and general-purpose queries and inserts. This module is designed to be approachable for new programmers and extensible for contributors.
+
+Module Docstring
+
+Functions
+
+
+
+Purpose: Sets up the database schema, ensuring all necessary tables exist and are clean for a new build.
+
+
+
+Purpose: Provides a reusable way to obtain a database connection, using the default project path if none is specified.
+
+
+
+Purpose: Allows flexible querying of any table, returning results as a list of dictionaries for easy use in Python code.
+
+
+
+Purpose: Efficiently inserts multiple records into any table, handling connection management and error logging.
+
+
+
+Purpose: Helps developers inspect the contents of any table in a readable format, useful for debugging and development.
+
+
+
+Purpose: Centralizes logging for all database operations, making it easier to track and debug issues.
+
+
+
+Purpose: Specifically designed to create links between files and pages in the  table, supporting asset tracking and page relationships.
+
+Best Practices
+
+Always close database connections when done to avoid resource leaks.
+
+
+Use the provided logging functions to track database operations and errors.
+
+
+When adding new tables or relationships, update  and consider creating new utility functions for those tables.
+
+
+Read function docstrings for argument details and usage examples.
+
+
+Example Usage
+
+For New Programmers
+
+Read the module and function docstrings for guidance.
+
+
+If you are unsure about database operations, start with  and  to explore the data.
+
+
+Use logging to help debug and understand what your code is doing.
+
+
+Ask questions and refer to Python's official documentation for  if you want to learn more about database programming.
+
+
+This documentation is intended to be verbose and beginner-friendly. For further help, see the code comments and docstrings in  itself.
