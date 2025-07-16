@@ -46,13 +46,15 @@ toc:
         file: documentation/db_utils.md
       - title: "scan.py - OERForge Content Scanner"
         file: documentation/scan.md
+      - title: "WCAG checking with pa11y integration"
+        file: documentation/pa11y_config.md
   - title: "About"
     menu: true
     file: about.md
 
 pa11y:
-  wcag_level: AA
-  config: pa11y.wcag.aa.json
+  wcag_level: WCAG2AAA
+  config: pa11y.wcag.aaa.json
 
 static:
   images:
