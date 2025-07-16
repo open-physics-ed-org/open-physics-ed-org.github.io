@@ -346,15 +346,10 @@ footer a:hover, footer a:focus {
 /* =========================
   Card Grid & Cards
 ========================= */
+/* For accessibility report: full-width, left-justified cards */
 .card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2em;
-  justify-content: center;
+  display: block;
   margin: 2em 0;
-  background: none;
-  border: none;
-  box-shadow: none;
 }
 .card {
   background: var(--color-card) !important;
@@ -362,11 +357,10 @@ footer a:hover, footer a:focus {
   border-radius: 16px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.14);
   padding: 2em 2em 1.5em 2em;
-  min-width: 220px;
-  max-width: 320px;
-  flex: 1 1 220px;
-  text-align: center;
-  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  text-align: left;
+  margin: 0 0 2em 0;
   border: 1px solid var(--color-card);
   transition: box-shadow 0.2s, border 0.2s, background 0.2s;
 }
