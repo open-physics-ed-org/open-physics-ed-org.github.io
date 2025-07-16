@@ -5,16 +5,17 @@ import subprocess
 import json
 from typing import Optional, Dict, Any, List
 import logging
+
 logging.basicConfig(
     filename="log/pa11y.log",
     filemode="w",
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s"
 )
 
 # --- Config and Logging ---
 def load_pa11y_config(yml_path: str = "_content.yml") -> dict:
-    """Load pa11y config and logo info from _content.yml and/or pa11y-configs/wcag_logos.json."""
+    """Load pa11y config and logo info from _content.yml and/or pa11y-configs/wcag.badges.json."""
     import yaml
     yml_path = os.path.abspath(yml_path)
     if not os.path.exists(yml_path):
@@ -96,26 +97,27 @@ def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     pass
 
 # --- Badge and Report Generation ---
-def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict) -> str:
-    """Generate badge HTML for a given WCAG level and error count, using logo info."""
+def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, report_link: str) -> str:
+    """Generate badge HTML for a given WCAG level and error count, using logo info. Badge links to the local accessibility report."""
     # logo_info should be a dict mapping WCAG levels to badge/logo URLs
-    # Example: {"A": "https://www.w3.org/WAI/wcag2A", ...}
+    logging.debug(f"[generate_badge_html] logo_info keys: {list(logo_info.keys())}")
+    logging.debug(f"[generate_badge_html] Requested wcag_level: {wcag_level}")
     badge_url = logo_info.get(wcag_level, "")
+    logging.debug(f"[generate_badge_html] badge_url resolved: {badge_url}")
     if not badge_url:
         logging.warning(f"[generate_badge_html] No badge URL found for WCAG level: {wcag_level}")
         return f'<span class="badge-missing">WCAG {wcag_level} badge not found</span>'
-    # Compose badge HTML (W3C badge SVG is typically at {badge_url}/badge.svg)
-    img_url = f"{badge_url}/badge.svg"
+    img_url = f"{badge_url}"
     alt_text = f"WCAG {wcag_level} Conformance Logo"
     badge_html = (
-        f'<a href="{badge_url}" target="_blank" rel="noopener">'
+        f'<a href="{report_link}" aria-label="View Accessibility Report">'  # Local report link
         f'<img src="{img_url}" alt="{alt_text}" style="height:2em;vertical-align:middle;">'
         f'</a>'
     )
     logging.info(f"[generate_badge_html] Generated badge HTML for WCAG {wcag_level}: {badge_html}")
     return badge_html
 
-def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
+def inject_badge_into_html(html_path: str, badge_html: str, report_link: str, logo_info: dict):
     """Inject the badge/button into the HTML file after <main>."""
     # Use BeautifulSoup for robust HTML manipulation
     try:
@@ -133,19 +135,35 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
 
     soup = BeautifulSoup(html, 'html.parser')
 
-    # Remove all previous accessibility report buttons and badges
+    # Remove all previous accessibility report buttons and badges (robust)
     removed = 0
+    # Remove all <a class="download-btn" data-accessibility-report-btn>
     for a in soup.find_all('a', class_='download-btn'):
-        if a.has_attr('data-accessibility-report-btn'):
-            # Remove the badge (img or span) immediately after the button, if present
-            next_sib = a.find_next_sibling()
-            # Only check .name if next_sib is a Tag
-            if isinstance(next_sib, Tag):
-                sib_class = next_sib.get('class')
-                if next_sib.name == 'img' or (next_sib.name == 'span' and sib_class is not None and 'badge-missing' in sib_class):
-                    next_sib.decompose()
+        if isinstance(a, Tag) and a.has_attr('data-accessibility-report-btn'):
             a.decompose()
             removed += 1
+    # Remove all <span class="badge-missing">
+    for span in soup.find_all('span', class_='badge-missing'):
+        if isinstance(span, Tag):
+            span.decompose()
+            removed += 1
+    # Remove all <img> tags whose src starts with any badge URL in logo_info, and their parent <a> if it's a badge link
+    badge_urls = set(logo_info.values())
+    for img in soup.find_all('img'):
+        if isinstance(img, Tag) and img.has_attr('src'):
+            img_src = str(img['src'])
+            for badge_url in badge_urls:
+                if img_src.startswith(badge_url):
+                    parent = img.parent
+                    if parent and parent.name == 'a' and parent.has_attr('href'):
+                        parent_href = str(parent['href'])
+                        if parent_href.startswith(badge_url):
+                            parent.decompose()
+                            removed += 1
+                            break
+                    img.decompose()
+                    removed += 1
+                    break
     if removed > 0:
         logging.info(f"[inject_badge_into_html] Removed {removed} existing accessibility report button/badge blocks in {html_path}")
 
@@ -342,9 +360,9 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
     import json
     # Load config and logo info
     config_data = load_pa11y_config("_content.yml")
-    # Try to load logo info from pa11y-configs/wcag_logos.json if present
+    # Try to load logo info from pa11y-configs/wcag.badges.json if present
     logo_info = {}
-    logo_json_path = os.path.join("pa11y-configs", "wcag_logos.json")
+    logo_json_path = os.path.join("pa11y-config", "wcag.badges.json")
     if os.path.exists(logo_json_path):
         try:
             with open(logo_json_path, "r", encoding="utf-8") as f:
@@ -375,8 +393,10 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                 error_count = sum(1 for i in result if i.get("type") == "error") if result else 0
                 warning_count = sum(1 for i in result if i.get("type") == "warning") if result else 0
                 notice_count = sum(1 for i in result if i.get("type") == "notice") if result else 0
-                # Generate badge HTML dynamically
-                badge_html = generate_badge_html(wcag_level, error_count, logo_info)
+                # Generate 
+                # HTML dynamically
+                report_link = None  # Will be set after report is generated
+                badge_html = ''
                 safe_result = result if result is not None else []
                 if content_id is not None:
                     store_accessibility_result(content_id, safe_result, badge_html, wcag_level, error_count, warning_count, notice_count, conn)
@@ -387,8 +407,9 @@ def process_all_html_files(build_dir="build", config_file=None, db_path="db/sqli
                     issues = safe_result
                     report_path = generate_wcag_report(html_path, issues, badge_html, config)
                     # Compute relative link from html file to report
-                    report_link = os.path.basename(report_path)
-                    inject_badge_into_html(html_path, badge_html, report_link)
+                    report_link = os.path.basename(report_path)  # Compute relative link from html file to report
+                    badge_html = generate_badge_html(wcag_level, error_count, logo_info, report_link)
+                    inject_badge_into_html(html_path, badge_html, report_link, logo_info)
                 conn.close()
 
 # --- Utility ---
