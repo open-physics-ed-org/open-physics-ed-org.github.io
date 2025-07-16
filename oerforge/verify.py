@@ -105,7 +105,7 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
     pass
 
 def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_html: str, config: dict):
-    """Generate a detailed HTML report for the file using a Jinja2 template."""
+    """Generate a detailed HTML report for the file using a Jinja2 template that extends baseof.html."""
     from jinja2 import Environment, FileSystemLoader, select_autoescape
     # Determine output path: wcag_report_FILENAME.html in same dir as html_path
     html_dir = os.path.dirname(html_path)
@@ -120,7 +120,8 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../layouts'))
     template_dirs = [
         os.path.join(base_dir, 'reports'),
-        os.path.join(base_dir, 'partials')
+        os.path.join(base_dir, 'partials'),
+        os.path.join(base_dir, '_default'),
     ]
     env = Environment(
         loader=FileSystemLoader(template_dirs),
@@ -141,10 +142,11 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     logo_path = os.path.relpath(os.path.join(build_dir, 'images/logo.png'), html_dir)
 
     context = {
-        'title': config.get('title', html_filename),
-        'favicon': favicon,
+        'Title': config.get('title', html_filename),  # For {% block title %} in baseof.html
+        'site': site,
         'css_path': css_path,
         'js_path': js_path,
+        'favicon': favicon,
         'logo_path': logo_path,
         'wcag_level': config.get('wcag_level', 'AA'),
         'error_count': sum(1 for i in issues if i.get('type') == 'error'),
@@ -152,7 +154,6 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
         'notice_count': sum(1 for i in issues if i.get('type') == 'notice'),
         'badge_html': badge_html,
         'issues': issues,
-        'site': site,
         'footer_text': footer_text,
     }
 
