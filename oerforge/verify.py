@@ -32,7 +32,7 @@ def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None, wcag_le
     Accepts config_path and wcag_level ("AA" or "AAA").
     """
     html_abs = os.path.abspath(html_path)
-    pa11y_cmd = ["pa11y", f"file://{html_abs}", "--reporter", "json"]
+    pa11y_cmd = ["pa11y", f"file://{html_abs}", "--reporter", "json", "--runner", "axe"]
     # Add WCAG level as --standard
     if wcag_level.upper() == "AAA":
         pa11y_cmd.extend(["--standard", "WCAG2AAA"])

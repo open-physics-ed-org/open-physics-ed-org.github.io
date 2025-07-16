@@ -43,6 +43,7 @@
       </p>
       <p id="issue-selector-{{ loop.index }}"><strong>Selector:</strong> <code>{{ issue.selector }}</code></p>
       <p id="issue-rule-{{ loop.index }}"><strong>Rule:</strong> {{ issue.code }}
+        {{ issue.helpUrl }}
         {% if issue.helpUrl %}
           <a href="{{ issue.helpUrl }}" target="_blank" rel="noopener" aria-label="More information about {{ issue.code }} (opens in new tab)">More info</a>
         {% endif %}
