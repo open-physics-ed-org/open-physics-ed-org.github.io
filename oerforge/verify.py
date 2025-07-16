@@ -141,8 +141,28 @@ def generate_wcag_report(html_path: str, issues: List[Dict[str, Any]], badge_htm
     favicon = os.path.relpath(os.path.join(build_dir, 'images/favicon.ico'), html_dir)
     logo_path = os.path.relpath(os.path.join(build_dir, 'images/logo.png'), html_dir)
 
+    # Try to extract page title from HTML file (fallback to config or filename)
+    page_title = config.get('title', html_filename)
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                if '<title>' in line:
+                    import re
+                    m = re.search(r'<title>(.*?)</title>', line)
+                    if m:
+                        page_title = m.group(1).strip()
+                        break
+    except Exception:
+        pass
+
+    # Compute relative URL from build/ root
+    build_root = os.path.abspath(os.path.join(html_dir, '..'))
+    relative_url = os.path.relpath(html_path, build_root)
+
     context = {
-        'Title': config.get('title', html_filename),  # For {% block title %} in baseof.html
+        'Title': page_title,  # For {% block title %} in baseof.html
+        'page_title': page_title,
+        'relative_url': relative_url,
         'site': site,
         'css_path': css_path,
         'js_path': js_path,
