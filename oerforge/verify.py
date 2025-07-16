@@ -115,7 +115,7 @@ def generate_badge_html(wcag_level: str, error_count: int, logo_info: dict, repo
         error_html = ""
     else:
         badge_class = "badge-error"
-        error_html = f'<span class="error-count">{error_count}</span>'
+        error_html = f'<span class="error-count">Errors: {error_count}</span>'
     badge_html = (
         f'<a href="{report_link}" aria-label="View Accessibility Report" class="download-btn {badge_class}" data-accessibility-report-btn="1">'
         f'<img src="{img_url}" alt="{alt_text}" style="height:2em;vertical-align:middle;">'
