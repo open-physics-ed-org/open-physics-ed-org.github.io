@@ -90,16 +90,29 @@ def store_accessibility_result(content_id: int, pa11y_json: Any, badge_html: str
     ))
     conn.commit()
 
-def generate_badge_html(wcag_level: str, error_count: int) -> str:
+def generate_badge_html(wcag_level: str, error_count: int, logo_info=None) -> str:
     color = "#4caf50" if error_count == 0 else "#f44336"
     label = f"WCAG {wcag_level.upper()}"
     status = "PASS" if error_count == 0 else f"{error_count} ERRORS"
-    return f'<span style="background:{color};color:#fff;padding:2px 6px;border-radius:4px;font-size:90%">{label}: {status}</span>'
+    logo_html = ""
+    if logo_info and "img" in logo_info and "alt" in logo_info:
+        logo_html = f'<img src="{logo_info["img"]}" alt="{logo_info["alt"]}" style="height:1.5em;vertical-align:middle;margin-right:0.5em;">'
+    return f'<span style="background:{color};color:#fff;padding:2px 6px;border-radius:4px;font-size:90%">{logo_html}{label}: {status}</span>'
 
 def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     cursor = conn.cursor()
     cursor.execute("SELECT id, output_path FROM content WHERE output_path LIKE '%.html'")
     return [{"id": row[0], "output_path": row[1]} for row in cursor.fetchall()]
+
+def get_wcag_level_from_config(config_filename):
+    mapping = {
+        "pa11y.config.json": "AA",
+        #"wcag.aa.json": "AA",
+        #"basic.json": "A",
+        #"wcag.aaa.json": "AAA",
+        # Add more mappings as needed
+    }
+    return mapping.get(config_filename.lower(), "AA")  # Default to AA
 
 def read_config_order_from_yaml(yaml_path: str) -> List[str]:
     """
@@ -109,72 +122,6 @@ def read_config_order_from_yaml(yaml_path: str) -> List[str]:
     # TODO: Implement reading config order from YAML
     return []
 
-def generate_compliance_table_page(conn, output_path: str):
-    """
-    Generate a static HTML page summarizing accessibility compliance for all pages.
-    Uses Jinja2 template for rendering.
-    """
-    from oerforge.make import render_page
-
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT wcag_level FROM accessibility_results ORDER BY wcag_level")
-    configs = [row[0] for row in cursor.fetchall()]
-    cursor.execute('''
-        SELECT ar.content_id, ar.wcag_level, ar.error_count, ar.checked_at, c.title, c.output_path
-        FROM accessibility_results ar
-        JOIN content c ON ar.content_id = c.id
-        ORDER BY c.output_path, ar.wcag_level
-    ''')
-    rows = cursor.fetchall()
-    # Build mapping: page -> {title, output_path, last_checked, results_by_config}
-    pages = {}
-    for content_id, wcag_level, error_count, checked_at, title, output_path in rows:
-        if output_path not in pages:
-            pages[output_path] = {
-                'title': title,
-                'output_path': output_path,
-                'last_checked': checked_at,
-                'results': {}
-            }
-        if checked_at > pages[output_path]['last_checked']:
-            pages[output_path]['last_checked'] = checked_at
-        pages[output_path]['results'][wcag_level] = error_count
-
-    # Prepare rows for the template
-    table_rows = []
-    for page in pages.values():
-        row = {
-            'title': page['title'],
-            'output_path': page['output_path'],
-            'configs': [],
-            'last_checked': page['last_checked'],
-        }
-        for cname in configs:
-            err = page['results'].get(cname)
-            if err is None:
-                row['configs'].append({'error_count': None, 'checked': False})
-            else:
-                row['configs'].append({'error_count': err, 'checked': err == 0})
-        table_rows.append(row)
-
-    context = {
-        'configs': configs,
-        'rows': table_rows,
-        'title': 'Accessibility Compliance Summary',
-        'site': {
-            'favicon': 'static/images/favicon.ico',
-            'title': 'Open Physics Ed',
-            'subtitle': 'Accessible OER for Physics',
-        },
-        'css_path': 'css/theme-light.css',
-        'js_path': 'js/main.js',
-        'logo_path': 'images/logo.png',
-        'top_menu': [],
-    }
-
-    html = render_page(context, 'compliance-summary.html')
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html)
 
 def ensure_accessibility_results_table(conn, drop_and_recreate=False):
     cursor = conn.cursor()
@@ -195,103 +142,93 @@ def ensure_accessibility_results_table(conn, drop_and_recreate=False):
         )
     """)
     conn.commit()
-
+    
+def get_wcag_logo_info(level, logos_path=None):
+    if logos_path is None:
+        # Always resolve from project root
+        logos_path = os.path.join(project_root, "pa11y-configs", "wcag_logos.json")
+    try:
+        with open(logos_path, "r") as f:
+            logos = json.load(f)
+        return logos.get(level)
+    except Exception as e:
+        logging.error(f"Could not load WCAG logo info: {e}")
+        return None
+    
+def inject_badges_into_html(conn, badge_field="badge_html", marker="<!-- BADGE_INJECT -->"):
+    """
+    For each page in the DB, inject the badge_html into the HTML file.
+    If marker is found, insert there; otherwise, insert before </body>.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT c.output_path, ar.badge_html
+        FROM accessibility_results ar
+        JOIN content c ON ar.content_id = c.id
+        WHERE ar.badge_html IS NOT NULL AND ar.badge_html != ''
+    """)
+    rows = cursor.fetchall()
+    for output_path, badge_html in rows:
+        if not output_path or not os.path.exists(output_path):
+            continue
+        with open(output_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        # Replace the missing badge message if present
+        missing_div = '<div class="accessibility-badge-missing" role="status" style="color:#888;font-size:90%">\n        No accessibility verification results yet.\n      </div>'
+        if missing_div in html:
+            html = html.replace(missing_div, f'<div class="accessibility-badge">{badge_html}</div>')
+        elif marker in html:
+            html = html.replace(marker, badge_html + marker)
+        elif "</body>" in html:
+            html = html.replace("</body>", badge_html + "\n</body>")
+        else:
+            html += "\n" + badge_html
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html)
+    return True
+    
 def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Accessibility verification with Pa11y")
-    parser.add_argument("--config", "-c", type=str, help="Path to Pa11y config file (default: pa11y.config.json in project root if present)")
-    parser.add_argument("--all", action="store_true", help="Check all HTML files in the database (batch mode)")
-    parser.add_argument("--reset-results", action="store_true", help="Drop and recreate the accessibility_results table before running")
-    parser.add_argument("--summary", action="store_true", help="Generate accessibility compliance summary page only")
-    args = parser.parse_args()
-
-    config_path = args.config
-    if not config_path:
-        default_config = os.path.join(project_root, "pa11y.config.json")
-        if os.path.exists(default_config):
-            config_path = default_config
-
+    config_path = "pa11y-configs/pa11y.config.json"  # Set your config file here
+    project_root = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(project_root, "db", "sqlite.db")
     conn = sqlite3.connect(db_path)
-    ensure_accessibility_results_table(conn, drop_and_recreate=args.reset_results)
-
-    if args.summary:
-        output_path = os.path.join(project_root, "build", "compliance-summary.html")
-        generate_compliance_table_page(conn, output_path)
-        print(f"Compliance summary page generated at {output_path}")
-        conn.close()
-        return
-
-    if args.all:
-        pages = get_pages_to_check(conn)
-        print(f"Checking {len(pages)} HTML files from database...")
-        config_name = None
-        if config_path:
-            config_base = os.path.basename(config_path)
-            if config_base.endswith('.json'):
-                config_name = config_base[:-5]
-            else:
-                config_name = config_base
-        else:
-            config_name = "default"
-        for page in pages:
-            html_path = page["output_path"]
-            if not os.path.exists(html_path):
-                print(f"File not found: {html_path}")
-                continue
-            print(f"\n=== Checking: {html_path} ===")
-            result = run_pa11y_on_file(html_path, config_path)
-            error_count = 0
-            warning_count = 0
-            notice_count = 0
-            if isinstance(result, list):
-                for issue in result:
-                    if isinstance(issue, dict):
-                        t = issue.get("type")
-                        if t == "error":
-                            error_count += 1
-                        elif t == "warning":
-                            warning_count += 1
-                        elif t == "notice":
-                            notice_count += 1
-            wcag_level = config_name
-            badge_html = generate_badge_html(wcag_level, error_count)
-            store_accessibility_result(
-                content_id=page["id"],
-                pa11y_json=result if result is not None else [],
-                badge_html=badge_html,
-                wcag_level=wcag_level,
-                error_count=error_count,
-                warning_count=warning_count,
-                notice_count=notice_count,
-                conn=conn
-            )
-            if result is not None and result != []:
-                try:
-                    print(json.dumps(result, indent=2))
-                except Exception:
-                    print(result)
-            elif result == []:
-                print("No accessibility issues found (empty list).")
-            else:
-                print("No Pa11y result or error occurred.")
-        conn.close()
-    else:
-        html_path = os.path.join("build", "index.html")
+    ensure_accessibility_results_table(conn)
+    wcag_level = get_wcag_level_from_config(os.path.basename(config_path))
+    logo_info = get_wcag_logo_info(wcag_level)
+    pages = get_pages_to_check(conn)
+    for page in pages:
+        html_path = page["output_path"]
         if not os.path.exists(html_path):
-            print(f"File not found: {html_path}")
-            return
+            continue
         result = run_pa11y_on_file(html_path, config_path)
-        print("Raw Pa11y result:", result)
-        if result is not None and result != []:
-            try:
-                print(json.dumps(result, indent=2))
-            except Exception:
-                print(result)
-        elif result == []:
-            print("No accessibility issues found (empty list).")
-        else:
-            print("No Pa11y result or error occurred.")
+        error_count = 0
+        warning_count = 0
+        notice_count = 0
+        if isinstance(result, list):
+            for issue in result:
+                t = issue.get("type")
+                if t == "error":
+                    error_count += 1
+                elif t == "warning":
+                    warning_count += 1
+                elif t == "notice":
+                    notice_count += 1
+        badge_html = generate_badge_html(wcag_level, error_count, logo_info)
+        store_accessibility_result(
+            content_id=page["id"],
+            pa11y_json=result if result is not None else [],
+            badge_html=badge_html,
+            wcag_level=wcag_level,
+            error_count=error_count,
+            warning_count=warning_count,
+            notice_count=notice_count,
+            conn=conn
+        )
+    conn.close()
 
 if __name__ == "__main__":
     main()
+    
+    
+    
+    

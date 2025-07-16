@@ -1,6 +1,15 @@
 {% extends "_default/baseof.html" %}
 {% block main %}
   <article>
+    {% if badge_html %}
+      <div class="accessibility-badge">
+        {{ badge_html | safe }}
+      </div>
+    {% elif not badge_html %}
+      <div class="accessibility-badge-missing" role="status" style="color:#888;font-size:90%">
+        No accessibility verification results yet.
+      </div>
+    {% endif %}
     {% if download_buttons %}
     <nav class="download-nav" role="navigation" aria-label="Download options">
       {% for btn in download_buttons %}

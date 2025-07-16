@@ -1,8 +1,8 @@
 {
   "standard": "WCAG2AA",
+  "ignore": [],
   "timeout": 30000,
-  "screenCapture": false,
-  "ignore": [
-    "notice"
-  ]
+  "actions": [],
+  "viewport": {"width": 1280, "height": 800},
+  "screenCapture": false
 }
