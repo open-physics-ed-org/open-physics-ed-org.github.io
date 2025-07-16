@@ -151,38 +151,44 @@ def inject_badge_into_html(html_path: str, badge_html: str, report_link: str):
 
     # Build the new button and badge block
     button_tag = soup.new_tag('a', href=report_link, attrs={'class': 'download-btn', 'aria-label': 'View accessibility report', 'data-accessibility-report-btn': '1'})
-    button_tag.string = 'Accessibility Report'
+    button_tag.string = 'WCAG'
     badge_frag = BeautifulSoup(badge_html, 'html.parser') if badge_html else None
 
-    # Insert after <main> if present, else after <body>, else at top
+    # Try to insert at the placeholder next to the theme toggle
     inserted = False
-    main_tag = soup.find('main')
-    if main_tag and isinstance(main_tag, Tag):
-        # Insert button and badge as the first elements inside <main>
-        main_tag.insert(0, NavigableString('\n'))
-        main_tag.insert(1, button_tag)
+    placeholder = soup.find(id="accessibility-report-placeholder")
+    if placeholder is not None:
+        placeholder.insert_after(button_tag)
         if badge_frag:
-            # Insert badge(s) after the button
-            idx = 2
             for el in badge_frag.contents:
                 if isinstance(el, Tag) or isinstance(el, NavigableString):
-                    main_tag.insert(idx, el)
-                    idx += 1
+                    button_tag.insert_after(el)
         inserted = True
     else:
-        body_tag = soup.find('body')
-        if body_tag and isinstance(body_tag, Tag):
-            body_tag.insert(0, NavigableString('\n'))
-            body_tag.insert(1, button_tag)
+        main_tag = soup.find('main')
+        if main_tag and isinstance(main_tag, Tag):
+            main_tag.insert(0, NavigableString('\n'))
+            main_tag.insert(1, button_tag)
             if badge_frag:
                 idx = 2
                 for el in badge_frag.contents:
                     if isinstance(el, Tag) or isinstance(el, NavigableString):
-                        body_tag.insert(idx, el)
+                        main_tag.insert(idx, el)
                         idx += 1
             inserted = True
+        else:
+            body_tag = soup.find('body')
+            if body_tag and isinstance(body_tag, Tag):
+                body_tag.insert(0, NavigableString('\n'))
+                body_tag.insert(1, button_tag)
+                if badge_frag:
+                    idx = 2
+                    for el in badge_frag.contents:
+                        if isinstance(el, Tag) or isinstance(el, NavigableString):
+                            body_tag.insert(idx, el)
+                            idx += 1
+                inserted = True
     if not inserted:
-        # Fallback: prepend to the document
         soup.insert(0, button_tag)
         if badge_frag:
             idx = 1
