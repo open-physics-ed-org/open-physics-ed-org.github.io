@@ -1,145 +1,60 @@
-import datetime
-import logging
-from typing import List, Dict
+"""
+verify.py
+
+Accessibility compliance verification using Pa11y.
+- Supports single file, batch, and all-pages modes.
+- Stores results in accessibility_results table.
+- Generates badges and a compliance summary page.
+"""
 import os
+import sys
+import sqlite3
+import subprocess
+import json
+from typing import Optional, Dict, Any, List
 
-def run_wcag_zoo_on_page(page_path: str, browser: str) -> Dict:
+# --- Pa11y Integration Stubs ---
+def run_pa11y_on_file(html_path: str, config_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """
-    Run axe-selenium-python accessibility tests on a single HTML page using the specified browser.
-    Args:
-        page_path: Path to the HTML file to test.
-        browser: Browser to use ('chrome', 'firefox', etc.).
-    Returns:
-        Dictionary with results.
+    Run Pa11y on a single HTML file. Returns parsed JSON result, or None on error.
     """
-    logging.info(f"Starting Axe Selenium test for {page_path} on {browser}")
-    try:
-        from selenium import webdriver
-        from axe_selenium_python import Axe
-        # Choose browser
-        if browser.lower() == 'firefox':
-            driver = webdriver.Firefox()
-        elif browser.lower() == 'chrome':
-            driver = webdriver.Chrome()
-        else:
-            raise ValueError(f"Unsupported browser: {browser}")
-        # Open the local HTML file
-        import os
-        abs_path = os.path.abspath(page_path)
-        driver.get(f"file://{abs_path}")
-        axe = Axe(driver)
-        axe.inject()
-        results = axe.run()
-        violations = results.get('violations', [])
-        result = {
-            'page': page_path,
-            'browser': browser,
-            'status': 'success' if not violations else 'fail',
-            'issues': violations,
-            'axe_results': results
-        }
-        driver.quit()
-        logging.info(f"Axe Selenium test completed for {page_path} on {browser}: {result}")
-        return result
-    except Exception as e:
-        logging.error(f"Axe Selenium test failed for {page_path} on {browser}: {e}")
-        return {'page': page_path, 'browser': browser, 'status': 'error', 'error': str(e)}
+    # TODO: Implement subprocess call to pa11y
+    pass
 
-def run_wcag_zoo_on_all_pages(pages: List[str], browsers: List[str]) -> Dict[str, Dict[str, Dict]]:
+def store_accessibility_result(content_id: int, pa11y_json: Dict[str, Any], badge_html: str, wcag_level: str, error_count: int, warning_count: int, notice_count: int, conn=None):
     """
-    Run axe-selenium-python tests on all pages for all browsers.
-    Args:
-        pages: List of HTML file paths.
-        browsers: List of browsers to test.
-    Returns:
-        Nested dictionary: {page: {browser: results}}
+    Store the latest accessibility result for a page in the database.
     """
-    results = {}
-    for page in pages:
-        results[page] = {}
-        for browser in browsers:
-            res = run_wcag_zoo_on_page(page, browser)
-            results[page][browser] = res
-    return results
+    # TODO: Implement DB insert/update
+    pass
 
-def generate_markdown_report(results: Dict[str, Dict[str, Dict]]) -> str:
+def generate_badge_html(wcag_level: str, error_count: int) -> str:
     """
-    Generate a markdown report from the axe-selenium-python results.
-    Args:
-        results: Nested dictionary from run_wcag_zoo_on_all_pages.
-    Returns:
-        Markdown string summarizing results.
+    Generate badge HTML for a given WCAG level and error count.
     """
-    md = f"# Axe Selenium Accessibility Report\n\n"
-    md += f"**Generated:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-    for page, browser_results in results.items():
-        md += f"## Page: {page}\n\n"
-        for browser, result in browser_results.items():
-            md += f"### Browser: {browser}\n\n"
-            status = result.get('status', 'Unknown')
-            md += f"**Status:** {status}\n\n"
-            error = result.get('error', None)
-            if error:
-                md += f"**Error:** {error}\n\n"
-            issues = result.get('issues', [])
-            if issues:
-                md += "#### Issues Found\n"
-                for issue in issues:
-                    desc = issue.get('description', '')
-                    help_url = issue.get('helpUrl', '')
-                    impact = issue.get('impact', '')
-                    md += f"- **{issue.get('id', 'Unknown')}**: {desc} (Impact: {impact}) [More info]({help_url})\n"
-                    for node in issue.get('nodes', []):
-                        md += f"    - Element: {node.get('html', '')}\n"
-                        for failure in node.get('failureSummary', '').split('\n'):
-                            if failure.strip():
-                                md += f"        - {failure.strip()}\n"
-            else:
-                md += "No accessibility issues found.\n"
-            md += "\n"
-    return md
+    # TODO: Implement badge generation
+    pass
 
-def save_report_to_build_folder(report_md: str) -> str:
+def get_pages_to_check(conn) -> List[Dict[str, Any]]:
     """
-    Save the markdown report as a page in build/files/wcag-reports/ with today's date and time.
-    Args:
-        report_md: Markdown report string.
-    Returns:
-        Path to the saved markdown file.
+    Return a list of pages (from content table) to check for accessibility.
     """
-    now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    report_dir = os.path.join("build", "files", "wcag-reports")
-    if not os.path.exists(report_dir):
-        os.makedirs(report_dir, exist_ok=True)
-    report_path = os.path.join(report_dir, f"wcag_report_{now}.md")
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write(report_md)
-    return report_path
+    # TODO: Query DB for all pages
+    pass
 
-def generate_one_markdown_report(result: Dict) -> str:
+def generate_compliance_table_page(conn, output_path: str):
     """
-    Generate a markdown report for a single axe-selenium-python result (for testing).
-    Args:
-        result: Dictionary from run_wcag_zoo_on_page.
-    Returns:
-        Markdown string summarizing the result.
+    Generate a static HTML page summarizing accessibility compliance for all pages.
     """
-    # ...existing code...
-    page = result.get('page', 'Unknown')
-    browser = result.get('browser', 'Unknown')
-    status = result.get('status', 'Unknown')
-    issues = result.get('issues', [])
-    error = result.get('error', None)
-    md = f"# WCAG Report\n\n"
-    md += f"**Page:** {page}\n\n"
-    md += f"**Browser:** {browser}\n\n"
-    md += f"**Status:** {status}\n\n"
-    if error:
-        md += f"**Error:** {error}\n\n"
-    if issues:
-        md += "## Issues Found\n"
-        for issue in issues:
-            md += f"- {issue}\n"
-    else:
-        md += "No accessibility issues found.\n"
-    return md
+    # TODO: Implement compliance table generation
+    pass
+
+def main():
+    """
+    CLI entry point. Parse args, run checks, store results, and generate reports as needed.
+    """
+    # TODO: Implement CLI argument parsing and dispatch
+    pass
+
+if __name__ == "__main__":
+    main()

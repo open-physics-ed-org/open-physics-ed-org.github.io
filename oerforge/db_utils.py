@@ -90,6 +90,21 @@ def initialize_database():
 
     # Create tables
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS accessibility_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content_id INTEGER NOT NULL,
+            pa11y_json TEXT,
+            badge_html TEXT,
+            wcag_level TEXT,
+            error_count INTEGER,
+            warning_count INTEGER,
+            notice_count INTEGER,
+            checked_at TEXT,
+            FOREIGN KEY(content_id) REFERENCES content(id)
+        )
+    """)
+    db_log("Created table: accessibility_results")
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT,
