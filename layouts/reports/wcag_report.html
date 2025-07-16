@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accessibility Report: {{ title }}</title>
+  <link rel="icon" href="{{ favicon }}">
+  <link rel="stylesheet" href="{{ css_path }}" id="theme-css">
+  <script src="{{ js_path }}" defer></script>
+</head>
+<body>
+  {% include 'header.html' %}
+  <main id="main-content" tabindex="-1">
+    <div class="container">
+      <h1>Accessibility Report: {{ title }}</h1>
+      <div>
+        <strong>WCAG Level:</strong> {{ wcag_level }}<br>
+        <strong>Errors:</strong> {{ error_count }} |
+        <strong>Warnings:</strong> {{ warning_count }} |
+        <strong>Notices:</strong> {{ notice_count }}
+        <div>{{ badge_html|safe }}</div>
+      </div>
+      <h2>Issues</h2>
+      <table>
+        <tr><th>Type</th><th>Message</th><th>Selector</th></tr>
+        {% for issue in issues %}
+        <tr>
+          <td>{{ issue.type }}</td>
+          <td>{{ issue.message }}</td>
+          <td><code>{{ issue.selector }}</code></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </main>
+  {% include 'footer.html' %}
+</body>
+</html>
