@@ -1,94 +1,63 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>scan.py - OERForge Content Scanner</title>
-  
-  <link rel="icon" href="static/images/favicon.ico">
-  <link rel="stylesheet" href="../css/theme-dark.css" id="theme-css">
-  <script src="../js/main.js" defer></script>
+<meta charset="utf-8"/>
+<title>scan.py - OERForge Content Scanner</title>
+<link href="static/images/favicon.ico" rel="icon"/>
+<link href="../css/theme-dark.css" id="theme-css" rel="stylesheet"/>
+<script defer="" src="../js/main.js"></script>
 </head>
 <body>
-  <header class="site-header">
-  <div class="header-flex">
-    <img src="../images/logo.png" alt="Site Logo" class="site-logo" />
-    <div class="header-titles">
-      <h1 class="site-title">Open Physics Education</h1>
-      <h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
-    </div>
-    <!-- Theme toggle button moved to main content container in baseof.html -->
-  </div>
-  <nav class="site-nav" role="navigation" aria-label="Main menu">
-    <ul class="nav-menu">
-      
-        <li><a href="../index.html">Home</a></li>
-      
-        <li><a href="../news-roll/index.html">News</a></li>
-      
-        <li><a href="../sample-resources/index.html">Example</a></li>
-      
-        <li><a href="index.html">Docs</a></li>
-      
-        <li><a href="../about/index.html">About</a></li>
-      
-    </ul>
-  </nav>
+<header class="site-header">
+<div class="header-flex">
+<img alt="Site Logo" class="site-logo" src="../images/logo.png"/>
+<div class="header-titles">
+<h1 class="site-title">Open Physics Education</h1>
+<h2 class="site-subtitle">Open, accessible, and community-driven physics education.</h2>
+</div>
+<!-- Theme toggle button moved to main content container in baseof.html -->
+</div>
+<nav aria-label="Main menu" class="site-nav" role="navigation">
+<ul class="nav-menu">
+<li><a href="../index.html">Home</a></li>
+<li><a href="../news-roll/index.html">News</a></li>
+<li><a href="../sample-resources/index.html">Example</a></li>
+<li><a href="index.html">Docs</a></li>
+<li><a href="../about/index.html">About</a></li>
+</ul>
+</nav>
 </header>
-  <main id="main-content" tabindex="-1">
-    <div class="container">
-      <button id="theme-toggle" aria-label="Switch theme" class="theme-toggle">🌙
+<main id="main-content" tabindex="-1">
+<div class="container">
+<button aria-label="Switch theme" class="theme-toggle" id="theme-toggle">🌙
         <span class="visually-hidden">Toggle dark/light theme</span>
-      </button>
-      <span id="accessibility-report-placeholder"></span>
-      
-  <article>
-    
-    <nav class="download-nav" role="navigation" aria-label="Download options">
-      
-        <a href="../files/documentation/scan.pdf"
-           class="download-btn theme-download-pdf"
-           role="button"
-           aria-label="Download as PDF">
+</button>
+<span id="accessibility-report-placeholder"></span><a aria-label="View Accessibility Report" class="wcag-badge wcag-badge-error" data-accessibility-report-btn="1" href="wcag_report_scan.html"><img alt="WCAG AA Conformance Logo" src="https://www.w3.org/WAI/wcag2AA" style="height:2em;vertical-align:middle;"/></a>
+<article>
+<nav aria-label="Download options" class="download-nav" role="navigation">
+<a aria-label="Download as PDF" class="download-btn theme-download-pdf" href="../files/documentation/scan.pdf" role="button">
           PDF
         </a>
-      
-        <a href="../files/documentation/scan.docx"
-           class="download-btn theme-download-docx"
-           role="button"
-           aria-label="Download as Word">
+<a aria-label="Download as Word" class="download-btn theme-download-docx" href="../files/documentation/scan.docx" role="button">
           Word
         </a>
-      
-        <a href="../files/documentation/scan.tex"
-           class="download-btn theme-download-tex"
-           role="button"
-           aria-label="Download as LaTeX">
+<a aria-label="Download as LaTeX" class="download-btn theme-download-tex" href="../files/documentation/scan.tex" role="button">
           LaTeX
         </a>
-      
-        <a href="../files/documentation/scan.md"
-           class="download-btn theme-download-md"
-           role="button"
-           aria-label="Download as Markdown">
+<a aria-label="Download as Markdown" class="download-btn theme-download-md" href="../files/documentation/scan.md" role="button">
           Markdown
         </a>
-      
-        <a href="../files/documentation/scan.txt"
-           class="download-btn theme-download-txt"
-           role="button"
-           aria-label="Download as Plain Text">
+<a aria-label="Download as Plain Text" class="download-btn theme-download-txt" href="../files/documentation/scan.txt" role="button">
           Plain Text
         </a>
-      
-    </nav>
-    
-    <h1>scan.py - OERForge Content Scanner</h1>
-    
-    <h2>Overview</h2>
+</nav>
+<h1>scan.py - OERForge Content Scanner</h1>
+<h2>Overview</h2>
 <p><code>scan.py</code> provides the core logic for scanning site content, extracting assets, and populating the SQLite database for the OERForge project. It supports hierarchical TOC parsing, asset extraction from Markdown, Jupyter Notebooks, and DOCX files, and maintains relationships between pages, sections, and files. The module is designed for clarity, extensibility, and ease of debugging, with standardized logging and comprehensive docstrings.</p>
-<hr />
+<hr/>
 <h2>Module Docstring</h2>
-<pre><code class="language-python">&quot;&quot;&quot;
+<pre><code class="language-python">"""
 scan.py
 --------
 Static Site Asset and Content Scanner
@@ -107,162 +76,162 @@ Key Features:
 Usage:
     Import and call scan_toc_and_populate_db(config_path) to scan the TOC and populate the database.
     Use get_descendants_for_parent() to query section hierarchies.
-&quot;&quot;&quot;
+"""
 </code></pre>
-<hr />
+<hr/>
 <h2>Functions</h2>
-<h3><code>log_event(message, level=&quot;INFO&quot;)</code></h3>
-<pre><code class="language-python">def log_event(message, level=&quot;INFO&quot;):
-    &quot;&quot;&quot;
+<h3><code>log_event(message, level="INFO")</code></h3>
+<pre><code class="language-python">def log_event(message, level="INFO"):
+    """
     Logs an event to both stdout and scan.log in the project root.
     Uses Python logging and project-standard setup.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Standardizes logging for all scan operations, ensuring traceability in both the console and log files.</p>
-<hr />
+<hr/>
 <h3><code>batch_read_files(file_paths)</code></h3>
 <pre><code class="language-python">def batch_read_files(file_paths):
-    &quot;&quot;&quot;
+    """
     Reads multiple files and returns their contents as a dict: {path: content}
     Supports markdown (.md), notebook (.ipynb), docx (.docx), and other file types.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Efficiently loads content from a list of files, supporting multiple formats for downstream asset extraction.</p>
-<hr />
+<hr/>
 <h3><code>read_markdown_file(path)</code></h3>
 <pre><code class="language-python">def read_markdown_file(path):
-    &quot;&quot;&quot;
+    """
     Reads a markdown (.md) file and returns its content as a string.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Loads Markdown content for asset extraction and database population.</p>
-<hr />
+<hr/>
 <h3><code>read_notebook_file(path)</code></h3>
 <pre><code class="language-python">def read_notebook_file(path):
-    &quot;&quot;&quot;
+    """
     Reads a Jupyter notebook (.ipynb) file and returns its content as a dict.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Loads Jupyter notebook content for asset extraction and database population.</p>
-<hr />
+<hr/>
 <h3><code>read_docx_file(path)</code></h3>
 <pre><code class="language-python">def read_docx_file(path):
-    &quot;&quot;&quot;
+    """
     Reads a docx file and returns its text content as a string.
     Requires python-docx to be installed.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Loads DOCX content for asset extraction and database population.</p>
-<hr />
+<hr/>
 <h3><code>batch_extract_assets(contents_dict, content_type, **kwargs)</code></h3>
 <pre><code class="language-python">def batch_extract_assets(contents_dict, content_type, **kwargs):
-    &quot;&quot;&quot;
+    """
     Extracts assets from multiple file contents in one pass.
     contents_dict: {path: content}
     content_type: 'markdown', 'notebook', 'docx', etc.
     Returns a dict: {path: [asset_records]}
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Extracts and records all linked assets (images, files, etc.) from a batch of content files, updating the database and linking files to pages.</p>
-<hr />
+<hr/>
 <h3><code>extract_linked_files_from_markdown_content(md_text, page_id=None)</code></h3>
 <pre><code class="language-python">def extract_linked_files_from_markdown_content(md_text, page_id=None):
-    &quot;&quot;&quot;
+    """
     Extract asset links from markdown text.
     Args:
         md_text (str): Markdown content.
         page_id (optional): Page identifier for DB linking.
     Returns:
         list: File record dicts for each asset found.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Finds and returns all asset links in Markdown content for database tracking.</p>
-<hr />
+<hr/>
 <h3><code>extract_linked_files_from_notebook_cell_content(cell, nb_path=None)</code></h3>
 <pre><code class="language-python">def extract_linked_files_from_notebook_cell_content(cell, nb_path=None):
-    &quot;&quot;&quot;
+    """
     Extract asset links from a notebook cell.
     Args:
         cell (dict): Notebook cell.
         nb_path (str, optional): Notebook file path.
     Returns:
         list: File record dicts for each asset found.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Finds and returns all asset links in notebook cells, including embedded images and code-generated outputs.</p>
-<hr />
+<hr/>
 <h3><code>extract_linked_files_from_docx_content(docx_path, page_id=None)</code></h3>
 <pre><code class="language-python">def extract_linked_files_from_docx_content(docx_path, page_id=None):
-    &quot;&quot;&quot;
+    """
     Extract asset links from a DOCX file.
     Args:
         docx_path (str): Path to DOCX file.
         page_id (optional): Page identifier for DB linking.
     Returns:
         list: File record dicts for each asset found.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Finds and returns all asset links and embedded images in DOCX files for database tracking.</p>
-<hr />
+<hr/>
 <h3><code>populate_site_info_from_config(config_filename='_config.yml')</code></h3>
 <pre><code class="language-python">def populate_site_info_from_config(config_filename='_config.yml'):
-    &quot;&quot;&quot;
+    """
     Populate the site_info table from the given config file (default: _config.yml).
     Args:
         config_filename (str): Name of the config file (e.g., '_config.yml').
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Reads site metadata from the config YAML and updates the site_info table in the database.</p>
-<hr />
+<hr/>
 <h3><code>get_possible_conversions(extension)</code></h3>
 <pre><code class="language-python">def get_possible_conversions(extension):
-    &quot;&quot;&quot;
+    """
     Get possible conversion flags for a given file extension.
     Args:
         extension (str): File extension (e.g., '.md', '.ipynb').
     Returns:
         dict: Conversion capability flags.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Determines which conversion operations are supported for a given file type.</p>
-<hr />
+<hr/>
 <h3><code>scan_toc_and_populate_db(config_path)</code></h3>
 <pre><code class="language-python">def scan_toc_and_populate_db(config_path):
-    &quot;&quot;&quot;
+    """
     Walk the TOC from the config YAML, read each file, extract assets/images, and populate the DB with content and asset records.
     Maintains TOC hierarchy and section relationships.
     Args:
         config_path (str): Path to the config YAML file.
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 The main entry point for scanning the TOC, reading files, extracting assets, and populating the database with hierarchical content and file records.</p>
-<hr />
+<hr/>
 <h3><code>get_descendants_for_parent(parent_output_path, db_path)</code></h3>
 <pre><code class="language-python">def get_descendants_for_parent(parent_output_path, db_path):
-    &quot;&quot;&quot;
+    """
     Query all children, grandchildren, and deeper descendants for a given parent_output_path using a recursive CTE.
     Args:
         parent_output_path (str): Output path of the parent section.
         db_path (str): Path to the SQLite database.
     Returns:
         list: Dicts for each descendant (id, title, output_path, parent_output_path, slug, level).
-    &quot;&quot;&quot;
+    """
 </code></pre>
-<p><strong>Purpose:</strong><br />
+<p><strong>Purpose:</strong><br/>
 Efficiently queries the database for all descendants of a section, supporting hierarchical navigation and index generation.</p>
-<hr />
+<hr/>
 <h2>Typical Workflow</h2>
 <ol role="list">
 <li role="listitem">
@@ -290,32 +259,30 @@ Efficiently queries the database for all descendants of a section, supporting hi
 </ul>
 </li>
 </ol>
-<hr />
+<hr/>
 <h2>Logging and Debugging</h2>
 <p>All major operations are logged using <code>log_event</code>, with output to both stdout and <code>scan.log</code>. This ensures traceability for debugging and auditing. Errors, warnings, and key events are clearly marked.</p>
-<hr />
+<hr/>
 <h2>Extensibility</h2>
 <ul role="list">
 <li role="listitem">New asset types and file formats can be added by extending the asset extraction helpers.</li>
 <li role="listitem">The TOC walking logic supports arbitrary nesting and slug overrides.</li>
 <li role="listitem">All functions are documented and organized for easy onboarding and contribution.</li>
 </ul>
-<hr />
+<hr/>
 <h2>Intended Audience</h2>
 <ul role="list">
 <li role="listitem">Contributors to OERForge</li>
 <li role="listitem">Developers building or extending static site generators</li>
 <li role="listitem">Anyone needing robust asset and content scanning for static sites</li>
 </ul>
-<hr />
+<hr/>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  </article>
-
-    </div>
-  </main>
-  <footer>
+</article>
+</div>
+</main>
+<footer>
   Made with tons of ☕️  and lots of ❤️ for students and educators everywhere. | Built with <a href="https://github.com/OER-Forge/">OER Forge</a>
-
 </footer>
 </body>
 </html>

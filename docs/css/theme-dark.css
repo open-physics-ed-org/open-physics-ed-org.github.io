@@ -22,7 +22,7 @@ Description: Accessible palette for low-light viewing.
 }
 
 body.dark {
-  --color-btn-text: #000;
+  --color-btn-text: #ffffff;
   --color-btn-hover-text: #181a20;  /* Button hover text: dark for yellow bg */
   --font-size: 1.1em;
   --letter-spacing: 0.03em;
@@ -480,15 +480,11 @@ body.dark .wip-banner {
   border: 2px solid #c00 !important;
 }
 
-.chapter-downloads {
-  margin-bottom: 2em;
-  padding: 1em 0 0.5em 0;
-  border-bottom: 1px solid var(--color-border);
-}
 .download-label {
   font-weight: 500;
   margin-right: 1em;
   font-size: 1em;
+  color: var(--color-btn-text);
 }
 .download-btn {
   display: inline-block;
@@ -496,6 +492,7 @@ body.dark .wip-banner {
   padding: 0.6em 1.5em;
   font-size: 1.1em;
   font-weight: 700;
+  color: var(--color-btn-text);
   background: var(--color-btn);
   border: 2px solid var(--color-btn);
   border-radius: 0.6em;
@@ -507,18 +504,13 @@ body.dark .wip-banner {
   line-height: 1.2;
   letter-spacing: 0.01em;
 }
-body.dark .download-btn,
-html.dark .download-btn {
-  background: var(--color-btn);
-  border-color: var(--color-btn);
-  color: var(--color-btn-text);
+
+.download-btn:hover {
+  background: var(--color-btn-hover);
+  color: var(--color-btn-hover-text, #181a20);
+  border: 2px solid var(--color-btn-hover);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.24);
 }
-.download-btn:focus {
-  outline: 3px solid var(--color-btn-hover);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(255,183,77,0.28);
-}
-.download-btn:hover, .download-btn:focus {
 
 /* WCAG Accessibility Badge Button */
 .wcag-badge {
@@ -546,12 +538,6 @@ html.dark .download-btn {
   background: #090 !important;
   color: #fff !important;
   border-color: #090 !important;
-}
-  background: var(--color-btn-hover) !important;
-  border-color: var(--color-btn-hover) !important;
-  color: var(--color-btn-hover-text) !important;
-  text-decoration: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.28);
 }
 
 /* =========================
