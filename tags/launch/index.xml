@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Launch on Open Physics Education</title>
+    <link>https://openphysicsed.org/tags/launch/</link>
+    <description>Recent content in Launch on Open Physics Education</description>
+    <generator>Hugo -- 0.154.3</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://openphysicsed.org/tags/launch/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Welcome to Open Physics Education</title>
+      <link>https://openphysicsed.org/blog/welcome/</link>
+      <pubDate>Thu, 08 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/blog/welcome/</guid>
+      <description>&lt;p&gt;Welcome to our new site! We&amp;rsquo;re excited to share open physics education resources with you.&lt;/p&gt;
+&lt;h2 id=&#34;what-we-do&#34;&gt;What We Do&lt;/h2&gt;
+&lt;p&gt;Open Physics Education is dedicated to creating and sharing high-quality physics resources that are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Free and Open&lt;/strong&gt;: All materials are freely available to use and modify&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Accessible&lt;/strong&gt;: Created with diverse learners in mind&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Comprehensive&lt;/strong&gt;: Covering fundamental physics through advanced topics&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Community-Driven&lt;/strong&gt;: Built by educators and physicists worldwide&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;getting-started&#34;&gt;Getting Started&lt;/h2&gt;
+&lt;p&gt;Explore our resources and join our community. Whether you&amp;rsquo;re a student learning physics for the first time or an educator looking for classroom materials, we have something for you.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

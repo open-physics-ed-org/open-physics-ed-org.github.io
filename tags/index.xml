@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tags on Open Physics Education</title>
+    <link>https://openphysicsed.org/tags/</link>
+    <description>Recent content in Tags on Open Physics Education</description>
+    <generator>Hugo -- 0.154.3</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 08 Jan 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://openphysicsed.org/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Launch</title>
+      <link>https://openphysicsed.org/tags/launch/</link>
+      <pubDate>Thu, 08 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/launch/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Welcome</title>
+      <link>https://openphysicsed.org/tags/welcome/</link>
+      <pubDate>Thu, 08 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/welcome/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Guide</title>
+      <link>https://openphysicsed.org/tags/guide/</link>
+      <pubDate>Wed, 07 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/guide/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Resources</title>
+      <link>https://openphysicsed.org/tags/resources/</link>
+      <pubDate>Wed, 07 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/resources/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Announcement</title>
+      <link>https://openphysicsed.org/tags/announcement/</link>
+      <pubDate>Tue, 06 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/announcement/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Site</title>
+      <link>https://openphysicsed.org/tags/site/</link>
+      <pubDate>Tue, 06 Jan 2026 00:00:00 +0000</pubDate>
+      <guid>https://openphysicsed.org/tags/site/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>
