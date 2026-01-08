@@ -1,0 +1,75 @@
+baseURL = "https://openphysicsed.org/"
+languageCode = "en-us"
+title = "Open Physics Education"
+theme = "PaperMod"
+enableRobotsTXT = true
+enableInlineShortcodes = true
+favicon = "/images/favicon.ico"
+
+[pagination]
+  pagerSize = 20
+
+[taxonomies]
+  tag = "tags"
+
+[params]
+  env = "production"
+  description = "Open physics education resources and community"
+  author = "Open Physics Education"
+  DateFormat = "January 2006"
+  defaultTheme = "dark"
+  hideFooter = false
+  disableThemeToggle = false
+  ShowShareButtons = false
+  ShowReadingTime = true
+  disableSpecial1stPost = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  MainSections = ["blog"]
+  comments = false
+
+  [params.label]
+    text = "Open Physics Education"
+    icon = "/images/favicon.ico"
+    iconHeight = 32
+
+  [params.profileMode]
+    enabled = true
+    title = "Open Physics Education"
+    subtitle = "Resources and community for physics learning"
+    imageUrl = "/images/logo.png"
+    imageWidth = 180
+    imageHeight = 180
+
+    [[params.profileMode.buttons]]
+      name = "Blog"
+      url = "/blog/"
+
+    [[params.profileMode.buttons]]
+      name = "About"
+      url = "/about/"
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/open-physics-ed"
+
+  [[params.socialIcons]]
+    name = "email"
+    url = "mailto:info@openphysicsed.org"
+
+[outputs]
+  home = ["HTML", "JSON"]
+
+[[menu.main]]
+  name = "github"
+  url = "https://github.com/open-physics-ed"
+  weight = 1
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.highlight]
+    guessSyntax = true
+    style = "autumn"
