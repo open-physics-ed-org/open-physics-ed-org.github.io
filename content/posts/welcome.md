@@ -1,7 +1,7 @@
 ---
 title: "Welcome to Open Physics Education"
-date: 2026-01-08
-author: "Open Physics Education"
+date: 2026-01-06
+author: "danny caballero"
 draft: false
 tags: ["welcome", "launch"]
 ---

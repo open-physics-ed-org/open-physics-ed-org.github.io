@@ -42,29 +42,43 @@ favicon = "/images/favicon.ico"
     imageWidth = 180
     imageHeight = 180
 
-    [[params.profileMode.buttons]]
-      name = "Blog"
-      url = "/blog/"
+  [[params.profileMode.buttons]]
+      name = "classical mechanics"
+      url = "/modern-classical-mechanics/"
 
-    [[params.profileMode.buttons]]
-      name = "About"
-      url = "/about/"
+  [[params.profileMode.buttons]]
+      name = "mathematical methods"
+      url = "/modern-mathematical-methods/"
 
   [[params.socialIcons]]
     name = "github"
-    url = "https://github.com/open-physics-ed"
+    url = "https://github.com/open-physics-ed-org"
+
+  [[params.socialIcons]]
+    name = "bluesky"
+    url = "https://bsky.app/profile/openphysicsed.org"
 
   [[params.socialIcons]]
     name = "email"
-    url = "mailto:info@openphysicsed.org"
+    url = "mailto:hello@openphysicsed.org"
 
 [outputs]
   home = ["HTML", "JSON"]
 
 [[menu.main]]
+  name = "news"
+  url = "/posts/"
+  weight = 1
+
+[[menu.main]]
+  name = "about"
+  url = "/about/"
+  weight = 2
+
+[[menu.main]]
   name = "github"
   url = "https://github.com/open-physics-ed"
-  weight = 1
+  weight = 3
 
 [markup]
   [markup.goldmark]
