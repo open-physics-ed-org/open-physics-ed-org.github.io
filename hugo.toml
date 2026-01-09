@@ -77,7 +77,7 @@ favicon = "/images/favicon.ico"
 
 [[menu.main]]
   name = "github"
-  url = "https://github.com/open-physics-ed"
+  url = "https://github.com/open-physics-ed-org"
   weight = 3
 
 [markup]
